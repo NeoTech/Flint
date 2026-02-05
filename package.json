@@ -1,0 +1,42 @@
+{
+  "name": "static-site-generator",
+  "version": "1.0.0",
+  "description": "TypeScript static site generator with Markdown, HTMX, and TailwindCSS",
+  "type": "module",
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "dev": "rspack serve --mode development",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src/ scripts/ --ext .ts",
+    "lint:fix": "eslint src/ scripts/ --ext .ts --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["static-site", "markdown", "typescript", "htmx", "tailwindcss"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@rspack/cli": "^1.1.0",
+    "@rspack/core": "^1.1.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "autoprefixer": "^10.4.20",
+    "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^7.0.0",
+    "eslint": "^9.0.0",
+    "happy-dom": "^16.0.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "postcss": "^8.4.0",
+    "postcss-loader": "^8.1.0",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "htmx.org": "^2.0.4",
+    "marked": "^15.0.0"
+  }
+}
