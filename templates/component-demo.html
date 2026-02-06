@@ -1,0 +1,15 @@
+{{head}}
+<body class="min-h-screen bg-gray-50">
+    <div id="app" class="flex flex-col min-h-screen">
+        {{#if navigation}}{{navigation}}{{/if}}
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {{content}}
+            <section class="mt-10">
+                {{gadget}}
+            </section>
+        </main>
+        {{#if label-footer}}{{label-footer}}{{/if}}
+    </div>
+    {{foot-scripts}}
+</body>
+</html>

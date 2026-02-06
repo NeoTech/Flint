@@ -8,16 +8,24 @@ Flint is a static site generator built around a simple pipeline: **Markdown in �
 content/*.md          src/components/         src/core/
 ┌──────────────┐     ┌───────────────────┐   ┌──────────────────────┐
 │ YAML         │     │ Component<T>      │   │ frontmatter.ts       │
-│ Frontmatter  │────▶│ Layout            │   │ page-metadata.ts     │
-│ + Markdown   │     │ Navigation        │   │ markdown.ts          │
-│ body         │     │ TreeMenu          │   │ htmx-markdown.ts     │
-└──────┬───────┘     │ CategoryNav       │   │ html-blocks.ts       │
-       │             │ LabelCloud        │   │ template.ts          │
-       │             └───────┬───────────┘   │ hierarchy.ts         │
-       │                     │               │ index-generator.ts   │
+│ Frontmatter  │────▶│ Navigation        │   │ page-metadata.ts     │
+│ + Markdown   │     │ TreeMenu          │   │ markdown.ts          │
+│ body         │     │ CategoryNav       │   │ htmx-markdown.ts     │
+└──────┬───────┘     │ LabelCloud        │   │ html-blocks.ts       │
+       │             │ LabelFooter       │   │ hierarchy.ts         │
+       │             └───────┬───────────┘   │ index-generator.ts   │
        │                     │               │ builder.ts           │
-       ▼                     ▼               └──────────┬───────────┘
-  ┌──────────────────────────────────────────────────────┘
+       │                     │               └──────────┬───────────┘
+       │                     │                          │
+       │             templates/              src/templates/
+       │             ┌───────────────────┐   ┌──────────────────────┐
+       │             │ default.html      │   │ tag-engine.ts        │
+       │             │ blank.html        │   │ template-registry.ts │
+       │             │ blog-post.html    │   │ helpers.ts           │
+       │             └───────┬───────────┘   └──────────┬───────────┘
+       │                     │                          │
+       ▼                     ▼                          ▼
+  ┌─────────────────────────────────────────────────────┘
   │                  Build Pipeline
   │  ┌─────────────────────────────────────────────────┐
   │  │ 1. Scan content/ for *.md files                 │
@@ -27,7 +35,7 @@ content/*.md          src/components/         src/core/
   │  │ 5. Preprocess: convert [text](url){hx-attrs}   │
   │  │ 6. Compile Markdown → HTML (marked)             │
   │  │ 7. Restore raw HTML blocks                      │
-  │  │ 8. Wrap in Layout + Navigation components       │
+  │  │ 8. Resolve {{tag}} placeholders in template     │
   │  │ 9. Write to dist/ with clean URLs               │
   │  └─────────────────────────────────────────────────┘
   │
@@ -55,7 +63,6 @@ The engine. Stateless functions and classes that parse, compile, and build.
 | `markdown.ts` | Compiles Markdown to HTML (orchestrates the preprocessing pipeline) |
 | `htmx-markdown.ts` | Converts `[text](url){hx-attrs}` links into HTMX-powered elements |
 | `html-blocks.ts` | Extracts `:::html` / `:::` blocks before compilation, restores after |
-| `template.ts` | Assembles content + navigation + layout into a full HTML page |
 | `hierarchy.ts` | Builds the page tree from `Parent` fields (breadcrumbs, tree menus) |
 | `index-generator.ts` | Generates category and label index pages from metadata |
 | `builder.ts` | Orchestrator — scans, processes, writes the entire site |
@@ -67,13 +74,35 @@ Pure rendering functions. Each component extends `Component<T>`, accepts typed p
 | Component | Purpose |
 |---|---|
 | `Component<T>` | Abstract base class — provides `render()`, `escapeHtml()`, `classNames()` |
-| `Layout` | Full HTML document shell (`<html>`, `<head>`, `<body>`) |
 | `Navigation` | Top-level nav bar with active state and HTMX boost support |
 | `TreeMenu` | Hierarchical sidebar navigation (collapsible tree) |
 | `CategoryNav` | Pill-style category filter links with counts |
 | `LabelCloud` | Weighted tag cloud with size scaling by frequency |
+| `LabelFooter` | Label badges displayed at the bottom of pages |
 
-### 3. Build & Config (root + `scripts/`)
+### 3. Templates (`templates/` + `src/templates/`)
+
+HTML template files with `{{tag}}` placeholders. Templates are plain HTML — no TypeScript required to create or modify them.
+
+**Template files** (`templates/`):
+
+| File | Purpose |
+|---|---|
+| `default.html` | Standard page layout with navigation, content area, and label footer |
+| `blank.html` | Minimal shell — content and scripts only |
+| `blog-post.html` | Article layout with byline header, narrower max-width |
+
+**Template engine** (`src/templates/`):
+
+| Module | Responsibility |
+|---|---|
+| `tag-engine.ts` | Resolves `{{tag}}` placeholders to HTML (switch on tag name). Handles `{{#if tag}}...{{/if}}` conditionals. |
+| `template-registry.ts` | Stores named HTML templates, renders them via the tag engine. `loadTemplatesFromDir()` reads `.html` files from disk. |
+| `helpers.ts` | Shared HTML generators for `<head>` and foot scripts |
+
+Content files select their template via `Template: <name>` in frontmatter. The tag engine resolves placeholders like `{{head}}`, `{{navigation}}`, `{{content}}`, `{{label-footer}}`, etc. See [templates.md](templates.md) for the full tag reference.
+
+### 4. Build & Config (root + `scripts/`)
 
 | File | Purpose |
 |---|---|
@@ -136,15 +165,23 @@ The Markdown body passes through three stages:
 
 ### Phase 4: Render
 
-The template engine wraps compiled content in the component tree:
+The template engine selects an HTML template (based on `Template` frontmatter) and resolves all `{{tag}}` placeholders:
 
 ```
-  Layout (full HTML document)
-    └── Navigation (top bar)
-    └── <main>
-          └── compiled content HTML
-        </main>
-    └── <script src="main.js"> (HTMX bundle)
+  templates/default.html
+      │
+      ▼
+  processTemplate(html, context)
+      │
+      ├── {{#if navigation}} → conditionally include block
+      ├── {{head}}           → renderHead() → <!DOCTYPE html><html><head>...</head>
+      ├── {{navigation}}     → Navigation.render() → <nav>...</nav>
+      ├── {{content}}        → compiled Markdown HTML
+      ├── {{label-footer}}   → LabelFooter.render() → <footer>...</footer>
+      └── {{foot-scripts}}   → renderFootScripts() → <script src="main.js">
+      │
+      ▼
+  Final HTML document string
 ```
 
 ### Phase 5: Write
@@ -169,6 +206,15 @@ Components are just functions that return strings. The class pattern (`Component
 
 No virtual DOM, no runtime. The output is a string that gets written to a file.
 
+### Why HTML templates with `{{tag}}` placeholders?
+
+Templates define page structure (where navigation, content, and footer go). This is a layout concern, not a logic concern. Plain HTML files with `{{tag}}` placeholders let you:
+- **Create templates without TypeScript** — just HTML
+- **See the structure at a glance** — no class hierarchies or render methods
+- **Add new templates in seconds** — copy an HTML file, set `Template: name` in frontmatter
+
+Components handle the complex rendering (navigation trees, label clouds). Templates just compose those components into a page. The tag engine bridges the two layers.
+
 ### Why preprocessors instead of marked plugins?
 
 Marked plugins operate at the token level. HTMX attribute syntax (`{hx-get ...}`) and raw HTML blocks (`:::html`) are easier to handle as **text transforms before marked runs**. This keeps each concern isolated and independently testable.
@@ -185,4 +231,4 @@ Rspack handles the **browser bundle** (Tailwind CSS + HTMX JS). The **site build
 
 ### Why co-located tests?
 
-Every module has a `.test.ts` file next to it. This makes it obvious which tests cover which code, and ensures tests are updated when the module changes. The project has **162 tests** across 15 test files.
+Every module has a `.test.ts` file next to it. This makes it obvious which tests cover which code, and ensures tests are updated when the module changes. The project has **315 tests** across 22 test files.

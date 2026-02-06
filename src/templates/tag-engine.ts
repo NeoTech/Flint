@@ -21,10 +21,12 @@
  *   {{reading-time}}   — estimated reading time
  *   {{category-pill}}  — category badge HTML
  *   {{label-badges}}   — label badges HTML
+ *   {{gadget}}         — interactive demo widget
  */
 
 import { Navigation } from '../components/navigation.js';
 import { LabelFooter } from '../components/label-footer.js';
+import { Gadget } from '../components/gadget.js';
 import { renderHead, renderFootScripts } from './helpers.js';
 import type { TemplateContext } from './template-registry.js';
 
@@ -148,6 +150,9 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
             `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">${l}</span>`
           ).join('')
         : '';
+
+    case 'gadget':
+      return Gadget.render({});
 
     default:
       return `{{${tagName}}}`;
