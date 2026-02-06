@@ -7,6 +7,7 @@ import { parsePageMetadata, type PageMetadata } from './page-metadata.js';
 import { processChildrenDirectives, type ChildPageData } from './children-directive.js';
 import { generatePageIndex, generateLabelSlug, type PageIndexEntry } from './page-index.js';
 import { generateSitemap, generateRobotsTxt } from './seo.js';
+import { rewriteAbsolutePaths } from './base-path.js';
 import { LabelIndex } from '../components/label-index.js';
 
 export interface BuildConfig {
@@ -160,11 +161,12 @@ export class SiteBuilder {
             : (processed.data.keywords as string | undefined));
 
       const basePath = process.env.BASE_PATH || '';
+      const rewrittenContent = rewriteAbsolutePaths(processed.html, basePath);
       const pageHtml = this.templateEngine.renderPage({
         title,
         description,
         keywords,
-        content: processed.html,
+        content: rewrittenContent,
         path: file.relativePath,
         frontmatter: processed.data,
         navigation: navWithActive,
