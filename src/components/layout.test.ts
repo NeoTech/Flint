@@ -46,6 +46,25 @@ describe('Layout', () => {
     expect(html).toContain('<meta name="description" content="A test page">');
   });
 
+  it('should render keywords meta tag when provided', () => {
+    const html = Layout.render({
+      title: 'Test',
+      keywords: 'typescript, static site, markdown',
+      children: '',
+    });
+
+    expect(html).toContain('<meta name="keywords" content="typescript, static site, markdown">');
+  });
+
+  it('should omit keywords meta tag when not provided', () => {
+    const html = Layout.render({
+      title: 'Test',
+      children: '',
+    });
+
+    expect(html).not.toContain('meta name="keywords"');
+  });
+
   it('should render with custom CSS files', () => {
     const html = Layout.render({
       title: 'Test',

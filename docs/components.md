@@ -168,6 +168,26 @@ interface LabelCloudProps extends ComponentProps {
 - Selected labels: blue pill. Unselected: grey
 - Generates slug-based URLs: `htmx` → `/label/htmx`
 
+### LabelFooter
+
+**File:** `src/components/label-footer.ts`
+
+A site-wide footer that displays every label found across all content files. Automatically rendered on every page by the Layout component — no per-page configuration needed.
+
+```typescript
+interface LabelFooterProps extends ComponentProps {
+  labels: string[];  // All labels across the entire site
+}
+```
+
+**Behaviour:**
+- Deduplicates and sorts labels alphabetically
+- Cycles through 8 colour pairs (blue, green, purple, amber, rose, teal, indigo, orange) for visual variety
+- Returns empty string when no labels exist
+- Rendered inside `<footer>` with a top border to separate from page content
+
+**Data flow:** Builder → `collectSiteLabels()` → `PageData.siteLabels` → Layout → LabelFooter
+
 ## Creating a New Component
 
 ### 1. Write the test first

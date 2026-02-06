@@ -46,6 +46,27 @@ The engine layer. Stateless modules that parse, compile, and build.
 
 ---
 
+### `children-directive.ts`
+
+**Purpose:** Preprocess `:::children` directives — auto-generate child page listings from a template and page metadata.
+
+**Dependencies:** none (receives data from builder)
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `processChildrenDirectives(markdown, children)` | function | Find all `:::children` blocks and expand them using child page data |
+| `parseChildrenOptions(str)` | function | Parse `sort=value limit=N class="..."` option strings |
+| `renderChildTemplate(template, page)` | function | Replace `{placeholder}` tokens with page data |
+| `formatDate(date)` | function | Format Date as `"Feb 1, 2026"` (UTC) |
+| `renderLabelBadges(labels)` | function | Render labels as styled `<span>` badge elements |
+| `ChildPageData` | interface | Page data passed to template rendering (title, url, description, date, category, labels, author, type, shortUri, order) |
+| `ChildrenDirectiveOptions` | interface | Parsed options (sort, limit, wrapperClass) |
+
+**Used by:** `builder.ts`
+
+---
+
 ### `html-blocks.ts`
 
 **Purpose:** Extract `:::html` / `:::` delimited blocks from Markdown before compilation, restore them after.
@@ -296,6 +317,22 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
 
 ---
 
+### `label-footer.ts`
+
+**Purpose:** Site-wide footer displaying all labels from every content file.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `LabelFooter` | class | Footer with deduplicated, sorted, colour-coded label badges |
+| `LabelFooterProps` | interface | `{ labels: string[] }` |
+
+**Used by:** `layout.ts` (rendered automatically when `siteLabels` is non-empty)
+
+---
+
 ## Build & Config (root)
 
 ---
@@ -360,12 +397,12 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
           template.ts   |   page-metadata.ts
           /       \     |        |
   markdown.ts  layout.ts|   frontmatter.ts
-  /    |    \    navigation.ts
- /     |     \        |
-htmx-  html-  marked  navigation/
-markdown blocks        ├── tree-menu.ts     ← hierarchy.ts
-  .ts    .ts           ├── category-nav.ts  ← page-metadata.ts
-                       └── label-cloud.ts   ← page-metadata.ts
-
+  /    |    \    |  \   navigation.ts
+ /     |     \   |   \       |
+htmx-  html-  marked |  label-  navigation/
+markdown blocks      |  footer  ├── tree-menu.ts     ← hierarchy.ts
+  .ts    .ts         |   .ts    ├── category-nav.ts  ← page-metadata.ts
+                     |          └── label-cloud.ts   ← page-metadata.ts
+           children-directive.ts
                   index-generator.ts ← page-metadata.ts
 ```

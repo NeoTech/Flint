@@ -8,11 +8,13 @@ export interface PageData {
   content: string;
   path: string;
   description?: string;
+  keywords?: string;
   frontmatter?: FrontmatterData;
   navigation?: NavItem[];
   layout?: string;
   cssFiles?: string[];
   jsFiles?: string[];
+    siteLabels?: string[];
 }
 
 export interface ProcessedMarkdown {
@@ -45,15 +47,20 @@ export class TemplateEngine {
       content,
       path,
       description,
+      keywords,
       frontmatter = {},
       navigation,
       cssFiles = [],
       jsFiles = [],
+      siteLabels = [],
     } = data;
 
     // Use frontmatter title if available, otherwise use provided title
     const pageTitle = (frontmatter.title as string) || title;
     const pageDescription = (frontmatter.description as string) || description;
+    const pageKeywords = keywords || (Array.isArray(frontmatter.Keywords)
+      ? (frontmatter.Keywords as string[]).join(', ')
+      : (frontmatter.Keywords as string | undefined));
 
     // Build page structure - content is already HTML
     let pageContent = content;
@@ -70,9 +77,11 @@ export class TemplateEngine {
     return Layout.render({
       title: pageTitle,
       description: pageDescription,
+      keywords: pageKeywords,
       children: pageContent,
       cssFiles,
       jsFiles,
+      siteLabels,
     });
   }
 

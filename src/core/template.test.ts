@@ -81,6 +81,34 @@ describe('TemplateEngine', () => {
 
       expect(html).toContain('class="');
     });
+
+    it('should render keywords meta tag from frontmatter array', () => {
+      const pageData: PageData = {
+        title: 'Page',
+        content: 'Content',
+        path: '/page',
+        frontmatter: {
+          Keywords: ['typescript', 'static site', 'markdown'],
+        },
+      };
+
+      const html = engine.renderPage(pageData);
+
+      expect(html).toContain('<meta name="keywords" content="typescript, static site, markdown">');
+    });
+
+    it('should render keywords meta tag from explicit string', () => {
+      const pageData: PageData = {
+        title: 'Page',
+        content: 'Content',
+        path: '/page',
+        keywords: 'htmx, web development',
+      };
+
+      const html = engine.renderPage(pageData);
+
+      expect(html).toContain('<meta name="keywords" content="htmx, web development">');
+    });
   });
 
   describe('renderPartial', () => {

@@ -3,6 +3,7 @@
 ## Agent Rules
 
 - **Never open a new terminal** if there is already an agent-controlled terminal open. Reuse the existing terminal for all commands.
+- **EADDRINUSE error**: If a command fails with `EADDRINUSE` (port already in use), simply inform the user that the server is already running. Do **not** attempt to kill the process or force-restart the server.
 
 ## Project Overview
 

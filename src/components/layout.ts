@@ -1,12 +1,15 @@
 import { Component, type ComponentProps } from './component.js';
+import { LabelFooter } from './label-footer.js';
 
 export interface LayoutProps extends ComponentProps {
   title: string;
   description?: string;
+  keywords?: string;
   children: string;
   lang?: string;
   cssFiles?: string[];
   jsFiles?: string[];
+  siteLabels?: string[];
 }
 
 /**
@@ -18,10 +21,12 @@ export class Layout extends Component<LayoutProps> {
     const {
       title,
       description,
+      keywords,
       children,
       lang = 'en',
       cssFiles = [],
       jsFiles = [],
+      siteLabels = [],
     } = this.props;
 
     const cssLinks = cssFiles
@@ -38,6 +43,7 @@ export class Layout extends Component<LayoutProps> {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     ${description ? `<meta name="description" content="${description}">` : ''}
+    ${keywords ? `<meta name="keywords" content="${keywords}">` : ''}
     <title>${title}</title>
     <link rel="stylesheet" href="/assets/main.css">
 ${cssLinks}
@@ -46,6 +52,7 @@ ${jsScripts}
 <body class="min-h-screen bg-gray-50">
     <div id="app" class="flex flex-col min-h-screen">
         ${children}
+        ${siteLabels.length > 0 ? LabelFooter.render({ labels: siteLabels }) : ''}
     </div>
     <script src="/assets/main.js"></script>
 </body>

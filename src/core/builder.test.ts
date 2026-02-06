@@ -175,6 +175,75 @@ title: About Us
       const homeContent = readFileSync(join(outputDir, 'index.html'), 'utf-8');
       expect(homeContent).toContain('href="/blog"');
     });
+
+    it('should resolve :::children directives in section pages', async () => {
+      const blogDir = join(contentDir, 'blog');
+      mkdirSync(blogDir, { recursive: true });
+
+      writeFileSync(join(contentDir, 'index.md'), '---\ntitle: Home\nShort-URI: home\nParent: root\nOrder: 1\n---\n# Home');
+
+      writeFileSync(join(blogDir, 'index.md'), [
+        '---',
+        'title: Blog',
+        'Short-URI: blog',
+        'Type: section',
+        'Parent: root',
+        'Order: 2',
+        '---',
+        '# Blog',
+        '',
+        ':::children sort=date-desc',
+        ':::',
+      ].join('\n'));
+
+      writeFileSync(join(blogDir, 'post1.md'), [
+        '---',
+        'title: First Post',
+        'Short-URI: first-post',
+        'Type: post',
+        'Category: Tutorials',
+        'Labels:',
+        '  - htmx',
+        'Parent: blog',
+        'Order: 1',
+        'Date: 2026-02-01',
+        'Description: A first blog post',
+        '---',
+        '# First Post',
+      ].join('\n'));
+
+      writeFileSync(join(blogDir, 'post2.md'), [
+        '---',
+        'title: Second Post',
+        'Short-URI: second-post',
+        'Type: post',
+        'Category: Deep Dives',
+        'Labels:',
+        '  - architecture',
+        'Parent: blog',
+        'Order: 2',
+        'Date: 2026-01-15',
+        'Description: A second blog post',
+        '---',
+        '# Second Post',
+      ].join('\n'));
+
+      await builder.build();
+
+      const blogIndex = readFileSync(join(outputDir, 'blog', 'index.html'), 'utf-8');
+
+      // Children should be rendered in the blog index
+      expect(blogIndex).toContain('First Post');
+      expect(blogIndex).toContain('Second Post');
+      // Date-desc: First Post (Feb 1) before Second Post (Jan 15)
+      expect(blogIndex.indexOf('First Post')).toBeLessThan(blogIndex.indexOf('Second Post'));
+      // Should contain links to child pages
+      expect(blogIndex).toContain('/blog/post1');
+      expect(blogIndex).toContain('/blog/post2');
+      // Should contain descriptions
+      expect(blogIndex).toContain('A first blog post');
+      expect(blogIndex).toContain('A second blog post');
+    });
   });
 
   describe('getOutputPath', () => {

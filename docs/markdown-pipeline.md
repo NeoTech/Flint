@@ -1,15 +1,23 @@
 # Markdown Pipeline
 
-Flint's Markdown compiler is more than a wrapper around `marked`. It runs a three-stage preprocessing pipeline that supports HTMX attribute syntax and raw HTML blocks — then compiles standard Markdown — then restores the raw blocks.
+Flint's Markdown compiler is more than a wrapper around `marked`. It runs a multi-stage preprocessing pipeline that supports child page listings, HTMX attribute syntax, and raw HTML blocks — then compiles standard Markdown — then restores the raw blocks.
 
 ## Pipeline Overview
 
 ```
-  Input: raw Markdown string (after frontmatter is stripped)
+  Input: raw Markdown string (with frontmatter)
+      │
+      ▼
+  ┌──────────────────────────────┐
+  │ 0. processChildrenDirectives()│   Resolve :::children blocks → expand to :::html listings
+  └──────────┬───────────────────┘   (runs in the builder, before markdown compilation)
+             │
+             ▼
+  (frontmatter stripped by gray-matter)
       │
       ▼
   ┌──────────────────────┐
-  │ 1. extractHtmlBlocks()│   Replace :::html/:::: blocks with <!--HTML_BLOCK_N--> placeholders
+  │ 1. extractHtmlBlocks()│   Replace :::html blocks with <!--HTML_BLOCK_N--> placeholders
   └──────────┬───────────┘
              │
              ▼
@@ -36,6 +44,112 @@ Flint's Markdown compiler is more than a wrapper around `marked`. It runs a thre
 - HTML blocks must be extracted **first** so `marked` doesn't escape them
 - HTMX syntax must be converted **before** `marked` because `marked` would parse `[text](url)` as a regular link and discard the `{attrs}` part
 - HTML blocks are restored **after** `marked` so the raw HTML passes through untouched
+- Children directives run **first** (in the builder) because they need access to other pages' metadata, and their output may contain `:::html` blocks that the later stages handle
+
+## Stage 0: Children Directive (`:::children`)
+
+**Module:** `src/core/children-directive.ts`
+
+The children directive automatically generates a listing of child pages for section pages. Instead of hardcoding HTML for each sub-page, you write a single directive and the build system populates it from child page frontmatter.
+
+### Syntax
+
+````markdown
+:::children sort=date-desc limit=5 class="space-y-4"
+<div class="card">
+  <a href="{url}">{title}</a>
+  <p>{description}</p>
+  <p>{date} · {category} {labels:badges}</p>
+</div>
+:::
+````
+
+The block between `:::children` and `:::` is the **template** — it gets repeated once for each child page. If no template body is provided, a default card template is used.
+
+### Options
+
+Specified on the opening `:::children` line:
+
+| Option | Values | Default | Description |
+|---|---|---|---|
+| `sort` | `date-desc`, `date-asc`, `order`, `title` | `date-desc` | Sort order for child pages |
+| `limit` | any positive integer | (no limit) | Maximum number of children to show |
+| `class` | any CSS classes (quoted) | `"space-y-4"` | Wrapper `<div>` CSS classes |
+
+### Template Placeholders
+
+| Placeholder | Resolves to | Example |
+|---|---|---|
+| `{title}` | Page title | `Getting Started with HTMX` |
+| `{url}` | Page URL path | `/blog/getting-started-with-htmx` |
+| `{description}` | Page description | `Learn HTMX basics` |
+| `{date}` | Formatted date | `Feb 1, 2026` |
+| `{date:iso}` | ISO date | `2026-02-01` |
+| `{category}` | Category name | `Tutorials` |
+| `{labels}` | Comma-separated labels | `htmx, beginner` |
+| `{labels:badges}` | Styled `<span>` badges | `<span class="...">htmx</span> ...` |
+| `{author}` | Author name | `Jane Developer` |
+| `{type}` | Page type | `post` |
+| `{short-uri}` | Short-URI identifier | `getting-started-htmx` |
+
+### Default Template
+
+When the body is empty, this card template is used:
+
+```html
+<div class="border border-gray-200 rounded p-4 hover:shadow-sm transition-shadow">
+  <a href="{url}" class="text-lg font-semibold text-blue-600 hover:underline">{title}</a>
+  <p class="text-sm text-gray-500 mt-1">{date} · {category} {labels:badges}</p>
+  <p class="text-gray-600 mt-2">{description}</p>
+</div>
+```
+
+### Examples
+
+**Minimal — default card layout, newest first:**
+````markdown
+:::children
+:::
+````
+
+**Custom sort and limit:**
+````markdown
+:::children sort=title limit=3
+:::
+````
+
+**Custom template — simple link list:**
+````markdown
+:::children sort=order
+<li><a href="{url}">{title}</a> — {description}</li>
+:::
+````
+
+**Custom template — grid cards:**
+````markdown
+:::children sort=date-desc class="grid grid-cols-2 gap-4"
+<div class="p-4 border rounded">
+  <a href="{url}" class="font-bold">{title}</a>
+  <p class="text-sm text-gray-500">{date} · {author}</p>
+  <p class="mt-2">{description}</p>
+  <div class="mt-2">{labels:badges}</div>
+</div>
+:::
+````
+
+### How It Works
+
+1. The builder scans all content files and groups pages by their `Parent` field
+2. For each page containing `:::children`, the builder looks up children by the page's `Short-URI`
+3. `processChildrenDirectives()` sorts/limits the children and renders the template for each
+4. The output is wrapped in a `:::html` block so it passes through the Markdown compiler untouched
+5. The normal pipeline then processes the result (html-blocks → htmx → marked → restore)
+
+### Limitations
+
+- `:::children` cannot be nested inside `:::html` blocks (all `:::` blocks are terminated by the first `:::` encountered)
+- The template body is treated as HTML — for Markdown-based listings, use standard Markdown instead
+- Labels are rendered with a uniform blue colour scheme; customise via a custom template
 
 ## Stage 1: Raw HTML Blocks (`:::html`)
 

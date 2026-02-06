@@ -2,8 +2,9 @@ import { readdirSync, statSync, readFileSync, writeFileSync, mkdirSync, existsSy
 import { join, dirname, extname, basename, relative } from 'path';
 import { TemplateEngine } from './template.js';
 import type { NavItem } from '../components/navigation.js';
-import type { FrontmatterData } from './frontmatter.js';
+import { parseFrontmatter, type FrontmatterData } from './frontmatter.js';
 import { parsePageMetadata } from './page-metadata.js';
+import { processChildrenDirectives, type ChildPageData } from './children-directive.js';
 
 export interface BuildConfig {
   contentDir: string;
@@ -110,9 +111,30 @@ export class SiteBuilder {
     // Generate navigation from root-level pages
     const navigation = this.generateNavigation(contentFiles);
 
+    // Collect children metadata for :::children directive resolution
+    const childrenMap = this.collectChildrenMap(contentFiles);
+
+    // Collect all unique labels across every page for the site-wide footer
+    const siteLabels = this.collectSiteLabels(contentFiles);
+
     // Process each file
     for (const file of contentFiles) {
-      const content = readFileSync(file.path, 'utf-8');
+      let content = readFileSync(file.path, 'utf-8');
+
+      // Resolve :::children directives before markdown compilation
+      if (content.includes(':::children')) {
+        try {
+          const { data } = parseFrontmatter(content);
+          const shortUri = data['Short-URI'] as string;
+          if (shortUri) {
+            const children = childrenMap.get(shortUri) || [];
+            content = processChildrenDirectives(content, children);
+          }
+        } catch {
+          // Continue with unprocessed content if frontmatter parsing fails
+        }
+      }
+
       const processed = this.processFile(content, file.relativePath);
 
       // Build navigation with active state
@@ -123,15 +145,25 @@ export class SiteBuilder {
 
       // Render full page
       const title = (processed.data.title as string) || this.config.defaultTitle || 'Untitled';
-      const description = processed.data.description as string | undefined;
+      const description = (processed.data.Description as string)
+        || (processed.data.description as string)
+        || undefined;
+      const keywords = Array.isArray(processed.data.Keywords)
+        ? (processed.data.Keywords as string[]).join(', ')
+        : (processed.data.Keywords as string | undefined)
+          || (Array.isArray(processed.data.keywords)
+            ? (processed.data.keywords as string[]).join(', ')
+            : (processed.data.keywords as string | undefined));
 
       const pageHtml = this.templateEngine.renderPage({
         title,
         description,
+        keywords,
         content: processed.html,
         path: file.relativePath,
         frontmatter: processed.data,
         navigation: navWithActive,
+        siteLabels,
       });
 
       // Write output file
@@ -175,6 +207,65 @@ export class SiteBuilder {
     });
 
     return navItems;
+  }
+
+  /**
+   * Collect all page metadata grouped by parent Short-URI.
+   * Used to resolve :::children directives at build time.
+   */
+  private collectChildrenMap(contentFiles: ContentFile[]): Map<string, ChildPageData[]> {
+    const childrenMap = new Map<string, ChildPageData[]>();
+
+    for (const file of contentFiles) {
+      try {
+        const content = readFileSync(file.path, 'utf-8');
+        const metadata = parsePageMetadata(content);
+        const url = this.getUrlPath(file.relativePath);
+
+        const parent = metadata.parent || 'root';
+        if (!childrenMap.has(parent)) {
+          childrenMap.set(parent, []);
+        }
+
+        childrenMap.get(parent)!.push({
+          title: metadata.title,
+          url,
+          description: metadata.description,
+          date: metadata.date,
+          category: metadata.category,
+          labels: metadata.labels,
+          author: metadata.author,
+          type: metadata.type,
+          shortUri: metadata.shortUri,
+          order: metadata.order,
+        });
+      } catch {
+        continue;
+      }
+    }
+
+    return childrenMap;
+  }
+
+  /**
+   * Collect all unique labels across every content file for the site-wide footer.
+   */
+  private collectSiteLabels(contentFiles: ContentFile[]): string[] {
+    const labelSet = new Set<string>();
+
+    for (const file of contentFiles) {
+      try {
+        const content = readFileSync(file.path, 'utf-8');
+        const metadata = parsePageMetadata(content);
+        for (const label of metadata.labels) {
+          labelSet.add(label);
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return [...labelSet];
   }
 
   /**
