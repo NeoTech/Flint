@@ -19,10 +19,12 @@ describe('LabelFooter', () => {
     expect(html).toContain('typescript');
   });
 
-  it('should render labels as styled badge spans', () => {
+  it('should render labels as clickable anchor badges', () => {
     const html = LabelFooter.render({ labels: ['htmx'] });
 
-    expect(html).toContain('<span');
+    expect(html).toContain('<a');
+    expect(html).toContain('label-link');
+    expect(html).toContain('data-label="htmx"');
     expect(html).toContain('rounded');
     expect(html).toContain('htmx');
   });
@@ -51,8 +53,8 @@ describe('LabelFooter', () => {
       labels: ['htmx', 'css', 'htmx', 'css'],
     });
 
-    const count = (html.match(/htmx/g) || []).length;
-    // Should appear once as badge text, not duplicated
+    // data-label="htmx" appears once per deduplicated label
+    const count = (html.match(/data-label="htmx"/g) || []).length;
     expect(count).toBe(1);
   });
 

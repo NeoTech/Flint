@@ -150,8 +150,11 @@ title: About Us
       await builder.build();
       
       expect(existsSync(outputDir)).toBe(true);
+      // Only the fragments directory (with empty page-index.json) should exist
       const files = readdirSync(outputDir);
-      expect(files).toHaveLength(0);
+      expect(files).toEqual(['fragments']);
+      const index = JSON.parse(readFileSync(join(outputDir, 'fragments', 'page-index.json'), 'utf-8'));
+      expect(index).toEqual([]);
     });
 
     it('should build subdirectory index pages correctly', async () => {
@@ -243,6 +246,98 @@ title: About Us
       // Should contain descriptions
       expect(blogIndex).toContain('A first blog post');
       expect(blogIndex).toContain('A second blog post');
+    });
+
+    it('should generate page-index.json in fragments directory', async () => {
+      writeFileSync(join(contentDir, 'index.md'), [
+        '---',
+        'title: Home',
+        'Short-URI: home',
+        'Parent: root',
+        'Labels:',
+        '  - welcome',
+        '---',
+        '# Home',
+      ].join('\n'));
+
+      writeFileSync(join(contentDir, 'about.md'), [
+        '---',
+        'title: About',
+        'Short-URI: about',
+        'Parent: root',
+        'Labels:',
+        '  - info',
+        '---',
+        '# About',
+      ].join('\n'));
+
+      await builder.build();
+
+      const jsonPath = join(outputDir, 'fragments', 'page-index.json');
+      expect(existsSync(jsonPath)).toBe(true);
+
+      const index = JSON.parse(readFileSync(jsonPath, 'utf-8'));
+      expect(index).toHaveLength(2);
+      expect(index.map((e: { title: string }) => e.title)).toContain('Home');
+      expect(index.map((e: { title: string }) => e.title)).toContain('About');
+      // Each entry should have labels array
+      const homeEntry = index.find((e: { title: string }) => e.title === 'Home');
+      expect(homeEntry.labels).toContain('welcome');
+    });
+
+    it('should generate label index pages for labels with 2+ pages', async () => {
+      writeFileSync(join(contentDir, 'page1.md'), [
+        '---',
+        'title: Page One',
+        'Short-URI: page-one',
+        'Labels:',
+        '  - shared-label',
+        '  - unique-a',
+        '---',
+        '# Page One',
+      ].join('\n'));
+
+      writeFileSync(join(contentDir, 'page2.md'), [
+        '---',
+        'title: Page Two',
+        'Short-URI: page-two',
+        'Labels:',
+        '  - shared-label',
+        '  - unique-b',
+        '---',
+        '# Page Two',
+      ].join('\n'));
+
+      await builder.build();
+
+      // shared-label has 2 pages → should get a label index page
+      const labelPagePath = join(outputDir, 'label', 'shared-label', 'index.html');
+      expect(existsSync(labelPagePath)).toBe(true);
+
+      const labelPageHtml = readFileSync(labelPagePath, 'utf-8');
+      expect(labelPageHtml).toContain('shared-label');
+      expect(labelPageHtml).toContain('Page One');
+      expect(labelPageHtml).toContain('Page Two');
+
+      // unique-a and unique-b each only appear on 1 page → no label index page
+      expect(existsSync(join(outputDir, 'label', 'unique-a', 'index.html'))).toBe(false);
+      expect(existsSync(join(outputDir, 'label', 'unique-b', 'index.html'))).toBe(false);
+    });
+
+    it('should not generate label index page for single-page labels', async () => {
+      writeFileSync(join(contentDir, 'page.md'), [
+        '---',
+        'title: Solo Page',
+        'Short-URI: solo',
+        'Labels:',
+        '  - lonely-label',
+        '---',
+        '# Solo',
+      ].join('\n'));
+
+      await builder.build();
+
+      expect(existsSync(join(outputDir, 'label', 'lonely-label', 'index.html'))).toBe(false);
     });
   });
 

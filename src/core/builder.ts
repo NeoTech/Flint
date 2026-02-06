@@ -3,8 +3,10 @@ import { join, dirname, extname, basename, relative } from 'path';
 import { TemplateEngine } from './template.js';
 import type { NavItem } from '../components/navigation.js';
 import { parseFrontmatter, type FrontmatterData } from './frontmatter.js';
-import { parsePageMetadata } from './page-metadata.js';
+import { parsePageMetadata, type PageMetadata } from './page-metadata.js';
 import { processChildrenDirectives, type ChildPageData } from './children-directive.js';
+import { generatePageIndex, generateLabelSlug, type PageIndexEntry } from './page-index.js';
+import { LabelIndex } from '../components/label-index.js';
 
 export interface BuildConfig {
   contentDir: string;
@@ -171,6 +173,20 @@ export class SiteBuilder {
       mkdirSync(dirname(outputPath), { recursive: true });
       writeFileSync(outputPath, pageHtml, 'utf-8');
     }
+
+    // Generate static page index (JSON) for client-side label routing
+    const allPageMeta = this.collectAllPageMetadata(contentFiles);
+    const pageIndex = generatePageIndex(allPageMeta);
+    const fragmentsDir = join(this.config.outputDir, 'fragments');
+    mkdirSync(fragmentsDir, { recursive: true });
+    writeFileSync(
+      join(fragmentsDir, 'page-index.json'),
+      JSON.stringify(pageIndex),
+      'utf-8',
+    );
+
+    // Generate label index pages for labels with 2+ pages
+    this.generateLabelIndexPages(pageIndex, navigation, siteLabels);
   }
 
   /**
@@ -266,6 +282,78 @@ export class SiteBuilder {
     }
 
     return [...labelSet];
+  }
+
+  /**
+   * Collect page metadata + URL for every content file.
+   * Used to build the static page-index.json.
+   */
+  private collectAllPageMetadata(contentFiles: ContentFile[]): (PageMetadata & { url: string })[] {
+    const results: (PageMetadata & { url: string })[] = [];
+
+    for (const file of contentFiles) {
+      try {
+        const content = readFileSync(file.path, 'utf-8');
+        const metadata = parsePageMetadata(content);
+        const url = this.getUrlPath(file.relativePath);
+        results.push({ ...metadata, url });
+      } catch {
+        continue;
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Generate label index pages for labels that appear on 2+ pages.
+   * Written to dist/label/<slug>/index.html with full layout.
+   */
+  private generateLabelIndexPages(
+    pageIndex: PageIndexEntry[],
+    navigation: NavItem[],
+    siteLabels: string[],
+  ): void {
+    // Group pages by label
+    const labelPages = new Map<string, PageIndexEntry[]>();
+    for (const entry of pageIndex) {
+      for (const label of entry.labels) {
+        if (!labelPages.has(label)) {
+          labelPages.set(label, []);
+        }
+        labelPages.get(label)!.push(entry);
+      }
+    }
+
+    // Only generate pages for labels with 2+ pages
+    for (const [label, pages] of labelPages) {
+      if (pages.length < 2) continue;
+
+      const slug = generateLabelSlug(label);
+      const content = LabelIndex.render({
+        label,
+        pages: pages.map(p => ({
+          url: p.url,
+          title: p.title,
+          description: p.description,
+          category: p.category,
+          date: p.date,
+        })),
+      });
+
+      const pageHtml = this.templateEngine.renderPage({
+        title: `Label: ${label}`,
+        description: `All pages tagged with "${label}"`,
+        content,
+        path: `label/${slug}`,
+        navigation,
+        siteLabels,
+      });
+
+      const outputPath = join(this.config.outputDir, 'label', slug, 'index.html');
+      mkdirSync(dirname(outputPath), { recursive: true });
+      writeFileSync(outputPath, pageHtml, 'utf-8');
+    }
   }
 
   /**

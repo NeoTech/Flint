@@ -36,7 +36,7 @@ export class LabelFooter extends Component<LabelFooterProps> {
 
     const badges = unique.map((label, i) => {
       const color = LABEL_COLORS[i % LABEL_COLORS.length];
-      return `<span class="text-sm ${color.bg} ${color.text} px-3 py-1 rounded-full">${label}</span>`;
+      return `<a href="#" class="label-link text-sm ${color.bg} ${color.text} px-3 py-1 rounded-full cursor-pointer hover:opacity-80 transition-opacity" data-label="${label}">${label}</a>`;
     }).join('\n      ');
 
     const extraClass = className ? ` ${className}` : '';
