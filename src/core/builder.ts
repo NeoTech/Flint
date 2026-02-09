@@ -221,6 +221,9 @@ export class SiteBuilder {
     // Generate label index pages for labels with 2+ pages
     this.generateLabelIndexPages(pageIndex, navigation, siteLabels);
 
+    // Generate product index JSON from Type: product pages
+    this.generateProductIndex(allPageMeta);
+
     // Generate robots.txt and sitemap.xml for SEO
     const basePath = process.env.BASE_PATH || '';
     const siteUrl = this.config.siteUrl || process.env.SITE_URL || '';
@@ -303,6 +306,11 @@ export class SiteBuilder {
           type: metadata.type,
           shortUri: metadata.shortUri,
           order: metadata.order,
+          price: metadata.priceCents ? `$${(metadata.priceCents / 100).toFixed(2)}` : '',
+          priceCents: metadata.priceCents,
+          currency: metadata.currency,
+          stripePriceId: metadata.stripePriceId,
+          image: metadata.image,
         });
       } catch {
         continue;
@@ -415,6 +423,48 @@ export class SiteBuilder {
       mkdirSync(dirname(outputPath), { recursive: true });
       writeFileSync(outputPath, pageHtml, 'utf-8');
     }
+  }
+
+  /**
+   * Generate products/index.json from all Type: product pages.
+   * This replaces the manually maintained static/products/index.json.
+   * The cart-hydrate module reads this at runtime for prices and Stripe IDs.
+   */
+  private generateProductIndex(allMeta: (PageMetadata & { url: string })[]): void {
+    const products = allMeta.filter(m => m.type === 'product');
+    if (products.length === 0) return;
+
+    const index: Record<string, {
+      id: string;
+      title: string;
+      price_cents: number;
+      currency: string;
+      stripe_price_id: string;
+      description: string;
+      url: string;
+      image: string;
+    }> = {};
+
+    for (const p of products) {
+      index[p.shortUri] = {
+        id: p.shortUri,
+        title: p.title,
+        price_cents: p.priceCents,
+        currency: p.currency,
+        stripe_price_id: p.stripePriceId,
+        description: p.description,
+        url: p.url,
+        image: p.image,
+      };
+    }
+
+    const dir = join(this.config.outputDir, 'static', 'products');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, 'index.json'),
+      JSON.stringify(index, null, 2),
+      'utf-8',
+    );
   }
 
   /**

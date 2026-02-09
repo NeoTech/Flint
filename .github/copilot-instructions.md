@@ -26,15 +26,26 @@ This is a **TypeScript Static Site Generator** that compiles Markdown files into
 ├── templates/         # HTML page templates ({{tag}} syntax)
 │   ├── default.html         # Standard page layout
 │   ├── blank.html           # Minimal shell
-│   └── blog-post.html       # Article layout with byline
+│   ├── blog-post.html       # Article layout with byline
+│   ├── component-demo.html  # Interactive component demo
+│   └── product-demo.html    # Product + cart demo page
 ├── src/
 │   ├── components/    # Reusable UI components
 │   │   ├── component.ts      # Base Component class
-│   │   └── navigation.ts     # Navigation component
+│   │   ├── navigation.ts     # Navigation component
+│   │   ├── gadget.ts         # Interactive demo widget
+│   │   ├── cart.ts           # Shopping cart placeholder (hydrated client-side)
+│   │   └── product.ts        # Product card with Add-to-Cart button
+│   ├── client/        # Client-side modules (bundled by Rspack)
+│   │   ├── cart-api.ts       # CartAPI — IndexedDB + AES-GCM encrypted persistence
+│   │   ├── cart-hydrate.ts   # Cart UI hydration, toggle, Stripe.js checkout
+│   │   └── product-hydrate.ts # Binds .flint-add-to-cart buttons
 │   ├── core/          # Core functionality
 │   │   ├── frontmatter.ts    # YAML frontmatter parser
 │   │   ├── markdown.ts       # Markdown compiler (marked)
-│   │   └── builder.ts        # Site builder
+│   │   ├── builder.ts        # Site builder
+│   │   ├── db.ts             # IndexedDB promisified wrapper
+│   │   └── crypto.ts         # Web Crypto AES-GCM helpers
 │   ├── templates/     # Template engine
 │   │   ├── tag-engine.ts     # {{tag}} resolver
 │   │   ├── template-registry.ts # Registry + loader
@@ -44,7 +55,13 @@ This is a **TypeScript Static Site Generator** that compiles Markdown files into
 │   └── test/          # Test utilities
 ├── scripts/           # Build scripts
 ├── dist/              # Output directory (generated)
-└── static/            # Static assets
+├── static/            # Static assets
+│   └── products/      # Product fragments + metadata
+│       ├── blue-mug.html     # HTMX product fragment
+│       ├── blue-mug.json     # Product metadata
+│       └── index.json        # Consolidated product index
+└── docs/              # Project documentation
+    └── ecommerce.md   # E-commerce architecture docs
 ```
 
 ## Development Workflow
@@ -132,7 +149,7 @@ Templates are plain HTML files in `templates/` using `{{tag}}` placeholders:
 </html>
 ```
 
-Available tags: `{{head}}`, `{{navigation}}`, `{{content}}`, `{{label-footer}}`, `{{foot-scripts}}`, `{{blog-header}}`, `{{title}}`, `{{description}}`, `{{author}}`, `{{category}}`, `{{formatted-date}}`, `{{reading-time}}`, `{{category-pill}}`, `{{label-badges}}`, `{{basePath}}`, `{{keywords}}`.
+Available tags: `{{head}}`, `{{navigation}}`, `{{content}}`, `{{label-footer}}`, `{{foot-scripts}}`, `{{blog-header}}`, `{{title}}`, `{{description}}`, `{{author}}`, `{{category}}`, `{{formatted-date}}`, `{{reading-time}}`, `{{category-pill}}`, `{{label-badges}}`, `{{basePath}}`, `{{keywords}}`, `{{gadget}}`, `{{cart}}`, `{{product}}`.
 
 Conditionals: `{{#if tagName}}...{{/if}}` renders block only when tag is non-empty.
 
@@ -225,6 +242,28 @@ Use HTMX for dynamic interactions:
 1. Edit `scripts/build.ts`
 2. Update tests if needed
 3. Run `npm run build` to verify
+
+### Adding a Product
+
+1. Create `static/products/<slug>.html` — HTMX fragment with `data-product-id`, `data-stripe-price-id`, and a `.flint-add-to-cart` button
+2. Create `static/products/<slug>.json` — metadata (id, title, price_cents, currency, stripe_price_id, description, fragment)
+3. Update `static/products/index.json` with the new product entry
+4. Reference in shop content using `:::html` blocks with `hx-get="/products/<slug>.html"`
+5. Run `npm run build` to verify
+
+### E-Commerce Architecture
+
+The cart system is **entirely client-side** — no server backend required:
+
+- **Cart component** (`src/components/cart.ts`): Server-rendered placeholder HTML, hydrated client-side
+- **Product component** (`src/components/product.ts`): Server-rendered product card with `.flint-add-to-cart` buttons
+- **CartAPI** (`src/client/cart-api.ts`): Client-side IndexedDB + AES-GCM encrypted cart persistence
+- **Cart hydration** (`src/client/cart-hydrate.ts`): Wires toggle, renders items, handles Stripe.js `redirectToCheckout`
+- **Product hydration** (`src/client/product-hydrate.ts`): Binds Add-to-Cart buttons to CartAPI
+- **Product fragments** (`static/products/`): Static HTML/JSON loaded via HTMX
+- **Stripe checkout**: Client-only via `Stripe(publishableKey).redirectToCheckout({ lineItems })` — no server session needed
+
+Config is injected via `window.__FLINT_CONFIG__` in the bundled `src/index.ts`.
 
 ## Dependencies
 

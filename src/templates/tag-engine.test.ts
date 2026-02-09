@@ -318,3 +318,50 @@ describe('processTemplate', () => {
     expect(result).toContain('main.js');
   });
 });
+
+// ------------------------------------------------------------------
+// Component tags
+// ------------------------------------------------------------------
+
+describe('resolveTag – gadget', () => {
+  it('should render the gadget widget', () => {
+    const ctx = makeCtx();
+    const html = resolveTag('gadget', ctx);
+    expect(html).toContain('gadget');
+  });
+});
+
+describe('resolveTag – cart', () => {
+  it('should render the cart widget shell', () => {
+    const ctx = makeCtx();
+    const html = resolveTag('cart', ctx);
+    expect(html).toContain('flint-cart');
+    expect(html).toContain('button');
+  });
+
+  it('should be truthy so {{#if cart}} blocks render', () => {
+    const ctx = makeCtx();
+    expect(isTagTruthy('cart', ctx)).toBe(true);
+  });
+});
+
+describe('resolveTag – product', () => {
+  it('should render the product card with default demo values', () => {
+    const ctx = makeCtx();
+    const html = resolveTag('product', ctx);
+    expect(html).toContain('Blue Ceramic Mug');
+    expect(html).toContain('$12.00');
+    expect(html).toContain('blue-mug');
+  });
+
+  it('should include an Add to Cart button', () => {
+    const ctx = makeCtx();
+    const html = resolveTag('product', ctx);
+    expect(html).toContain('Add');
+  });
+
+  it('should be truthy so {{#if product}} blocks render', () => {
+    const ctx = makeCtx();
+    expect(isTagTruthy('product', ctx)).toBe(true);
+  });
+});

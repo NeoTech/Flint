@@ -40,6 +40,8 @@ function copyStaticAssets(): void {
   }
 
   copyRecursive(staticDir, outputDir);
+  // Also copy to dist/static/ so paths like /static/products/blue-mug.html work
+  copyRecursive(staticDir, join(outputDir, 'static'));
   console.log('✓ Static assets copied');
 }
 

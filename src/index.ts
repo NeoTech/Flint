@@ -4,12 +4,43 @@
 import 'htmx.org';
 import './styles/main.css';
 
-// Make htmx available globally
+// --- Cart queue stub ---
+// Provides window.CartAPI stub + queue so product fragments can call
+// addItem() immediately, even before the full CartAPI initialises.
+// The real cart-hydrate module drains the queue on DOMContentLoaded.
 declare global {
   interface Window {
     htmx: typeof import('htmx.org');
+    __flintCartQueue: Array<[string, unknown[]]>;
+    __FLINT_CONFIG__: { stripePublishableKey: string; siteUrl: string };
+    CartAPI: any;
+    queueCartCall: (name: string, ...args: unknown[]) => void;
   }
 }
+
+(function initCartStub() {
+  if (typeof window === 'undefined') return;
+  if (window.__flintCartQueue) return;          // already initialised
+  window.__flintCartQueue = [];
+  window.__FLINT_CONFIG__ = window.__FLINT_CONFIG__ || { stripePublishableKey: '', siteUrl: '' };
+  window.queueCartCall = function (name: string, ...args: unknown[]) {
+    window.__flintCartQueue.push([name, args]);
+  };
+  // Lightweight stub — replaced by real CartAPI when cart-hydrate loads
+  if (!window.CartAPI || window.CartAPI._isStub) {
+    window.CartAPI = {
+      _isStub: true,
+      addItem(id: string, qty = 1) { window.queueCartCall('addItem', id, qty); return Promise.resolve([]); },
+      removeItem(id: string) { window.queueCartCall('removeItem', id); return Promise.resolve([]); },
+      clear() { window.queueCartCall('clear'); return Promise.resolve(); },
+      getItems() { return Promise.resolve([]); },
+    };
+  }
+})();
+
+// Client-side hydration modules (bundled by rspack)
+import './client/cart-hydrate.js';
+import './client/product-hydrate.js';
 
 // --- Page Index types (mirrors PageIndexEntry from page-index.ts) ---
 interface PageIndexEntry {

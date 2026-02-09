@@ -169,6 +169,57 @@ Type: invalid-type
       expect(() => parsePageMetadata(input)).toThrow('Invalid Type');
     });
 
+    it('should accept Type: product', () => {
+      const input = `---
+Short-URI: blue-mug
+Type: product
+Category: Shop
+PriceCents: 1200
+Currency: usd
+StripePriceId: price_1ExampleBlueMug
+Image: ☕
+---
+
+# Blue Mug`;
+
+      const result = parsePageMetadata(input);
+      expect(result.type).toBe('product');
+      expect(result.priceCents).toBe(1200);
+      expect(result.currency).toBe('usd');
+      expect(result.stripePriceId).toBe('price_1ExampleBlueMug');
+      expect(result.image).toBe('☕');
+    });
+
+    it('should parse Price-Cents as alternative to PriceCents', () => {
+      const input = `---
+Short-URI: red-mug
+Type: product
+Price-Cents: 1500
+Stripe-Price-Id: price_1RedMug
+---
+
+# Red Mug`;
+
+      const result = parsePageMetadata(input);
+      expect(result.priceCents).toBe(1500);
+      expect(result.stripePriceId).toBe('price_1RedMug');
+    });
+
+    it('should default product fields for non-product types', () => {
+      const input = `---
+Short-URI: about
+Type: page
+---
+
+# About`;
+
+      const result = parsePageMetadata(input);
+      expect(result.priceCents).toBe(0);
+      expect(result.currency).toBe('usd');
+      expect(result.stripePriceId).toBe('');
+      expect(result.image).toBe('');
+    });
+
     it('should throw on missing Short-URI', () => {
       const input = `---
 Type: page

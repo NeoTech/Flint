@@ -37,6 +37,7 @@
  *   sort=title       Sort alphabetically by title
  *   limit=N          Show at most N children
  *   class="..."      Wrapper div CSS classes (default: "space-y-4")
+ *   type=product     Filter to children of a specific page type
  */
 
 export interface ChildPageData {
@@ -50,12 +51,24 @@ export interface ChildPageData {
   type: string;
   shortUri: string;
   order: number;
+  /** Product-specific: formatted price string, e.g. '$12.00' */
+  price: string;
+  /** Product-specific: price in cents, e.g. 1200 */
+  priceCents: number;
+  /** Product-specific: currency code, e.g. 'usd' */
+  currency: string;
+  /** Product-specific: Stripe Price ID */
+  stripePriceId: string;
+  /** Product-specific: image URL or emoji */
+  image: string;
 }
 
 export interface ChildrenDirectiveOptions {
   sort: 'date-desc' | 'date-asc' | 'order' | 'title';
   limit?: number;
   wrapperClass?: string;
+  /** Filter children by page type (e.g. 'product', 'post') */
+  filterType?: string;
 }
 
 const CHILDREN_PATTERN = /^:::children(?:[ \t]+(.*))?\r?\n([\s\S]*?)^:::\s*$/gm;
@@ -97,6 +110,9 @@ export function parseChildrenOptions(optionString: string): ChildrenDirectiveOpt
         break;
       case 'class':
         options.wrapperClass = value;
+        break;
+      case 'type':
+        options.filterType = value;
         break;
     }
   }
@@ -150,7 +166,12 @@ export function renderChildTemplate(template: string, page: ChildPageData): stri
     .replace(/\{labels\}/g, page.labels.join(', '))
     .replace(/\{author\}/g, page.author)
     .replace(/\{type\}/g, page.type)
-    .replace(/\{short-uri\}/g, page.shortUri);
+    .replace(/\{short-uri\}/g, page.shortUri)
+    .replace(/\{price\}/g, page.price || '')
+    .replace(/\{price-cents\}/g, String(page.priceCents || 0))
+    .replace(/\{currency\}/g, page.currency || '')
+    .replace(/\{stripe-price-id\}/g, page.stripePriceId || '')
+    .replace(/\{image\}/g, page.image || '');
 }
 
 /**
@@ -200,7 +221,10 @@ export function processChildrenDirectives(
   return markdown.replace(CHILDREN_PATTERN, (_match, optionsStr: string | undefined, body: string) => {
     const options = parseChildrenOptions(optionsStr || '');
 
-    let pages = sortPages(children, options.sort);
+    let pages = options.filterType
+      ? children.filter(c => c.type === options.filterType)
+      : children;
+    pages = sortPages(pages, options.sort);
     if (options.limit) {
       pages = pages.slice(0, options.limit);
     }

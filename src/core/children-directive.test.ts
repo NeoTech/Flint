@@ -20,6 +20,11 @@ const sampleChildren: ChildPageData[] = [
     type: 'post',
     shortUri: 'getting-started-htmx',
     order: 1,
+    price: '',
+    priceCents: 0,
+    currency: '',
+    stripePriceId: '',
+    image: '',
   },
   {
     title: 'Tailwind Patterns',
@@ -32,6 +37,11 @@ const sampleChildren: ChildPageData[] = [
     type: 'post',
     shortUri: 'tailwind-patterns',
     order: 2,
+    price: '',
+    priceCents: 0,
+    currency: '',
+    stripePriceId: '',
+    image: '',
   },
   {
     title: 'Static Sites Are Back',
@@ -44,8 +54,31 @@ const sampleChildren: ChildPageData[] = [
     type: 'post',
     shortUri: 'static-sites-back',
     order: 3,
+    price: '',
+    priceCents: 0,
+    currency: '',
+    stripePriceId: '',
+    image: '',
   },
 ];
+
+const sampleProduct: ChildPageData = {
+  title: 'Blue Ceramic Mug',
+  url: '/shop/blue-mug',
+  description: 'A beautiful hand-crafted mug',
+  date: new Date('2026-01-15'),
+  category: 'Shop',
+  labels: ['shop'],
+  author: 'System',
+  type: 'product',
+  shortUri: 'blue-mug',
+  order: 1,
+  price: '$12.00',
+  priceCents: 1200,
+  currency: 'usd',
+  stripePriceId: 'price_1ExampleBlueMug',
+  image: '☕',
+};
 
 describe('Children Directive', () => {
   describe('parseChildrenOptions', () => {
@@ -81,6 +114,18 @@ describe('Children Directive', () => {
       expect(options.sort).toBe('order');
       expect(options.limit).toBe(3);
       expect(options.wrapperClass).toBe('my-grid');
+    });
+
+    it('should parse type filter option', () => {
+      const options = parseChildrenOptions('type=product');
+      expect(options.filterType).toBe('product');
+    });
+
+    it('should parse type with other options', () => {
+      const options = parseChildrenOptions('sort=order type=product limit=5');
+      expect(options.sort).toBe('order');
+      expect(options.filterType).toBe('product');
+      expect(options.limit).toBe(5);
     });
 
     it('should ignore invalid sort values', () => {
@@ -198,6 +243,42 @@ describe('Children Directive', () => {
       const page: ChildPageData = { ...sampleChildren[0], date: null };
       const result = renderChildTemplate('{date} {date:iso}', page);
       expect(result).toBe(' ');
+    });
+
+    it('should replace {price} placeholder', () => {
+      const result = renderChildTemplate('{price}', sampleProduct);
+      expect(result).toBe('$12.00');
+    });
+
+    it('should replace {price-cents} placeholder', () => {
+      const result = renderChildTemplate('{price-cents}', sampleProduct);
+      expect(result).toBe('1200');
+    });
+
+    it('should replace {currency} placeholder', () => {
+      const result = renderChildTemplate('{currency}', sampleProduct);
+      expect(result).toBe('usd');
+    });
+
+    it('should replace {stripe-price-id} placeholder', () => {
+      const result = renderChildTemplate('{stripe-price-id}', sampleProduct);
+      expect(result).toBe('price_1ExampleBlueMug');
+    });
+
+    it('should replace {image} placeholder', () => {
+      const result = renderChildTemplate('{image}', sampleProduct);
+      expect(result).toBe('☕');
+    });
+
+    it('should render product card template with all placeholders', () => {
+      const template = '<div>{title} - {price} <button data-id="{short-uri}">{image}</button></div>';
+      const result = renderChildTemplate(template, sampleProduct);
+      expect(result).toBe('<div>Blue Ceramic Mug - $12.00 <button data-id="blue-mug">☕</button></div>');
+    });
+
+    it('should default product fields to empty for non-product pages', () => {
+      const result = renderChildTemplate('{price}|{image}|{currency}', sampleChildren[0]);
+      expect(result).toBe('||');
     });
   });
 
@@ -348,6 +429,53 @@ describe('Children Directive', () => {
 
       expect(result).toContain('<li>Getting Started with HTMX</li>');
       expect(result).toContain('<li>Tailwind Patterns</li>');
+    });
+
+    it('should filter children by type=product', () => {
+      const mixed = [...sampleChildren, sampleProduct];
+      const markdown = ':::children type=product\n<div>{title} - {price}</div>\n:::';
+      const result = processChildrenDirectives(markdown, mixed);
+
+      expect(result).toContain('Blue Ceramic Mug - $12.00');
+      expect(result).not.toContain('Getting Started with HTMX');
+      expect(result).not.toContain('Tailwind Patterns');
+      expect(result).not.toContain('Static Sites Are Back');
+    });
+
+    it('should filter children by type=post', () => {
+      const mixed = [...sampleChildren, sampleProduct];
+      const markdown = ':::children type=post\n<div>{title}</div>\n:::';
+      const result = processChildrenDirectives(markdown, mixed);
+
+      expect(result).toContain('Getting Started with HTMX');
+      expect(result).not.toContain('Blue Ceramic Mug');
+    });
+
+    it('should return empty when type filter matches nothing', () => {
+      const markdown = '# Shop\n\n:::children type=product\n<div>{title}</div>\n:::';
+      const result = processChildrenDirectives(markdown, sampleChildren);
+
+      expect(result).not.toContain(':::html');
+      expect(result).toContain('# Shop');
+    });
+
+    it('should combine type filter with sort and limit', () => {
+      const product2: ChildPageData = {
+        ...sampleProduct,
+        title: 'Red Ceramic Mug',
+        shortUri: 'red-mug',
+        url: '/shop/red-mug',
+        order: 2,
+        price: '$15.00',
+        priceCents: 1500,
+      };
+      const mixed = [...sampleChildren, sampleProduct, product2];
+      const markdown = ':::children type=product sort=order limit=1\n<div>{title}</div>\n:::';
+      const result = processChildrenDirectives(markdown, mixed);
+
+      expect(result).toContain('Blue Ceramic Mug');
+      expect(result).not.toContain('Red Ceramic Mug');
+      expect(result).not.toContain('Getting Started');
     });
   });
 });

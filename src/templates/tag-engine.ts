@@ -22,11 +22,15 @@
  *   {{category-pill}}  — category badge HTML
  *   {{label-badges}}   — label badges HTML
  *   {{gadget}}         — interactive demo widget
+ *   {{cart}}           — shopping cart widget (hydrated client-side)
+ *   {{product}}        — demo product card with Add-to-Cart button
  */
 
 import { Navigation } from '../components/navigation.js';
 import { LabelFooter } from '../components/label-footer.js';
 import { Gadget } from '../components/gadget.js';
+import { Cart } from '../components/cart.js';
+import { Product } from '../components/product.js';
 import { renderHead, renderFootScripts } from './helpers.js';
 import type { TemplateContext } from './template-registry.js';
 
@@ -153,6 +157,17 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
 
     case 'gadget':
       return Gadget.render({});
+
+    case 'product':
+      return Product.render({
+        id: 'blue-mug',
+        title: 'Blue Ceramic Mug',
+        price: '$12.00',
+        description: 'A beautiful hand-crafted ceramic mug, perfect for your morning coffee.',
+      });
+
+    case 'cart':
+      return Cart.render({});
 
     default:
       return `{{${tagName}}}`;

@@ -1,6 +1,6 @@
 import { parseFrontmatter, type FrontmatterData } from './frontmatter.js';
 
-export type PageType = 'page' | 'post' | 'section';
+export type PageType = 'page' | 'post' | 'section' | 'product';
 
 export interface PageMetadata {
   shortUri: string;
@@ -15,9 +15,17 @@ export interface PageMetadata {
   description: string;
   keywords: string[];
   template: string;
+  /** Product-specific: price in cents (e.g. 1200 = $12.00) */
+  priceCents: number;
+  /** Product-specific: currency code (default 'usd') */
+  currency: string;
+  /** Product-specific: Stripe Price ID for checkout */
+  stripePriceId: string;
+  /** Product-specific: image URL or emoji placeholder */
+  image: string;
 }
 
-const VALID_TYPES: PageType[] = ['page', 'post', 'section'];
+const VALID_TYPES: PageType[] = ['page', 'post', 'section', 'product'];
 
 /**
  * Parse page metadata from markdown content with extended fields
@@ -68,6 +76,10 @@ export function parsePageMetadata(content: string): PageMetadata {
     description: (data['Description'] as string) || '',
     keywords,
     template: (data['Template'] as string) || 'default',
+    priceCents: Number(data['PriceCents'] || data['Price-Cents'] || 0),
+    currency: (data['Currency'] as string) || 'usd',
+    stripePriceId: (data['StripePriceId'] as string) || (data['Stripe-Price-Id'] as string) || '',
+    image: (data['Image'] as string) || '',
   };
 }
 
