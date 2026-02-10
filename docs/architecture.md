@@ -13,17 +13,23 @@ content/*.md          src/components/         src/core/
 │ body         │     │ CategoryNav       │   │ htmx-markdown.ts     │
 └──────┬───────┘     │ LabelCloud        │   │ html-blocks.ts       │
        │             │ LabelFooter       │   │ hierarchy.ts         │
-       │             └───────┬───────────┘   │ index-generator.ts   │
-       │                     │               │ builder.ts           │
-       │                     │               └──────────┬───────────┘
+       │             │ Product           │   │ index-generator.ts   │
+       │             │ Cart              │   │ children-directive.ts │
+       │             │ Gadget            │   │ builder.ts           │
+       │             │ SkillCards        │   └──────────┬───────────┘
+       │             │ LabelIndex        │              │
+       │             └───────┬───────────┘              │
        │                     │                          │
        │             templates/              src/templates/
        │             ┌───────────────────┐   ┌──────────────────────┐
        │             │ default.html      │   │ tag-engine.ts        │
        │             │ blank.html        │   │ template-registry.ts │
        │             │ blog-post.html    │   │ helpers.ts           │
-       │             └───────┬───────────┘   └──────────┬───────────┘
-       │                     │                          │
+       │             │ shop.html         │   └──────────┬───────────┘
+       │             │ agent-info.html   │              │
+       │             │ product-demo.html │              │
+       │             │ component-demo.html│             │
+       │             └───────┬───────────┘              │
        ▼                     ▼                          ▼
   ┌─────────────────────────────────────────────────────┘
   │                  Build Pipeline
@@ -79,6 +85,11 @@ Pure rendering functions. Each component extends `Component<T>`, accepts typed p
 | `CategoryNav` | Pill-style category filter links with counts |
 | `LabelCloud` | Weighted tag cloud with size scaling by frequency |
 | `LabelFooter` | Label badges displayed at the bottom of pages |
+| `Product` | Product card with image, price, and Add-to-Cart button (data-driven from frontmatter) |
+| `Cart` | Cart placeholder HTML, hydrated client-side |
+| `Gadget` | Interactive component demo widget |
+| `SkillCards` | Responsive grid of skill info cards with coloured badges (data-driven from frontmatter) |
+| `LabelIndex` | Label index page with page listings |
 
 ### 3. Templates (`templates/` + `src/templates/`)
 
@@ -91,6 +102,10 @@ HTML template files with `{{tag}}` placeholders. Templates are plain HTML — no
 | `default.html` | Standard page layout with navigation, content area, and label footer |
 | `blank.html` | Minimal shell — content and scripts only |
 | `blog-post.html` | Article layout with byline header, narrower max-width |
+| `shop.html` | E-commerce layout with cart sidebar |
+| `agent-info.html` | Two-column layout with skill cards and sidebar |
+| `product-demo.html` | Product detail page with product card |
+| `component-demo.html` | Interactive component demo layout |
 
 **Template engine** (`src/templates/`):
 
@@ -177,6 +192,10 @@ The template engine selects an HTML template (based on `Template` frontmatter) a
       ├── {{head}}           → renderHead() → <!DOCTYPE html><html><head>...</head>
       ├── {{navigation}}     → Navigation.render() → <nav>...</nav>
       ├── {{content}}        → compiled Markdown HTML
+      ├── {{product}}        → Product.render(frontmatter) → product card (data-driven)
+      ├── {{skill-cards}}    → SkillCards.render(frontmatter) → skill grid (data-driven)
+      ├── {{cart}}           → Cart.render() → cart placeholder
+      ├── {{gadget}}         → Gadget.render() → component demo
       ├── {{label-footer}}   → LabelFooter.render() → <footer>...</footer>
       └── {{foot-scripts}}   → renderFootScripts() → <script src="main.js">
       │
@@ -231,4 +250,8 @@ Rspack handles the **browser bundle** (Tailwind CSS + HTMX JS). The **site build
 
 ### Why co-located tests?
 
-Every module has a `.test.ts` file next to it. This makes it obvious which tests cover which code, and ensures tests are updated when the module changes. The project has **315 tests** across 22 test files.
+Every module has a `.test.ts` file next to it. This makes it obvious which tests cover which code, and ensures tests are updated when the module changes. The project has **397 tests** across 29 test files.
+
+### Why data-driven components?
+
+Some tags (`{{product}}`, `{{skill-cards}}`) read their props directly from `ctx.frontmatter` in the tag engine rather than receiving hardcoded values. This means **content files drive component data** — the YAML frontmatter is the single source of truth. Adding a new product or skill means editing a Markdown file, not touching TypeScript. The tag engine maps frontmatter keys to typed component props.

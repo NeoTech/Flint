@@ -23,7 +23,7 @@ CartAPI (IndexedDB)  →  Stripe.js redirectToCheckout  →  Stripe hosted check
 | Module | Purpose |
 |--------|---------|
 | `src/components/cart.ts` | Server-rendered cart placeholder HTML (hydrated client-side) |
-| `src/components/product.ts` | Server-rendered product card with `.flint-add-to-cart` buttons |
+| `src/components/product.ts` | Server-rendered product card with `.flint-add-to-cart` buttons. **Data-driven** — the `{{product}}` tag reads `Short-URI`, `PriceCents`, `Description`, and `Image` from the page's frontmatter. |
 | `src/client/cart-api.ts` | Client-side cart — IndexedDB persistence with optional AES-GCM encryption |
 | `src/client/cart-hydrate.ts` | Cart UI hydration: renders items, totals, qty ±, remove, Stripe checkout |
 | `src/client/product-hydrate.ts` | Binds Add-to-Cart buttons to CartAPI, shows "✓ Added!" feedback |

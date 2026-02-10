@@ -188,6 +188,135 @@ interface LabelFooterProps extends ComponentProps {
 
 **Data flow:** Builder → `collectSiteLabels()` → `PageData.siteLabels` → Layout → LabelFooter
 
+### Product
+
+**File:** `src/components/product.ts`
+
+A product card with image, title, price, description, and an Add-to-Cart button. **Data-driven** — the tag engine reads `Short-URI`, `PriceCents`, `Description`, and `Image` from the page's frontmatter and maps them to props.
+
+```typescript
+interface ProductProps extends ComponentProps {
+  id: string;            // Product slug for cart operations
+  title: string;         // Display title
+  price?: string;        // Formatted price string, e.g. '$14.99'
+  image?: string;        // Image URL (omit for 📦 placeholder)
+  description?: string;  // Short product description
+}
+```
+
+**Behaviour:**
+- Renders a horizontal card layout (image left, details right)
+- Add-to-Cart button has `.flint-add-to-cart` class + `data-id` and `data-qty` attributes
+- Client-side `product-hydrate.ts` binds click handlers for cart integration
+- Returns empty string when `Short-URI` is missing (tag engine guard)
+
+### Cart
+
+**File:** `src/components/cart.ts`
+
+A lightweight cart widget placeholder. Server-renders the structural HTML (toggle button, panel, items list, totals, checkout button). All interactive behaviour is handled by the client-side `cart-hydrate.ts` module.
+
+```typescript
+interface CartProps extends ComponentProps {
+  initialCount?: number;  // Server-side hint (hydrated client-side)
+}
+```
+
+**Behaviour:**
+- Toggle button shows item count (`#flint-cart-count`)
+- Panel with items list, total, and Checkout button
+- Panel is `hidden` by default, toggled by client-side JS
+- Checkout button triggers Stripe `redirectToCheckout`
+
+### Gadget
+
+**File:** `src/components/gadget.ts`
+
+A demonstration widget that randomizes its background colour and text on button click. Shows how a component can embed interactive behaviour while still being server-rendered.
+
+```typescript
+interface GadgetProps extends ComponentProps {
+  initialText?: string;  // Override the initial display text
+}
+```
+
+**Behaviour:**
+- Renders a coloured box with text and a 🎲 Randomize button
+- Inline `<script>` with a `randomizeGadget()` function (no HTMX needed)
+- Cycles through 12 colours and 10 phrases
+
+### SkillCards
+
+**File:** `src/components/skill-cards.ts`
+
+A responsive grid of skill info cards with coloured badges. **Data-driven** — the tag engine reads a `Skills` YAML array from the page's frontmatter and passes it as props.
+
+```typescript
+type SkillColor = 'green' | 'blue' | 'purple' | 'amber' | 'gray' | 'rose' | 'teal';
+
+interface SkillInfo {
+  name: string;        // Skill directory name
+  icon: string;        // Emoji icon
+  description: string; // Short description
+  tags: string[];      // Keyword badges
+  color: SkillColor;   // Badge colour theme
+}
+
+interface SkillCardsProps extends ComponentProps {
+  skills: SkillInfo[];
+}
+```
+
+**Behaviour:**
+- Renders a 1→2 column responsive grid
+- Each card: icon + name header, description, coloured tag badges
+- Last card spans full width when the total is odd
+- Returns empty string when `Skills` is missing/empty (tag engine guard)
+
+### LabelIndex
+
+**File:** `src/components/label-index.ts`
+
+Renders a full page listing all pages that share a particular label. Generated at build time for labels that appear on multiple pages.
+
+```typescript
+interface LabelIndexPageEntry {
+  url: string;
+  title: string;
+  description: string;
+  category: string;
+  date: string | null;
+}
+
+interface LabelIndexProps extends ComponentProps {
+  label: string;
+  pages: LabelIndexPageEntry[];
+}
+```
+
+**Behaviour:**
+- Header with label name and page count
+- Cards with title link, date/category meta, description
+- Shows "No pages found" message when `pages` is empty
+
+## Data-Driven Components
+
+Some components receive their props from **page frontmatter** rather than hardcoded values. The tag engine reads YAML fields from `ctx.frontmatter` and maps them to typed component props.
+
+| Tag | Frontmatter Fields | Component |
+|-----|-------------------|-----------|
+| `{{product}}` | `Short-URI`, `PriceCents`, `Description`, `Image` | `Product` |
+| `{{skill-cards}}` | `Skills` (array of objects) | `SkillCards` |
+
+**How it works:**
+
+1. Content author adds structured YAML to the page's frontmatter
+2. The builder passes `FrontmatterData` through to `TemplateContext.frontmatter`
+3. The tag engine's `resolveTag()` reads from `ctx.frontmatter` and maps to component props
+4. The component renders with the typed data
+
+**Key rule:** Never hardcode content data in the tag engine. If a component needs data, it should come from the content file's frontmatter.
+
 ## Creating a New Component
 
 ### 1. Write the test first

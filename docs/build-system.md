@@ -209,8 +209,8 @@ The `static/` directory is copied verbatim to `dist/` during build. Use it for:
 **Framework:** Vitest with happy-dom environment
 
 ```
-15 test files
-162 tests
+29 test files
+397 tests
 Co-located: every *.ts module has a matching *.test.ts
 ```
 

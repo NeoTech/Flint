@@ -333,6 +333,89 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
 
 ---
 
+### `product.ts`
+
+**Purpose:** Product card with image, price, description, and Add-to-Cart button.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `Product` | class | Renders a product card. Data-driven — tag engine reads `Short-URI`, `PriceCents`, `Description`, `Image` from frontmatter. |
+| `ProductProps` | interface | `{ id, title, price?, image?, description? }` |
+
+**Used by:** `tag-engine.ts`
+
+---
+
+### `cart.ts`
+
+**Purpose:** Shopping cart widget placeholder, hydrated client-side.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `Cart` | class | Renders toggle button, panel, items list, totals, checkout button. |
+| `CartProps` | interface | `{ initialCount? }` |
+
+**Used by:** `tag-engine.ts`
+
+---
+
+### `gadget.ts`
+
+**Purpose:** Interactive demonstration widget that randomizes colour and text.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `Gadget` | class | Renders coloured box with 🎲 Randomize button and inline script. |
+| `GadgetProps` | interface | `{ initialText? }` |
+
+**Used by:** `tag-engine.ts`
+
+---
+
+### `skill-cards.ts`
+
+**Purpose:** Responsive grid of skill info cards with coloured tag badges.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `SkillCards` | class | Renders 1–2 column grid. Data-driven — tag engine reads `Skills` array from frontmatter. |
+| `SkillCardsProps` | interface | `{ skills: SkillInfo[] }` |
+| `SkillInfo` | interface | `{ name, icon, description, tags, color }` |
+| `SkillColor` | type | `'green' \| 'blue' \| 'purple' \| 'amber' \| 'gray' \| 'rose' \| 'teal'` |
+
+**Used by:** `tag-engine.ts`
+
+---
+
+### `label-index.ts`
+
+**Purpose:** Renders a full page listing all pages that share a particular label.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `LabelIndex` | class | Header, count, and card listing for one label's pages. |
+| `LabelIndexProps` | interface | `{ label, pages: LabelIndexPageEntry[] }` |
+| `LabelIndexPageEntry` | interface | `{ url, title, description, category, date }` |
+
+**Used by:** `builder.ts`
+
+---
+
 ## Build & Config (root)
 
 ---
@@ -376,6 +459,63 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
 
 ---
 
+## Client (`src/client/`)
+
+Browser-side modules bundled by Rspack. These run in the browser, not at build time.
+
+---
+
+### `cart-api.ts`
+
+**Purpose:** Client-side shopping cart with IndexedDB persistence and optional AES-GCM encryption.
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `CartAPI` | class | CRUD operations on the cart. Dispatches `cart:updated` and `cart:ready` CustomEvents. |
+
+**Behaviour:**
+- HTTPS: encrypts cart data with AES-GCM via Web Crypto API
+- HTTP (local dev): falls back to plain JSON
+- Stored in IndexedDB (`flint-db` database, `kv` store)
+
+---
+
+### `cart-hydrate.ts`
+
+**Purpose:** Cart UI hydration — renders items, totals, qty ±, remove, Stripe checkout.
+
+**Behaviour:**
+- Binds to `#flint-cart-toggle`, `#flint-cart-panel`, `#flint-cart-checkout`
+- Reads product index from `/static/products/index.json`
+- Calls `Stripe(publishableKey).redirectToCheckout()` on checkout
+
+---
+
+### `product-hydrate.ts`
+
+**Purpose:** Binds Add-to-Cart buttons (`.flint-add-to-cart`) to the CartAPI.
+
+**Behaviour:**
+- Reads `data-id` and `data-qty` from button attributes
+- Shows "✓ Added!" feedback after successful cart add
+
+---
+
+## Templates (`templates/`)
+
+| File | Purpose |
+|---|---|
+| `default.html` | Standard page layout with navigation, content area, label footer |
+| `blank.html` | Minimal shell — content and scripts only |
+| `blog-post.html` | Article layout with byline header, narrower max-width |
+| `shop.html` | E-commerce layout with cart sidebar |
+| `agent-info.html` | Two-column layout with skill cards and sidebar |
+| `product-demo.html` | Product detail page with product card |
+| `component-demo.html` | Interactive component demo layout |
+
+---
+
 ## Content (`content/`)
 
 | File | Type | Parent | Order | Category |
@@ -383,11 +523,27 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
 | `index.md` | page | root | 1 | Home |
 | `about.md` | page | root | 2 | — |
 | `htmx.md` | page | root | 3 | — |
+| `component.md` | page | root | 4 | — |
 | `blog/index.md` | section | root | 4 | Blog |
 | `blog/getting-started-with-htmx.md` | post | blog | 1 | Tutorials |
 | `blog/tailwind-component-patterns.md` | post | blog | 2 | Tutorials |
 | `blog/static-sites-are-back.md` | post | blog | 3 | Deep Dives |
 | `blog/markdown-powered-workflows.md` | post | blog | 4 | Tips & Tricks |
+| `shop/index.md` | section | root | 5 | Shop |
+| `shop/blue-mug.md` | product | shop | 1 | Shop |
+| `agent.md` | page | root | 6 | — |
+
+---
+
+## Agent Skills (`.github/skills/`)
+
+| Skill | Description |
+|---|---|
+| `add-content` | Create/edit Flint content pages (Markdown + YAML frontmatter) |
+| `add-template` | Create/edit Flint page templates (HTML with {{tag}} placeholders) |
+| `add-component` | Create/edit Flint UI components (TypeScript classes extending Component) |
+| `build-and-test` | Build the Flint static site and run tests |
+| `create-skill` | Guide for creating effective skills following best practices |
 
 ## Dependency Graph
 
@@ -405,4 +561,16 @@ markdown blocks      |  footer  ├── tree-menu.ts     ← hierarchy.ts
                      |          └── label-cloud.ts   ← page-metadata.ts
            children-directive.ts
                   index-generator.ts ← page-metadata.ts
+
+  tag-engine.ts
+    ├── product.ts      ← ctx.frontmatter (data-driven)
+    ├── skill-cards.ts  ← ctx.frontmatter (data-driven)
+    ├── cart.ts
+    ├── gadget.ts
+    └── label-index.ts
+
+  src/client/ (browser-side, bundled by Rspack)
+    ├── cart-api.ts
+    ├── cart-hydrate.ts  ← cart-api.ts
+    └── product-hydrate.ts ← cart-api.ts
 ```

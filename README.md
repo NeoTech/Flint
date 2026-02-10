@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/HTMX-2.0-3366CC?logo=htmx&logoColor=white" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vitest-162_tests-6E9F18?logo=vitest&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vitest-397_tests-6E9F18?logo=vitest&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-yellow" />
 </p>
 
@@ -23,7 +23,7 @@ Most static site generators make you choose: **simple but ugly**, or **pretty bu
 | "I need a framework for interactivity" | HTMX gives you dynamic behavior **from HTML attributes** — no JS framework required |
 | "SSGs are hard to customize" | Component-driven architecture with a clean `Component<T>` base class |
 | "Markdown is too limited" | Extended frontmatter with categories, labels, hierarchy, ordering — your content is structured data |
-| "Testing is an afterthought" | **162 tests** baked in from day one. Every module has co-located test files |
+| "Testing is an afterthought" | **397 tests** baked in from day one. Every module has co-located test files |
 | "Build tools are a nightmare" | Rspack builds in **under 100ms**. Hot reload included |
 
 ---
@@ -56,14 +56,22 @@ Your site is now in `dist/`. Deploy it anywhere — GitHub Pages, Netlify, Cloud
 │   ├── index.md          ← Homepage
 │   ├── about.md          ← Static pages
 │   ├── htmx.md           ← Interactive HTMX demos
-│   └── blog/             ← Blog section with posts
-│       ├── index.md      ← Blog listing page
-│       └── *.md          ← Individual posts
+│   ├── agent.md          ← Agent & Skills info page
+│   ├── blog/             ← Blog section with posts
+│   │   ├── index.md      ← Blog listing page
+│   │   └── *.md          ← Individual posts
+│   └── shop/             ← E-commerce section
+│       ├── index.md      ← Shop listing page
+│       └── *.md          ← Product pages
+├── templates/            ← HTML page layouts with {{tag}} placeholders
 ├── src/
-│   ├── components/       ← Reusable UI components (layout, navigation, etc.)
+│   ├── components/       ← Reusable server-rendered UI components
+│   ├── client/           ← Browser-side JS (cart, product hydration)
 │   ├── core/             ← Engine (markdown, frontmatter, templates, builder)
+│   ├── templates/        ← Tag engine and template registry
 │   └── styles/           ← Tailwind CSS entry point
 ├── static/               ← Static assets (copied to dist as-is)
+├── .github/skills/       ← AI agent skill definitions
 ├── scripts/              ← Build scripts
 └── dist/                 ← Generated site (git-ignored)
 ```
@@ -166,7 +174,7 @@ No virtual DOM. No hydration. No runtime overhead. Just strings.
 
 ## 🧪 Test-First, Always
 
-Every module ships with co-located tests. 15 test files, 162 assertions, all green.
+Every module ships with co-located tests. 29 test files, 397 assertions, all green.
 
 ```bash
 # Run tests once
@@ -205,7 +213,7 @@ npm run lint
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start dev server with hot reload (port 8080) |
+| `npm run dev` | Start dev server with hot reload (port 3000) |
 | `npm run build` | Generate production site to `dist/` |
 | `npm run test` | Run tests in watch mode |
 | `npm run test:run` | Run tests once |

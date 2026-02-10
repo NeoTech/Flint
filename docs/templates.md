@@ -8,9 +8,13 @@ Templates live in the `templates/` directory at the project root:
 
 ```
 templates/
-├── default.html      # Standard page (nav, content, footer)
-├── blank.html        # Minimal shell (no nav, no footer)
-└── blog-post.html    # Article layout (byline, reading time)
+├── default.html        # Standard page (nav, content, footer)
+├── blank.html          # Minimal shell (no nav, no footer)
+├── blog-post.html      # Article layout (byline, reading time)
+├── shop.html           # E-commerce layout with cart sidebar
+├── agent-info.html     # Two-column layout with skill cards + sidebar
+├── product-demo.html   # Product detail page with product card
+└── component-demo.html # Interactive component demo layout
 ```
 
 ## Selecting a Template
@@ -58,6 +62,22 @@ If omitted, `default` is used. If the named template doesn't exist, it falls bac
 | `{{label-footer}}` | Site-wide label cloud footer |
 | `{{foot-scripts}}` | Closing `<script>` tags (main.js) |
 | `{{blog-header}}` | Full article header: category pill, title, byline, reading time, label badges |
+
+### Component Tags
+
+| Tag | Output |
+|-----|--------|
+| `{{gadget}}` | Interactive demo widget (Gadget component) |
+| `{{cart}}` | Shopping cart widget placeholder (Cart component, hydrated client-side) |
+
+### Data-Driven Tags
+
+These tags read their props from the page's **YAML frontmatter**. They return empty string when the required data is missing.
+
+| Tag | Frontmatter Fields | Output |
+|-----|-------------------|--------|
+| `{{product}}` | `Short-URI`, `PriceCents`, `Description`, `Image` | Product card with Add-to-Cart button |
+| `{{skill-cards}}` | `Skills` (array of `{ name, icon, description, tags, color }`) | Responsive grid of skill info cards |
 
 ### Scalar Tags
 
@@ -115,6 +135,39 @@ Article layout with:
 - Label footer
 
 Designed for `Type: post` content with `Author`, `Date`, `Category`, and `Labels` frontmatter fields.
+
+### shop.html
+
+E-commerce layout with:
+- Navigation bar
+- Two-column layout: main content + cart sidebar
+- `{{cart}}` widget in the sidebar (hydrated client-side)
+- Label footer
+
+Used by the shop section index (`content/shop/index.md`).
+
+### agent-info.html
+
+Two-column layout for the agent/skills info page:
+- Left column: `{{content}}` + `{{skill-cards}}`
+- Right column: sticky sidebar with Quick Reference card and tip box
+- `{{skill-cards}}` is **data-driven** — reads `Skills` array from frontmatter
+
+### product-demo.html
+
+Product detail page with:
+- Navigation bar
+- `{{product}}` card (data-driven from frontmatter — `Short-URI`, `PriceCents`, `Description`, `Image`)
+- Content area below the product card
+- Label footer
+
+### component-demo.html
+
+Interactive component demo layout with:
+- Navigation bar
+- `{{gadget}}` widget for interactive demonstration
+- Content area
+- Label footer
 
 ## Architecture
 
