@@ -3,6 +3,12 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '.github/skills/**'
+      - '.github/copilot-instructions.md'
+      - 'LICENSE'
 
 permissions:
   contents: read
