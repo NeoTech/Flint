@@ -1,288 +1,128 @@
- # Copilot Instructions
+# Copilot Instructions — Flint Static Site Generator
+
+> Lean routing document. Detailed procedures live in **skills** and **docs**.
+
+---
 
 ## Agent Rules
 
-- **Never open a new terminal** if there is already an agent-controlled terminal open. Reuse the existing terminal for all commands.
-- **EADDRINUSE error**: If a command fails with `EADDRINUSE` (port already in use), simply inform the user that the server is already running. Do **not** attempt to kill the process or force-restart the server.
+- **Never open a new terminal** if there is already an agent-controlled terminal open. Reuse the existing terminal.
+- **EADDRINUSE error**: Inform the user the server is already running. Do **not** kill the process.
+- **Test-first**: Always write or update tests before implementing features.
+- **Build after changes**: Run `npm run build` after content or code changes.
 
-## Project Overview
-
-This is a **TypeScript Static Site Generator** that compiles Markdown files into HTML pages using a component-driven architecture.
-
-## Architecture
-
-### Core Principles
-
-1. **Test-First Development**: Always write tests before implementing features
-2. **Component-Driven**: Build UI using TypeScript classes that extend `Component<T>`
-3. **Markdown as Data**: Content lives in Markdown files with YAML frontmatter
-4. **HTMX for Interactivity**: Use HTMX attributes for dynamic behavior without heavy JS frameworks
-5. **Tailwind CSS for Styling**: Utility-first CSS via Tailwind
-
-### Project Structure
-
-```
-├── content/           # Markdown content files
-├── templates/         # HTML page templates ({{tag}} syntax)
-│   ├── default.html         # Standard page layout
-│   ├── blank.html           # Minimal shell
-│   ├── blog-post.html       # Article layout with byline
-│   ├── component-demo.html  # Interactive component demo
-│   └── product-demo.html    # Product + cart demo page
-├── src/
-│   ├── components/    # Reusable UI components
-│   │   ├── component.ts      # Base Component class
-│   │   ├── navigation.ts     # Navigation component
-│   │   ├── gadget.ts         # Interactive demo widget
-│   │   ├── cart.ts           # Shopping cart placeholder (hydrated client-side)
-│   │   └── product.ts        # Product card with Add-to-Cart button
-│   ├── client/        # Client-side modules (bundled by Rspack)
-│   │   ├── cart-api.ts       # CartAPI — IndexedDB + AES-GCM encrypted persistence
-│   │   ├── cart-hydrate.ts   # Cart UI hydration, toggle, Stripe.js checkout
-│   │   └── product-hydrate.ts # Binds .flint-add-to-cart buttons
-│   ├── core/          # Core functionality
-│   │   ├── frontmatter.ts    # YAML frontmatter parser
-│   │   ├── markdown.ts       # Markdown compiler (marked)
-│   │   ├── builder.ts        # Site builder
-│   │   ├── db.ts             # IndexedDB promisified wrapper
-│   │   └── crypto.ts         # Web Crypto AES-GCM helpers
-│   ├── templates/     # Template engine
-│   │   ├── tag-engine.ts     # {{tag}} resolver
-│   │   ├── template-registry.ts # Registry + loader
-│   │   ├── helpers.ts        # Shared HTML helpers
-│   │   └── index.ts          # Exports
-│   ├── styles/        # CSS styles
-│   └── test/          # Test utilities
-├── scripts/           # Build scripts
-├── dist/              # Output directory (generated)
-├── static/            # Static assets
-│   └── products/      # Product fragments + metadata
-│       ├── blue-mug.html     # HTMX product fragment
-│       ├── blue-mug.json     # Product metadata
-│       └── index.json        # Consolidated product index
-└── docs/              # Project documentation
-    └── ecommerce.md   # E-commerce architecture docs
-```
-
-## Development Workflow
-
-### 1. Writing Tests First
-
-Every feature must have tests before implementation:
-
-```typescript
-// src/core/feature.test.ts
-import { describe, it, expect } from 'vitest';
-
-describe('Feature', () => {
-  it('should do something', () => {
-    // Test here
-  });
-});
-```
-
-Run tests: `npm run test:run`
-Watch mode: `npm run test`
-
-### 2. Creating Components
-
-Extend the base `Component` class:
-
-```typescript
-import { Component, type ComponentProps } from './component.js';
-
-export interface MyComponentProps extends ComponentProps {
-  title: string;
-}
-
-export class MyComponent extends Component<MyComponentProps> {
-  render(): string {
-    return `
-      <div class="my-component">
-        <h2>${this.props.title}</h2>
-      </div>
-    `;
-  }
-}
-```
-
-### 3. Component Best Practices
-
-- Use `this.classNames()` for conditional classes
-- Use `this.escapeHtml()` for user-generated content
-- Keep components pure (no side effects)
-- Return HTML strings from `render()`
-
-### 4. Working with Markdown
-
-Content files use YAML frontmatter:
-
-```markdown
----
-title: My Page
-Template: default
-Description: A description
-Author: John Doe
-Date: 2024-01-15
-Labels:
-  - typescript
-  - web
 ---
 
-# Content Here
+## What Is Flint?
 
-Regular **markdown** content.
+A **TypeScript static site generator** that compiles Markdown files into HTML pages using:
+
+- **Markdown + YAML frontmatter** for content
+- **HTML templates with `{{tag}}` placeholders** for page layouts
+- **TypeScript components** (`Component<T>`) for reusable server-rendered UI
+- **HTMX** for client-side interactions · **Tailwind CSS** for styling · **Rspack** for bundling
+
+---
+
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `npm run build` | Compile content/ → dist/ |
+| `npm run dev` | Dev server on port 3000 with HMR |
+| `npm run test:run` | Vitest once |
+| `npm run test` | Vitest watch |
+| `npm run typecheck` | TypeScript type checking |
+| `npm run lint` | ESLint |
+
+---
+
+## Separation of Concerns — The Core Rule
+
+Every decision starts with: **which layer does this belong in?**
+
+| Layer | Location | Responsibility |
+|-------|----------|----------------|
+| **Content** | `content/*.md` | Page text, frontmatter data, `:::children`/`:::html`/HTMX links |
+| **Templates** | `templates/*.html` | Page skeleton with `{{tag}}` placeholders — no logic |
+| **Components** | `src/components/*.ts` | Reusable server-rendered UI with typed props |
+| **Client** | `src/client/*.ts` | Browser-side JS (DOM events, fetch, IndexedDB) — bundled by Rspack |
+| **Styles** | Tailwind classes | Inline in templates, components, and `:::html` blocks |
+
+### Decision Flowchart
+
+```
+"I need to add something to a page"
+     │
+     ├── Page-specific text, data, or listing? → Content (Markdown + :::children)
+     ├── Page-specific custom HTML?            → Content (:::html block)
+     ├── Structural layout?                    → Template ({{tag}} placeholders)
+     ├── Reusable UI on multiple pages?        → Component (TypeScript → register tag)
+     ├── Client-side behaviour?                → Client module (src/client/*.ts)
+     └── Styling?                              → Tailwind classes
 ```
 
-### 5. Creating Templates
+### Hard Boundaries
 
-Templates are plain HTML files in `templates/` using `{{tag}}` placeholders:
+| ❌ Never | ✅ Instead |
+|----------|-----------|
+| `<script>` in content or templates | `src/client/*.ts` bundled by Rspack |
+| Page text in templates | Markdown in `content/` |
+| Hard-coded nav links | Auto-generated from `Parent` + `Order` |
+| `<style>` tags | Tailwind utility classes |
+| Components for one-off HTML | `:::html` block in content |
+| Secret keys in client code | Only `pk_test_`/`pk_live_` publishable keys |
 
-```html
-{{head}}
-<body class="bg-white">
-    {{#if navigation}}{{navigation}}{{/if}}
-    <main>{{content}}</main>
-    {{#if label-footer}}{{label-footer}}{{/if}}
-    {{foot-scripts}}
-</body>
-</html>
-```
+---
 
-Available tags: `{{head}}`, `{{navigation}}`, `{{content}}`, `{{label-footer}}`, `{{foot-scripts}}`, `{{blog-header}}`, `{{title}}`, `{{description}}`, `{{author}}`, `{{category}}`, `{{formatted-date}}`, `{{reading-time}}`, `{{category-pill}}`, `{{label-badges}}`, `{{basePath}}`, `{{keywords}}`, `{{gadget}}`, `{{cart}}`, `{{product}}`.
+## Skills — Step-by-Step Procedures
 
-Conditionals: `{{#if tagName}}...{{/if}}` renders block only when tag is non-empty.
+Use the appropriate skill for each task:
 
-To add a new template: create `templates/<name>.html`, then set `Template: <name>` in content frontmatter.
+| Task | Skill |
+|------|-------|
+| Add/edit a page, post, section, or product | `add-content` |
+| Add/edit a page layout | `add-template` |
+| Add/edit a reusable UI component | `add-component` |
+| Build, test, lint, typecheck, debug | `build-and-test` |
 
-### 6. HTMX Patterns
+Skills live in `.github/skills/` with references for detailed field lists, examples, and API docs.
 
-Use HTMX for dynamic interactions:
+---
 
-```html
-<!-- Load content dynamically -->
-<button hx-get="/api/content" hx-target="#result">Load</button>
-<div id="result"></div>
+## Documentation — Deep Dives
 
-<!-- Form submission -->
-<form hx-post="/submit" hx-target="#response">
-  <input type="text" name="message">
-  <button type="submit">Send</button>
-</form>
-```
+| Doc | Covers |
+|-----|--------|
+| `docs/architecture.md` | System overview, data flow, design decisions |
+| `docs/build-system.md` | Build pipeline, Rspack config, dev workflow |
+| `docs/content-model.md` | All frontmatter fields, hierarchy, Category vs Labels |
+| `docs/templates.md` | Template system, all tags, creating templates |
+| `docs/components.md` | Component base class, built-in components |
+| `docs/markdown-pipeline.md` | Preprocessing: :::children → :::html → HTMX → marked |
+| `docs/ecommerce.md` | Stripe setup, test cards, cart, CI/CD |
+| `docs/file-reference.md` | Every source file with exports |
 
-## Build System
+---
 
-### Commands
+## Agent Workflow — Building a Site from a Reference
 
-- `npm run build` - Build the static site
-- `npm run dev` - Start development server with hot reload
-- `npm run test` - Run tests in watch mode
-- `npm run test:run` - Run tests once
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - Run TypeScript type checking
+When a user provides an **image, URL, or description** and asks you to build a site:
 
-### Rspack Configuration
+1. **Analyse** — Identify pages, sections, nav structure, content types
+2. **Plan the content tree** — Map to Markdown files with `Parent`, `Type`, `Order`
+3. **Choose or create templates** — Match layouts to existing templates or create new ones
+4. **Write content files** — `.md` files with frontmatter and body (use `add-content` skill)
+5. **Use `:::children`** for section indexes, `:::html` for custom HTML, HTMX syntax for dynamic links
+6. **Create components** only if reusable UI doesn't exist yet (use `add-component` skill)
+7. **Write tests** for any new TypeScript code
+8. **Build and verify**: `npm run build && npm run test:run`
 
-- Uses `builtin:swc-loader` for TypeScript compilation
-- CSS processed with PostCSS + Tailwind
-- HTMX bundled for offline capability
-- Development server on port 8080
+---
 
 ## Code Style
 
-### TypeScript
-
-- Enable `strict` mode
-- Use explicit return types on public methods
-- Prefer `interface` over `type` for object shapes
-- Use `readonly` where appropriate
-- Avoid `any` - use `unknown` with type guards
-
-### CSS/Tailwind
-
-- Use Tailwind utility classes
-- Custom styles in `src/styles/main.css`
-- Component-specific styles via `@apply`
-- Responsive design with Tailwind breakpoints
-
-### Testing
-
-- Use Vitest with happy-dom environment
-- Test files: `*.test.ts` alongside source files
-- Aim for high coverage on core functionality
-- Use descriptive test names
-
-## Common Tasks
-
-### Adding a New Page
-
-1. Create Markdown file in `content/`
-2. Add frontmatter with title and `Template` field
-3. Run `npm run build`
-4. Page appears in `dist/`
-
-### Adding a Template
-
-1. Create `templates/<name>.html` using `{{tag}}` placeholders
-2. Set `Template: <name>` in content frontmatter
-3. Run `npm run build` — no TypeScript needed
-
-### Adding a Component
-
-1. Create test file: `src/components/my-component.test.ts`
-2. Write tests
-3. Create implementation: `src/components/my-component.ts`
-4. Export from appropriate index file
-5. To use in templates, add a new tag to `src/templates/tag-engine.ts`
-6. Run tests to verify
-
-### Modifying the Build
-
-1. Edit `scripts/build.ts`
-2. Update tests if needed
-3. Run `npm run build` to verify
-
-### Adding a Product
-
-1. Create `static/products/<slug>.html` — HTMX fragment with `data-product-id`, `data-stripe-price-id`, and a `.flint-add-to-cart` button
-2. Create `static/products/<slug>.json` — metadata (id, title, price_cents, currency, stripe_price_id, description, fragment)
-3. Update `static/products/index.json` with the new product entry
-4. Reference in shop content using `:::html` blocks with `hx-get="/products/<slug>.html"`
-5. Run `npm run build` to verify
-
-### E-Commerce Architecture
-
-The cart system is **entirely client-side** — no server backend required:
-
-- **Cart component** (`src/components/cart.ts`): Server-rendered placeholder HTML, hydrated client-side
-- **Product component** (`src/components/product.ts`): Server-rendered product card with `.flint-add-to-cart` buttons
-- **CartAPI** (`src/client/cart-api.ts`): Client-side IndexedDB + AES-GCM encrypted cart persistence
-- **Cart hydration** (`src/client/cart-hydrate.ts`): Wires toggle, renders items, handles Stripe.js `redirectToCheckout`
-- **Product hydration** (`src/client/product-hydrate.ts`): Binds Add-to-Cart buttons to CartAPI
-- **Product fragments** (`static/products/`): Static HTML/JSON loaded via HTMX
-- **Stripe checkout**: Client-only via `Stripe(publishableKey).redirectToCheckout({ lineItems })` — no server session needed
-
-Config is injected via `window.__FLINT_CONFIG__` in the bundled `src/index.ts`.
-
-## Dependencies
-
-### Production
-- `marked` - Markdown parsing
-- `gray-matter` - Frontmatter parsing
-- `htmx.org` - HTMX library
-
-### Development
-- `vitest` - Testing framework
-- `@rspack/cli` - Build tool
-- `tailwindcss` - CSS framework
-- `typescript` - Type checking
-- `eslint` - Linting
-
-## Notes
-
-- Always run tests before committing
-- Keep components small and focused
-- Use semantic HTML
-- Ensure accessibility (ARIA labels, etc.)
-- Test on different screen sizes
+- **TypeScript**: strict mode, `.js` imports, `interface` over `type`, no `any`, explicit return types
+- **CSS**: Tailwind utility classes only
+- **Testing**: Vitest + happy-dom, co-located `*.test.ts`, test-first
+- **HTML**: Semantic elements, ARIA labels, `escapeHtml()` on all user strings
