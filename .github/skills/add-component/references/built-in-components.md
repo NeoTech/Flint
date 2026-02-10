@@ -36,11 +36,13 @@ Shopping cart placeholder, hydrated client-side by `src/client/cart-hydrate.ts`.
 
 ## Product (`product.ts`)
 
-Demo product card with Add-to-Cart button.
+Demo product card with Add-to-Cart button. **Data-driven from frontmatter.**
 
 - **Tag:** `{{product}}`
-- **Props:** `{ id, title, price, description }`
+- **Props:** `{ id, title, price, description, image? }`
+- **Frontmatter source:** `Short-URI` → id, `title` → title, `PriceCents` → formatted price, `Description` → description, `Image` → image
 - **Renders:** Product card with image, title, price, description, and `.flint-add-to-cart` button
+- **Returns `''`** when `Short-URI` is missing (no product data on this page)
 
 ## TreeMenu (`navigation/tree-menu.ts`)
 
@@ -69,3 +71,13 @@ Label index page content listing pages grouped by label.
 
 - **Tag:** none (used in code only)
 - **Props:** `{ labels: LabelGroup[], basePath? }`
+
+## SkillCards (`skill-cards.ts`)
+
+Responsive grid of skill info cards with colored badges. **Data-driven from frontmatter.**
+
+- **Tag:** `{{skill-cards}}`
+- **Props:** `{ skills: SkillInfo[] }` where `SkillInfo = { name, icon, description, tags, color }`
+- **Frontmatter source:** `Skills` array — each item has `name`, `icon`, `description`, `tags[]`, `color`
+- **Renders:** 2-column card grid, last card spans full width when count is odd
+- **Returns `''`** when `Skills` frontmatter key is missing or empty

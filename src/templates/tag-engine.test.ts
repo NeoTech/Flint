@@ -346,22 +346,92 @@ describe('resolveTag – cart', () => {
 });
 
 describe('resolveTag – product', () => {
-  it('should render the product card with default demo values', () => {
-    const ctx = makeCtx();
+  it('should render the product card from frontmatter data', () => {
+    const ctx = makeCtx({
+      title: 'Blue Ceramic Mug',
+      frontmatter: {
+        'Short-URI': 'blue-mug',
+        'PriceCents': 1200,
+        'Description': 'A hand-crafted mug.',
+        'Image': '☕',
+      },
+    });
     const html = resolveTag('product', ctx);
     expect(html).toContain('Blue Ceramic Mug');
     expect(html).toContain('$12.00');
     expect(html).toContain('blue-mug');
+    expect(html).toContain('A hand-crafted mug.');
+  });
+
+  it('should return empty string when no Short-URI in frontmatter', () => {
+    const ctx = makeCtx({ frontmatter: {} });
+    expect(resolveTag('product', ctx)).toBe('');
+  });
+
+  it('should render without price when PriceCents is missing', () => {
+    const ctx = makeCtx({
+      title: 'Free Item',
+      frontmatter: { 'Short-URI': 'free-item' },
+    });
+    const html = resolveTag('product', ctx);
+    expect(html).toContain('Free Item');
+    expect(html).toContain('free-item');
   });
 
   it('should include an Add to Cart button', () => {
-    const ctx = makeCtx();
+    const ctx = makeCtx({
+      title: 'Mug',
+      frontmatter: { 'Short-URI': 'mug', 'PriceCents': 500 },
+    });
     const html = resolveTag('product', ctx);
     expect(html).toContain('Add');
   });
 
-  it('should be truthy so {{#if product}} blocks render', () => {
-    const ctx = makeCtx();
+  it('should be falsy when no product data', () => {
+    const ctx = makeCtx({ frontmatter: {} });
+    expect(isTagTruthy('product', ctx)).toBe(false);
+  });
+
+  it('should be truthy when product data exists', () => {
+    const ctx = makeCtx({
+      title: 'Mug',
+      frontmatter: { 'Short-URI': 'mug', 'PriceCents': 500 },
+    });
     expect(isTagTruthy('product', ctx)).toBe(true);
+  });
+});
+
+describe('resolveTag – skill-cards', () => {
+  const skillsData = [
+    { name: 'add-content', icon: '📝', description: 'Create content pages.', tags: ['frontmatter'], color: 'green' },
+    { name: 'build-and-test', icon: '🧪', description: 'Build and test.', tags: ['vitest'], color: 'amber' },
+  ];
+
+  it('should render skill cards from frontmatter Skills array', () => {
+    const ctx = makeCtx({ frontmatter: { Skills: skillsData } });
+    const html = resolveTag('skill-cards', ctx);
+    expect(html).toContain('add-content');
+    expect(html).toContain('build-and-test');
+    expect(html).toContain('📝');
+  });
+
+  it('should return empty string when Skills is missing', () => {
+    const ctx = makeCtx({ frontmatter: {} });
+    expect(resolveTag('skill-cards', ctx)).toBe('');
+  });
+
+  it('should return empty string when Skills is empty array', () => {
+    const ctx = makeCtx({ frontmatter: { Skills: [] } });
+    expect(resolveTag('skill-cards', ctx)).toBe('');
+  });
+
+  it('should be falsy when no Skills data', () => {
+    const ctx = makeCtx({ frontmatter: {} });
+    expect(isTagTruthy('skill-cards', ctx)).toBe(false);
+  });
+
+  it('should be truthy when Skills data exists', () => {
+    const ctx = makeCtx({ frontmatter: { Skills: skillsData } });
+    expect(isTagTruthy('skill-cards', ctx)).toBe(true);
   });
 });

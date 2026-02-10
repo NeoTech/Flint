@@ -25,6 +25,7 @@ Before creating a new template, check `templates/` — reuse or copy an existing
 | `blank` | Minimal shell (content + scripts only) |
 | `blog-post` | Article layout with byline header |
 | `shop` | Shop layout with cart widget |
+| `agent-info` | Two-column with sidebar (skills page) |
 
 ### 2. Create the file
 
@@ -52,7 +53,9 @@ Create `templates/<name>.html`. Start from this skeleton:
 - `{{content}}` — compiled Markdown body
 - `{{foot-scripts}}` — closing `<script>` tags before `</body>`
 
-**Optional structural tags:** `{{navigation}}`, `{{label-footer}}`, `{{blog-header}}`, `{{cart}}`, `{{gadget}}`, `{{product}}`
+**Optional structural tags:** `{{navigation}}`, `{{label-footer}}`, `{{blog-header}}`, `{{cart}}`, `{{gadget}}`
+
+**Data-driven tags (read from frontmatter):** `{{product}}`, `{{skill-cards}}` — these return `''` when the page's frontmatter lacks the required fields, so always use `{{#if}}` guards.
 
 **Optional scalar tags:** `{{title}}`, `{{description}}`, `{{author}}`, `{{category}}`, `{{formatted-date}}`, `{{reading-time}}`
 

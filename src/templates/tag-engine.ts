@@ -23,7 +23,8 @@
  *   {{label-badges}}   — label badges HTML
  *   {{gadget}}         — interactive demo widget
  *   {{cart}}           — shopping cart widget (hydrated client-side)
- *   {{product}}        — demo product card with Add-to-Cart button
+ *   {{product}}        — product card from frontmatter (PriceCents, Image, Description)
+ *   {{skill-cards}}    — grid of skill info cards from frontmatter Skills array
  */
 
 import { Navigation } from '../components/navigation.js';
@@ -31,6 +32,7 @@ import { LabelFooter } from '../components/label-footer.js';
 import { Gadget } from '../components/gadget.js';
 import { Cart } from '../components/cart.js';
 import { Product } from '../components/product.js';
+import { SkillCards, type SkillInfo } from '../components/skill-cards.js';
 import { renderHead, renderFootScripts } from './helpers.js';
 import type { TemplateContext } from './template-registry.js';
 
@@ -158,16 +160,27 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
     case 'gadget':
       return Gadget.render({});
 
-    case 'product':
-      return Product.render({
-        id: 'blue-mug',
-        title: 'Blue Ceramic Mug',
-        price: '$12.00',
-        description: 'A beautiful hand-crafted ceramic mug, perfect for your morning coffee.',
-      });
+    case 'product': {
+      const fm = ctx.frontmatter;
+      const id = (fm['Short-URI'] ?? fm['short-uri'] ?? '') as string;
+      const priceCents = (fm['PriceCents'] ?? fm['Price-Cents'] ?? 0) as number;
+      const price = priceCents > 0
+        ? `$${(priceCents / 100).toFixed(2)}`
+        : '';
+      const image = (fm['Image'] ?? '') as string;
+      const description = (fm['Description'] ?? '') as string;
+      if (!id) return '';
+      return Product.render({ id, title: ctx.title, price, description, image: image || undefined });
+    }
 
     case 'cart':
       return Cart.render({});
+
+    case 'skill-cards': {
+      const skills = ctx.frontmatter['Skills'] as SkillInfo[] | undefined;
+      if (!skills || !Array.isArray(skills) || skills.length === 0) return '';
+      return SkillCards.render({ skills });
+    }
 
     default:
       return `{{${tagName}}}`;

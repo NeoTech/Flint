@@ -94,3 +94,32 @@ Two-column layout with sidebar navigation. Not in codebase — illustrates the p
 </body>
 </html>
 ```
+
+## Agent Info (`templates/agent-info.html`)
+
+Two-column layout with content + data-driven skill cards on left, sticky sidebar on right. Demonstrates frontmatter-driven component tags.
+
+```html
+{{head}}
+<body class="min-h-screen bg-gray-50">
+    <div id="app" class="flex flex-col min-h-screen overflow-x-hidden">
+        {{#if navigation}}{{navigation}}{{/if}}
+        <div class="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
+                <main class="overflow-hidden">
+                    {{content}}
+                    {{skill-cards}}
+                </main>
+                <aside class="hidden lg:block">
+                    <!-- Static sidebar content -->
+                </aside>
+            </div>
+        </div>
+        {{#if label-footer}}{{label-footer}}{{/if}}
+    </div>
+    {{foot-scripts}}
+</body>
+</html>
+```
+
+Note: `{{skill-cards}}` reads the `Skills` array from the page's frontmatter. It renders nothing if the frontmatter key is missing — no `{{#if}}` guard needed but recommended for clarity.

@@ -95,6 +95,7 @@ npm run build
 - No nested `:::` blocks — first `:::` closes the block
 - No Markdown inside `:::html` — it's raw HTML only
 - No hard-coded nav links — navigation is auto-generated from `Parent` + `Order`
+- **No HTML cards for data a component already renders** — put structured data in frontmatter and let `{{tag}}` components render it (e.g. `Skills:` array → `{{skill-cards}}`, product fields → `{{product}}`)
 
 ## References
 

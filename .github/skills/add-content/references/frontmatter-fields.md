@@ -38,6 +38,29 @@
 
 Hyphenated alternatives (`Price-Cents`, `Stripe-Price-Id`) also work.
 
+## Component Data Fields
+
+Frontmatter can include structured data that drives template components. The tag engine reads these fields from `ctx.frontmatter` and passes them as typed props to components.
+
+| Field | Type | Consumed by | Purpose |
+|-------|------|-------------|---------|
+| `Skills` | `SkillInfo[]` | `{{skill-cards}}` | Array of skill cards with name, icon, description, tags, color |
+
+Product fields (`PriceCents`, `Image`, `Description`, `Short-URI`) are also read by the `{{product}}` tag.
+
+### Example: Skills array
+
+```yaml
+Skills:
+  - name: add-content
+    icon: 📝
+    description: Create or edit content pages.
+    tags: [frontmatter, ":::children"]
+    color: green
+```
+
+You can define any structured YAML that a component expects — the tag-engine switch case maps frontmatter keys to component props.
+
 ## Page Types
 
 | Type | Use for | Parent pattern |
@@ -57,3 +80,4 @@ Hyphenated alternatives (`Price-Cents`, `Stripe-Price-Id`) also work.
 | `shop` | Shop layout with cart widget |
 | `component-demo` | Interactive component demo |
 | `product-demo` | Product + cart demo |
+| `agent-info` | Two-column layout with sidebar (skills page) |

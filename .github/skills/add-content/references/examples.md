@@ -120,3 +120,37 @@ Description: About this site
 
 This is a simple standalone page with Markdown content.
 ```
+
+## Page with Component Data
+
+Content files can include structured YAML that drives template components. The tag engine reads these fields and passes them to components as typed props.
+
+```markdown
+---
+title: Agent & Skills
+Short-URI: agent
+Template: agent-info
+Type: page
+Parent: root
+Order: 6
+Description: Skills and automation overview
+Skills:
+  - name: add-content
+    icon: 📝
+    description: Create or edit content pages.
+    tags: [frontmatter, ":::children"]
+    color: green
+  - name: build-and-test
+    icon: 🧪
+    description: Build and run tests.
+    tags: [vitest, typecheck]
+    color: amber
+---
+
+# Skills
+
+Prose Markdown body. The `{{skill-cards}}` tag in the template
+reads the Skills array from frontmatter and renders them.
+```
+
+The key rule: **content files provide data, components provide presentation**. Never embed HTML cards in Markdown when a component exists.

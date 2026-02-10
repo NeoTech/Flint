@@ -1,0 +1,38 @@
+{{head}}
+<body class="min-h-screen bg-gray-50">
+    <div id="app" class="flex flex-col min-h-screen overflow-x-hidden">
+        {{#if navigation}}{{navigation}}{{/if}}
+        <div class="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
+                <main class="overflow-hidden">
+                    {{content}}
+                    {{skill-cards}}
+                </main>
+                <aside class="hidden lg:block">
+                    <div class="sticky top-8 space-y-6">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                            <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Quick Reference</h3>
+                            <dl class="space-y-3 text-sm">
+                                <div>
+                                    <dt class="font-medium text-gray-700">Skills</dt>
+                                    <dd class="text-gray-500 mt-0.5">5 procedural guides</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-medium text-gray-700">Location</dt>
+                                    <dd class="text-gray-500 mt-0.5 font-mono text-xs">.github/skills/</dd>
+                                </div>
+                            </dl>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg border border-blue-200 p-5">
+                            <h3 class="text-sm font-semibold text-blue-900 mb-2">💡 Tip</h3>
+                            <p class="text-sm text-blue-800">Make Agent aware of skills by telling it explicit to use skills.</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+        {{#if label-footer}}{{label-footer}}{{/if}}
+    </div>
+    {{foot-scripts}}
+</body>
+</html>

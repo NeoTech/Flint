@@ -78,16 +78,34 @@ export class MyComponent extends Component<MyComponentProps> {
 
 Edit `src/templates/tag-engine.ts`:
 - Add import: `import { MyComponent } from '../components/<name>.js';`
-- Add case in `resolveTag` switch:
+- Add case in `resolveTag` switch that reads **props from `ctx.frontmatter`**:
   ```typescript
-  case 'my-tag':
-    return MyComponent.render({ /* props from ctx */ });
+  case 'my-tag': {
+    const data = ctx.frontmatter['MyData'] as MyProps | undefined;
+    if (!data) return '';
+    return MyComponent.render(data);
+  }
   ```
-- Return `''` when no data so `{{#if my-tag}}` works
+- Return `''` when frontmatter data is missing so `{{#if my-tag}}` works
+- **Never hardcode props** — content files drive data into components via frontmatter
 
 ### 4. Extend TemplateContext if needed
 
-If the component needs data not in `TemplateContext` (`src/templates/template-registry.ts`), add the field and populate it in `src/core/builder.ts`.
+If the component needs data not in `TemplateContext` (`src/templates/template-registry.ts`), add the field and populate it in `src/core/builder.ts`. Most components should read from `ctx.frontmatter` directly — only add TemplateContext fields for site-wide data (navigation, siteLabels).
+
+### 5. Add component data to content frontmatter
+
+The content file should provide structured YAML matching the component's props:
+
+```yaml
+---
+MyData:
+  fieldA: value
+  fieldB: value
+---
+```
+
+The tag-engine case reads this and passes it to the component. Content authors control the data; the component controls the presentation.
 
 ### 5. Use in templates
 
@@ -109,8 +127,10 @@ npm run build
 - [ ] Extends `Component<T>` with typed props interface
 - [ ] `render()` is pure — no side effects
 - [ ] All user text through `this.escapeHtml()`
-- [ ] Tag registered in `tag-engine.ts` with import
-- [ ] `TemplateContext` extended if new data needed
+- [ ] Tag registered in `tag-engine.ts` reading props from `ctx.frontmatter`
+- [ ] No hardcoded data in tag-engine — content files drive data
+- [ ] `TemplateContext` extended only if site-wide data needed
+- [ ] Content file has structured YAML matching component props
 - [ ] Tag placed in template with `{{#if}}` guard if optional
 - [ ] `npm run test:run` passes
 - [ ] `npm run build` succeeds

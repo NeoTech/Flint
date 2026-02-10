@@ -14,7 +14,8 @@ Complete list of `{{tag}}` placeholders available in templates.
 | `{{blog-header}}` | Article header: category pill, title, byline, reading time, labels |
 | `{{gadget}}` | Interactive demo widget (from `Gadget` component) |
 | `{{cart}}` | Shopping cart widget, hydrated client-side (from `Cart` component) |
-| `{{product}}` | Demo product card with Add-to-Cart (from `Product` component) |
+| `{{product}}` | Product card — reads `Short-URI`, `PriceCents`, `Description`, `Image` from frontmatter |
+| `{{skill-cards}}` | Skill info card grid — reads `Skills` array from frontmatter |
 
 ## Scalar Tags (resolve to plain text)
 
@@ -48,3 +49,16 @@ Renders the inner block only when the tag resolves to non-empty output. Use for 
 ## Adding New Tags
 
 To add a custom tag, create a component and register it in `src/templates/tag-engine.ts`. See the `add-component` skill.
+
+## Data-Driven Tags
+
+Some tags read their data from the page's frontmatter rather than using hardcoded values:
+
+| Tag | Frontmatter fields read |
+|-----|------------------------|
+| `{{product}}` | `Short-URI`, `PriceCents`, `Description`, `Image`, `title` |
+| `{{skill-cards}}` | `Skills` (array of `{ name, icon, description, tags, color }`) |
+
+These tags return `''` when the required frontmatter is missing, so `{{#if}}` guards work correctly. Pages without the data simply skip the component.
+
+**Rule:** Content files provide data, templates provide structure, components provide presentation. Never hardcode content data in tag-engine switch cases.
