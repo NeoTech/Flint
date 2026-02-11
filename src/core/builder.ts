@@ -176,12 +176,11 @@ export class SiteBuilder {
             : (processed.data.keywords as string | undefined));
 
       const basePath = process.env.BASE_PATH || '';
-      const rewrittenContent = rewriteAbsolutePaths(processed.html, basePath);
 
       // Build template context
       const context: TemplateContext = {
         title,
-        content: rewrittenContent,
+        content: processed.html,
         description: description || '',
         keywords: keywords || '',
         basePath,
@@ -199,7 +198,10 @@ export class SiteBuilder {
 
       // Render with the selected template (fall back to 'default' if not found)
       const resolvedTemplate = this.templateRegistry.has(templateName) ? templateName : 'default';
-      const pageHtml = this.templateRegistry.render(resolvedTemplate, context);
+      const renderedHtml = this.templateRegistry.render(resolvedTemplate, context);
+
+      // Rewrite absolute paths in the full page (content + component + template links)
+      const pageHtml = rewriteAbsolutePaths(renderedHtml, basePath);
 
       // Write output file
       const outputPath = join(this.config.outputDir, processed.outputPath);
@@ -417,7 +419,8 @@ export class SiteBuilder {
         type: 'page',
       };
 
-      const pageHtml = this.templateRegistry.render('default', labelContext);
+      const renderedHtml = this.templateRegistry.render('default', labelContext);
+      const pageHtml = rewriteAbsolutePaths(renderedHtml, basePath);
 
       const outputPath = join(this.config.outputDir, 'label', slug, 'index.html');
       mkdirSync(dirname(outputPath), { recursive: true });

@@ -50,6 +50,7 @@ describe('SiteBuilder', () => {
   });
 
   afterEach(() => {
+    delete process.env.BASE_PATH;
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -420,6 +421,76 @@ title: About Us
 
       expect(existsSync(join(outputDir, 'robots.txt'))).toBe(false);
       expect(existsSync(join(outputDir, 'sitemap.xml'))).toBe(false);
+    });
+  });
+
+  describe('BASE_PATH rewriting', () => {
+    it('should rewrite absolute paths in content when BASE_PATH is set', async () => {
+      process.env.BASE_PATH = '/Flint';
+      writeFileSync(join(contentDir, 'index.md'), '---\ntitle: Home\n---\n[About](/about)');
+      await builder.build();
+
+      const html = readFileSync(join(outputDir, 'index.html'), 'utf-8');
+      expect(html).toContain('href="/Flint/about"');
+      expect(html).not.toContain('href="/about"');
+    });
+
+    it('should rewrite absolute paths rendered outside content (e.g. component output)', async () => {
+      process.env.BASE_PATH = '/Flint';
+      // Template with a hardcoded link outside {{content}} — simulates component-rendered links
+      writeFileSync(join(templatesDir, 'with-link.html'), [
+        '{{head}}',
+        '<body>',
+        '  <a href="/showcase">Showcase</a>',
+        '  <a href="/shop">Shop</a>',
+        '  <main>{{content}}</main>',
+        '  {{foot-scripts}}',
+        '</body>',
+        '</html>',
+      ].join('\n'));
+      writeFileSync(join(contentDir, 'index.md'), '---\ntitle: Home\nShort-URI: home\nTemplate: with-link\n---\n# Home');
+      // Rebuild builder so it picks up the new template
+      const freshBuilder = new SiteBuilder({
+        contentDir,
+        outputDir,
+        templatesDir,
+        navigation: [{ label: 'Home', href: '/' }],
+      });
+      await freshBuilder.build();
+
+      const html = readFileSync(join(outputDir, 'index.html'), 'utf-8');
+      expect(html).toContain('href="/Flint/showcase"');
+      expect(html).toContain('href="/Flint/shop"');
+      expect(html).not.toContain('href="/showcase"');
+      expect(html).not.toContain('href="/shop"');
+    });
+
+    it('should not double-prefix paths that already contain BASE_PATH', async () => {
+      process.env.BASE_PATH = '/Flint';
+      writeFileSync(join(contentDir, 'index.md'), '---\ntitle: Home\n---\n[Already](/Flint/about)');
+      await builder.build();
+
+      const html = readFileSync(join(outputDir, 'index.html'), 'utf-8');
+      expect(html).toContain('href="/Flint/about"');
+      expect(html).not.toContain('href="/Flint/Flint/about"');
+    });
+
+    it('should not rewrite external URLs', async () => {
+      process.env.BASE_PATH = '/Flint';
+      writeFileSync(join(contentDir, 'index.md'), '---\ntitle: Home\n---\n[External](https://example.com/page)');
+      await builder.build();
+
+      const html = readFileSync(join(outputDir, 'index.html'), 'utf-8');
+      expect(html).toContain('href="https://example.com/page"');
+    });
+
+    it('should leave paths unchanged when BASE_PATH is empty', async () => {
+      process.env.BASE_PATH = '';
+      writeFileSync(join(contentDir, 'index.md'), '---\ntitle: Home\n---\n[About](/about)');
+      await builder.build();
+
+      const html = readFileSync(join(outputDir, 'index.html'), 'utf-8');
+      expect(html).toContain('href="/about"');
     });
   });
 });
