@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/HTMX-2.0-3366CC?logo=htmx&logoColor=white" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vitest-397_tests-6E9F18?logo=vitest&logoColor=white" />
+  <img src="https://img.shields.io/badge/Bun_test-401_tests-f472b6?logo=bun&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-yellow" />
 </p>
 
@@ -23,7 +23,7 @@ Most static site generators make you choose: **simple but ugly**, or **pretty bu
 | "I need a framework for interactivity" | HTMX gives you dynamic behavior **from HTML attributes** — no JS framework required |
 | "SSGs are hard to customize" | Component-driven architecture with a clean `Component<T>` base class |
 | "Markdown is too limited" | Extended frontmatter with categories, labels, hierarchy, ordering — your content is structured data |
-| "Testing is an afterthought" | **397 tests** baked in from day one. Every module has co-located test files |
+| "Testing is an afterthought" | **401 tests** baked in from day one. Every module has co-located test files |
 | "Build tools are a nightmare" | Rspack builds in **under 100ms**. Hot reload included |
 
 ---
@@ -188,7 +188,7 @@ No virtual DOM. No hydration. No runtime overhead. Just strings.
 
 ## 🧪 Test-First, Always
 
-Every module ships with co-located tests. 29 test files, 397 assertions, all green.
+Every module ships with co-located tests. 30 test files, 401 assertions, all green.
 
 ```bash
 # Run tests once
@@ -217,7 +217,7 @@ bun run lint
 | **Interactivity** | HTMX 2.0 | Dynamic HTML without a JS framework |
 | **Styling** | Tailwind CSS 3.4 | Utility-first, zero unused CSS in prod |
 | **Bundler** | Rspack | Rust-powered builds — 5-10x faster than Webpack |
-| **Testing** | Vitest + happy-dom | Lightning-fast unit tests with DOM support |
+| **Testing** | Bun test runner + happy-dom | Lightning-fast unit tests with DOM support |
 | **Linting** | ESLint + @typescript-eslint | Consistent code quality |
 
 **Production dependencies: 3.** That's not a typo.

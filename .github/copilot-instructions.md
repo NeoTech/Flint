@@ -30,8 +30,8 @@ A **TypeScript static site generator** that compiles Markdown files into HTML pa
 |---------|---------|
 | `bun run build` | Compile content/ → dist/ |
 | `bun run dev` | Dev server on port 3000 with HMR |
-| `bun run test:run` | Vitest once |
-| `bun run test` | Vitest watch |
+| `bun run test:run` | Run all tests once |
+| `bun run test` | Test watch mode |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint |
 
@@ -124,5 +124,5 @@ When a user provides an **image, URL, or description** and asks you to build a s
 
 - **TypeScript**: strict mode, `.js` imports, `interface` over `type`, no `any`, explicit return types
 - **CSS**: Tailwind utility classes only
-- **Testing**: Vitest + happy-dom, co-located `*.test.ts`, test-first
+- **Testing**: Bun test runner + happy-dom, co-located `*.test.ts`, test-first
 - **HTML**: Semantic elements, ARIA labels, `escapeHtml()` on all user strings

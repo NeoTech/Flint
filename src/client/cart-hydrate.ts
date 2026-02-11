@@ -13,10 +13,14 @@ type ProductMeta = {
 
 let _productIndex: Record<string, ProductMeta> | null = null;
 
+function getBasePath(): string {
+  return document.querySelector('meta[name="base-path"]')?.getAttribute('content') || '';
+}
+
 async function loadProductIndex(): Promise<Record<string, ProductMeta>> {
   if (_productIndex) return _productIndex;
   try {
-    const res = await fetch('/static/products/index.json');
+    const res = await fetch(`${getBasePath()}/static/products/index.json`);
     _productIndex = res.ok ? await res.json() : {};
   } catch {
     _productIndex = {};

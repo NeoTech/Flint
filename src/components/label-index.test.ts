@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { LabelIndex, type LabelIndexProps } from './label-index.js';
 
 describe('LabelIndex', () => {

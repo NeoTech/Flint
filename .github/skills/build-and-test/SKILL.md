@@ -1,6 +1,6 @@
 ---
 name: build-and-test
-description: Build the Flint static site and run tests. Use when compiling Markdown to HTML, running Vitest tests, type-checking, linting, or debugging build/test issues.
+description: Build the Flint static site and run tests. Use when compiling Markdown to HTML, running Bun tests, type-checking, linting, or debugging build/test issues.
 ---
 
 # Build and Test
@@ -10,7 +10,7 @@ Core commands for building the site, running tests, and checking code quality.
 ## When to Use
 
 - After creating or editing content, templates, or components
-- Running or writing Vitest tests
+- Running or writing tests
 - Checking TypeScript types or linting
 - Debugging build or test failures
 
@@ -20,8 +20,8 @@ Core commands for building the site, running tests, and checking code quality.
 |---------|---------|
 | `bun run build` | Compile all Markdown → HTML in `dist/` |
 | `bun run dev` | Start Rspack dev server on port 3000 with HMR |
-| `bun run test:run` | Run all Vitest tests once |
-| `bun run test` | Run Vitest in watch mode |
+| `bun run test:run` | Run all tests once |
+| `bun run test` | Run tests in watch mode |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint |
 
@@ -64,10 +64,10 @@ src/core/
 
 ## Writing Tests
 
-Use Vitest with the `happy-dom` environment:
+Use Bun test with the `happy-dom` environment:
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { MyClass } from './my-class.js';
 
 describe('MyClass', () => {

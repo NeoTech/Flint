@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 
 /**
  * db.ts relies on window.indexedDB (browser API).
@@ -38,7 +38,7 @@ function createMockIDB() {
 
   const mockDB = {
     objectStoreNames: { contains: () => true },
-    createObjectStore: vi.fn(),
+    createObjectStore: mock(() => {}),
     transaction: (stores: string[]) => ({
       objectStore: (name: string) => mockObjectStore(name),
     }),
@@ -64,10 +64,8 @@ beforeEach(() => {
   memStore.secrets = {};
 
   // Provide window.indexedDB mock
-  Object.defineProperty(globalThis, 'window', {
-    value: {
-      indexedDB: createMockIDB(),
-    },
+  Object.defineProperty(window, 'indexedDB', {
+    value: createMockIDB(),
     writable: true,
     configurable: true,
   });

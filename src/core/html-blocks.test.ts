@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { extractHtmlBlocks, restoreHtmlBlocks } from './html-blocks.js';
 
 describe('HTML Blocks', () => {

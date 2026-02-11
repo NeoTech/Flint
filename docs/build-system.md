@@ -5,7 +5,7 @@ Flint has two build pipelines that work together:
 1. **Site build** (`bun run build`) — Bun script that compiles Markdown → HTML
 2. **Asset build** (`bun run dev`) — Rspack that bundles TypeScript + CSS for the browser
 
-**Runtime:** [Bun](https://bun.sh) — used for package management (`bun install`), running build scripts (native TypeScript execution, no `tsx` needed), and launching Vitest/Rspack.
+**Runtime:** [Bun](https://bun.sh) — used for package management (`bun install`), running build scripts (native TypeScript execution, no `tsx` needed), and launching Rspack.
 
 ## Commands
 
@@ -13,8 +13,8 @@ Flint has two build pipelines that work together:
 |---|---|---|
 | `bun run build` | Compile all Markdown to `dist/` + copy static assets | Before deploying |
 | `bun run dev` | Start Rspack dev server with HMR on port 3000 | During development |
-| `bun run test` | Run Vitest in watch mode | While writing code |
-| `bun run test:run` | Run Vitest once | Before committing |
+| `bun run test` | Run tests in watch mode | While writing code |
+| `bun run test:run` | Run all tests once | Before committing |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) | Before committing |
 | `bun run lint` | ESLint check | Before committing |
 | `bun run lint:fix` | ESLint auto-fix | To clean up |
@@ -208,11 +208,11 @@ The `static/` directory is copied verbatim to `dist/` during build. Use it for:
 
 ## Testing
 
-**Framework:** Vitest with happy-dom environment
+**Framework:** Bun test runner with happy-dom environment
 
 ```
-29 test files
-397 tests
+30 test files
+401 tests
 Co-located: every *.ts module has a matching *.test.ts
 ```
 
@@ -221,7 +221,7 @@ Tests run in happy-dom (a lightweight DOM implementation) so components that use
 ### Test structure
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 
 describe('ModuleName', () => {
   it('should do the expected thing', () => {

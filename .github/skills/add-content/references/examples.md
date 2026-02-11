@@ -143,7 +143,7 @@ Skills:
   - name: build-and-test
     icon: 🧪
     description: Build and run tests.
-    tags: [vitest, typecheck]
+    tags: [bun test, typecheck]
     color: amber
 ---
 

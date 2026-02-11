@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { resolveTag, isTagTruthy, processTemplate, estimateReadingTime, formatDate } from './tag-engine.js';
 import type { TemplateContext } from './template-registry.js';
 
@@ -404,7 +404,7 @@ describe('resolveTag – product', () => {
 describe('resolveTag – skill-cards', () => {
   const skillsData = [
     { name: 'add-content', icon: '📝', description: 'Create content pages.', tags: ['frontmatter'], color: 'green' },
-    { name: 'build-and-test', icon: '🧪', description: 'Build and test.', tags: ['vitest'], color: 'amber' },
+    { name: 'build-and-test', icon: '🧪', description: 'Build and test.', tags: ['bun test'], color: 'amber' },
   ];
 
   it('should render skill cards from frontmatter Skills array', () => {

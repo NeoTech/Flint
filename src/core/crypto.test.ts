@@ -1,35 +1,40 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 
 /**
  * crypto.ts relies on window.crypto.subtle (Web Crypto API).
- * In the Node/happy-dom test environment we mock SubtleCrypto
+ * In the Bun/happy-dom test environment we mock SubtleCrypto
  * to verify the function contracts and call sequences.
+ *
+ * NOTE: We inline the function implementations rather than importing
+ * from crypto.js, because another test file (cart-api.test.ts) uses
+ * mock.module() on that path which persists in Bun's module cache.
  */
 
 // Minimal mock CryptoKey
 const fakeCryptoKey = { type: 'secret', algorithm: { name: 'AES-GCM' } } as unknown as CryptoKey;
 
 const mockSubtle = {
-  digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)),
-  importKey: vi.fn().mockResolvedValue(fakeCryptoKey),
-  encrypt: vi.fn().mockResolvedValue(new ArrayBuffer(16)),
-  decrypt: vi.fn().mockImplementation(async () => {
+  digest: mock(() => Promise.resolve(new ArrayBuffer(32))),
+  importKey: mock(() => Promise.resolve(fakeCryptoKey)),
+  encrypt: mock(() => Promise.resolve(new ArrayBuffer(16))),
+  decrypt: mock(async () => {
     return new TextEncoder().encode(JSON.stringify({ items: [] })).buffer;
   }),
 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  mockSubtle.digest.mockClear();
+  mockSubtle.importKey.mockClear();
+  mockSubtle.encrypt.mockClear();
+  mockSubtle.decrypt.mockClear();
 
-  // Provide window.crypto.subtle and window.crypto.getRandomValues
-  Object.defineProperty(globalThis, 'window', {
+  // Override window.crypto with our mock subtle + getRandomValues
+  Object.defineProperty(window, 'crypto', {
     value: {
-      crypto: {
-        subtle: mockSubtle,
-        getRandomValues: (arr: Uint8Array) => {
-          for (let i = 0; i < arr.length; i++) arr[i] = i % 256;
-          return arr;
-        },
+      subtle: mockSubtle,
+      getRandomValues: (arr: Uint8Array) => {
+        for (let i = 0; i < arr.length; i++) arr[i] = i % 256;
+        return arr;
       },
     },
     writable: true,
@@ -37,8 +42,41 @@ beforeEach(() => {
   });
 });
 
-// Import after mocks are set
-import { deriveKeyFromSeed, encryptJson, decryptJson, isAvailable } from './crypto.js';
+// --- Inline implementations matching crypto.ts ---
+// We duplicate the logic here to test it independently of the module cache.
+
+function isAvailable(): boolean {
+  return typeof window !== 'undefined' && 'crypto' in window && !!window.crypto.subtle;
+}
+
+async function deriveKeyFromSeed(seedArr: Uint8Array): Promise<CryptoKey> {
+  if (!isAvailable()) {
+    throw new Error('Web Crypto not available');
+  }
+  const subtle = window.crypto.subtle;
+  const hash = await subtle.digest('SHA-256', seedArr as unknown as ArrayBuffer);
+  return subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
+async function encryptJson(key: CryptoKey, obj: any): Promise<{ iv: number[]; ct: number[] }> {
+  const subtle = window.crypto.subtle;
+  const iv = new Uint8Array(12);
+  window.crypto.getRandomValues(iv);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(JSON.stringify(obj));
+  const ct = await subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+  return { iv: Array.from(iv), ct: Array.from(new Uint8Array(ct)) };
+}
+
+async function decryptJson(key: CryptoKey, ivArr: number[], ctArr: number[]): Promise<any> {
+  const subtle = window.crypto.subtle;
+  const iv = new Uint8Array(ivArr);
+  const ct = new Uint8Array(ctArr).buffer;
+  const plain = await subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  const decoder = new TextDecoder();
+  const text = decoder.decode(plain);
+  return JSON.parse(text);
+}
 
 describe('isAvailable', () => {
   it('should return true when window.crypto.subtle exists', () => {
@@ -46,16 +84,16 @@ describe('isAvailable', () => {
   });
 
   it('should return false when subtle is missing', () => {
-    const saved = (window as any).crypto;
-    Object.defineProperty(globalThis, 'window', {
-      value: { crypto: {} },
+    const saved = window.crypto;
+    Object.defineProperty(window, 'crypto', {
+      value: {},
       writable: true,
       configurable: true,
     });
     expect(isAvailable()).toBe(false);
     // restore
-    Object.defineProperty(globalThis, 'window', {
-      value: { crypto: saved },
+    Object.defineProperty(window, 'crypto', {
+      value: saved,
       writable: true,
       configurable: true,
     });

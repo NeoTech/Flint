@@ -36,8 +36,8 @@ Skills:
     color: purple
   - name: build-and-test
     icon: 🧪
-    description: Build the site, run Vitest tests, type-check, and lint. The core development loop for compiling Markdown to HTML.
-    tags: [bun run build, vitest, typecheck]
+    description: Build the site, run tests, type-check, and lint. The core development loop for compiling Markdown to HTML.
+    tags: [bun run build, bun test, typecheck]
     color: amber
   - name: create-skill
     icon: 📚

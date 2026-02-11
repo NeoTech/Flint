@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { generateSitemap, generateRobotsTxt } from './seo.js';
 import type { PageIndexEntry } from './page-index.js';
 

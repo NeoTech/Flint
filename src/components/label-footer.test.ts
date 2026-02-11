@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { LabelFooter } from './label-footer.js';
 
 describe('LabelFooter', () => {

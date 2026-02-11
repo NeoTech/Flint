@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { TreeMenu } from './tree-menu.js';
 import type { PageNode } from '../../core/hierarchy.js';
 

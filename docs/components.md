@@ -323,7 +323,7 @@ Some components receive their props from **page frontmatter** rather than hardco
 
 ```typescript
 // src/components/alert.test.ts
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { Alert } from './alert.js';
 
 describe('Alert', () => {

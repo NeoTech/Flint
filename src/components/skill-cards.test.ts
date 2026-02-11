@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { SkillCards } from './skill-cards.js';
 
 describe('SkillCards', () => {
@@ -15,7 +15,7 @@ describe('SkillCards', () => {
         name: 'build-and-test',
         icon: '🧪',
         description: 'Build the site and run tests.',
-        tags: ['vitest', 'npm run build'],
+        tags: ['bun test', 'bun run build'],
         color: 'amber' as const,
       },
     ],
@@ -43,7 +43,7 @@ describe('SkillCards', () => {
     const html = SkillCards.render(defaultProps);
     expect(html).toContain('frontmatter');
     expect(html).toContain(':::children');
-    expect(html).toContain('vitest');
+    expect(html).toContain('bun test');
   });
 
   it('should render color-coded tag badges', () => {

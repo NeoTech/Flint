@@ -455,7 +455,7 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
 
 ### `src/test/setup.ts`
 
-**Purpose:** Vitest test environment setup (happy-dom configuration).
+**Purpose:** Bun test environment setup (happy-dom configuration).
 
 ---
 

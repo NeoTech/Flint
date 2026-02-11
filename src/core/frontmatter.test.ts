@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { parseFrontmatter, stringifyFrontmatter, type FrontmatterData } from './frontmatter.js';
 
 describe('Frontmatter Parser', () => {

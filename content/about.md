@@ -30,7 +30,7 @@ This static site generator demonstrates a modern approach to building websites:
 | Markdown | Content authoring |
 | HTMX | Dynamic interactions |
 | Tailwind CSS | Styling |
-| Vitest | Testing |
+| Bun test | Testing |
 
 ## Architecture
 
@@ -47,7 +47,7 @@ The project follows a **test-first, component-driven** architecture:
 Write Test → Implement → Pass Test → Refactor → Commit
 ```
 
-All features are developed test-first using Vitest.
+All features are developed test-first using Bun test.
 
 ## HTMX on a Static Site
 
