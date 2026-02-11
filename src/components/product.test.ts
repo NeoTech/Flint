@@ -87,3 +87,72 @@ describe('Product', () => {
     expect(html).toContain('featured');
   });
 });
+
+describe('Product detail view', () => {
+  const detailProps = {
+    id: 'blue-mug',
+    title: 'Blue Ceramic Mug',
+    price: '$12.00',
+    description: 'A beautiful hand-crafted ceramic mug.',
+    image: '☕',
+    detail: true,
+  };
+
+  it('should render a detail layout when detail=true', () => {
+    const html = Product.render(detailProps);
+    expect(html).toContain('product-detail');
+    expect(html).not.toContain('product-card');
+  });
+
+  it('should render a large image/emoji area', () => {
+    const html = Product.render(detailProps);
+    expect(html).toContain('text-8xl');
+    expect(html).toContain('☕');
+  });
+
+  it('should render an image tag for URL images in detail view', () => {
+    const html = Product.render({ ...detailProps, image: '/img/mug.jpg' });
+    expect(html).toContain('<img');
+    expect(html).toContain('/img/mug.jpg');
+  });
+
+  it('should render a stock badge', () => {
+    const html = Product.render(detailProps);
+    expect(html).toContain('In Stock');
+  });
+
+  it('should render the price prominently', () => {
+    const html = Product.render(detailProps);
+    expect(html).toContain('$12.00');
+    expect(html).toContain('text-3xl');
+  });
+
+  it('should render the description', () => {
+    const html = Product.render(detailProps);
+    expect(html).toContain('A beautiful hand-crafted ceramic mug.');
+  });
+
+  it('should render Add to Cart button with correct data attributes', () => {
+    const html = Product.render(detailProps);
+    expect(html).toContain('flint-add-to-cart');
+    expect(html).toContain('data-id="blue-mug"');
+    expect(html).toContain('data-qty="1"');
+  });
+
+  it('should escape HTML in detail view', () => {
+    const html = Product.render({
+      ...detailProps,
+      title: '<script>xss</script>',
+      description: '<img onerror=alert(1)>',
+    });
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).not.toContain('<img onerror');
+  });
+
+  it('should render card view when detail is false', () => {
+    const html = Product.render({ ...detailProps, detail: false });
+    expect(html).toContain('product-card');
+    expect(html).not.toContain('product-detail');
+  });
+});

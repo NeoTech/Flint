@@ -23,7 +23,7 @@
  *   {{label-badges}}   — label badges HTML
  *   {{gadget}}         — interactive demo widget
  *   {{cart}}           — shopping cart widget (hydrated client-side)
- *   {{product}}        — product card from frontmatter (PriceCents, Image, Description)
+ *   {{product}}        — product card or detail hero from frontmatter (auto-detects mode from Template)
  *   {{skill-cards}}    — grid of skill info cards from frontmatter Skills array
  */
 
@@ -169,8 +169,9 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
         : '';
       const image = (fm['Image'] ?? '') as string;
       const description = (fm['Description'] ?? '') as string;
+      const detail = (fm['Template'] ?? '') === 'product-detail';
       if (!id) return '';
-      return Product.render({ id, title: ctx.title, price, description, image: image || undefined });
+      return Product.render({ id, title: ctx.title, price, description, image: image || undefined, detail });
     }
 
     case 'cart':
