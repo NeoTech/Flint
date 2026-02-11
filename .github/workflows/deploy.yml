@@ -40,7 +40,7 @@ jobs:
 
       - run: bun run build
 
-      - run: bunx rspack build --mode production
+      - run: bunx --bun rspack build --mode production
 
       - uses: actions/upload-pages-artifact@v3
         with:
