@@ -85,7 +85,7 @@ See `references/directives.md` for full options and placeholders.
 ### 5. Build
 
 ```bash
-npm run build
+bun run build
 ```
 
 ## Constraints

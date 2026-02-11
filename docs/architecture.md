@@ -244,9 +244,9 @@ Flint generates static HTML. HTMX adds interactivity by loading HTML fragments o
 
 ### Why Rspack?
 
-Rspack handles the **browser bundle** (Tailwind CSS + HTMX JS). The **site build** uses Node.js directly via `tsx`. This separation means:
-- `npm run build` → Node.js compiles Markdown → HTML (fast, no bundler overhead)
-- `npm run dev` → Rspack serves `dist/` with HMR for CSS/JS changes
+Rspack handles the **browser bundle** (Tailwind CSS + HTMX JS). The **site build** uses Bun to run TypeScript directly. This separation means:
+- `bun run build` → Bun compiles Markdown → HTML (fast, native TS execution)
+- `bun run dev` → Rspack serves `dist/` with HMR for CSS/JS changes
 
 ### Why co-located tests?
 

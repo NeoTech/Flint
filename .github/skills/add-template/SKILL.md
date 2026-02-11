@@ -79,7 +79,7 @@ Set `Template: <name>` in content frontmatter files that should use this layout.
 ### 6. Build
 
 ```bash
-npm run build
+bun run build
 ```
 
 ## Constraints

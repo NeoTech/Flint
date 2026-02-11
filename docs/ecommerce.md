@@ -79,7 +79,7 @@ Product detail content goes here...
 
 ### 2. The build does the rest
 
-Running `npm run build` will:
+Running `bun run build` will:
 - Render the product detail page to `dist/shop/blue-mug/index.html`
 - Include it in the shop listing via `:::children type=product`
 - Auto-generate `dist/static/products/index.json` with all product metadata
@@ -182,14 +182,14 @@ it('builds correct lineItems from cart + product index', () => {
 });
 ```
 
-Run with: `npm run test:run`
+Run with: `bun run test:run`
 
 ### Level 2 — Test mode (real browser, fake money)
 
 1. Set `stripePublishableKey` to your `pk_test_...` key
 2. Set `StripePriceId` in product frontmatter to real Stripe test Price IDs
-3. Build and start the dev server: `npm run build && npm run dev`
-4. Open `http://localhost:8080/shop`
+3. Build and start the dev server: `bun run build && bun run dev`
+4. Open `http://localhost:3000/shop`
 5. Add a product to cart, then click **Checkout**
 6. Stripe redirects to its hosted checkout page
 7. Use a test card number:
@@ -210,7 +210,7 @@ Use any future expiry date and any 3-digit CVC.
 
 ```yaml
 - name: Build site
-  run: npm run build
+  run: bun run build
   env:
     STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
 ```

@@ -117,8 +117,8 @@ Add `{{my-tag}}` to `templates/*.html`. Guard optional tags:
 ### 6. Run tests and build
 
 ```bash
-npm run test:run
-npm run build
+bun run test:run
+bun run build
 ```
 
 ## Checklist
@@ -132,8 +132,8 @@ npm run build
 - [ ] `TemplateContext` extended only if site-wide data needed
 - [ ] Content file has structured YAML matching component props
 - [ ] Tag placed in template with `{{#if}}` guard if optional
-- [ ] `npm run test:run` passes
-- [ ] `npm run build` succeeds
+- [ ] `bun run test:run` passes
+- [ ] `bun run build` succeeds
 
 ## References
 

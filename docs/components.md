@@ -379,7 +379,7 @@ export class Alert extends Component<AlertProps> {
 ### 3. Run tests
 
 ```bash
-npm run test:run
+bun run test:run
 ```
 
 ## Principles

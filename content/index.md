@@ -68,8 +68,8 @@ Add dynamic behavior with HTMX attributes:
 ## Getting Started
 
 1. Edit this file in `content/index.md`
-2. Run `npm run dev` to start the dev server
-3. Run `npm run build` to generate the static site
+2. Run `bun run dev` to start the dev server
+3. Run `bun run build` to generate the static site
 
 ## Navigation
 

@@ -37,7 +37,7 @@ Skills:
   - name: build-and-test
     icon: 🧪
     description: Build the site, run Vitest tests, type-check, and lint. The core development loop for compiling Markdown to HTML.
-    tags: [npm run build, vitest, typecheck]
+    tags: [bun run build, vitest, typecheck]
     color: amber
   - name: create-skill
     icon: 📚

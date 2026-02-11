@@ -51,12 +51,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run test:run
-      - run: npm run build
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test:run
+      - run: bun run build
 ```
 
 ## Common Issues
@@ -67,4 +67,4 @@ jobs:
 | `EADDRINUSE` | Port 3000 already in use | Server already running, don't restart |
 | Hot reload broken | File not in watched directory | Hard refresh (Ctrl+F5), check console |
 | Async test fails | Missing `await` | Ensure async operations are awaited |
-| Build output stale | Forgot to rebuild | Run `npm run build` |
+| Build output stale | Forgot to rebuild | Run `bun run build` |

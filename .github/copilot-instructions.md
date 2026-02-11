@@ -9,7 +9,7 @@
 - **Never open a new terminal** if there is already an agent-controlled terminal open. Reuse the existing terminal.
 - **EADDRINUSE error**: Inform the user the server is already running. Do **not** kill the process.
 - **Test-first**: Always write or update tests before implementing features.
-- **Build after changes**: Run `npm run build` after content or code changes.
+- **Build after changes**: Run `bun run build` after content or code changes.
 
 ---
 
@@ -28,12 +28,12 @@ A **TypeScript static site generator** that compiles Markdown files into HTML pa
 
 | Command | Purpose |
 |---------|---------|
-| `npm run build` | Compile content/ → dist/ |
-| `npm run dev` | Dev server on port 3000 with HMR |
-| `npm run test:run` | Vitest once |
-| `npm run test` | Vitest watch |
-| `npm run typecheck` | TypeScript type checking |
-| `npm run lint` | ESLint |
+| `bun run build` | Compile content/ → dist/ |
+| `bun run dev` | Dev server on port 3000 with HMR |
+| `bun run test:run` | Vitest once |
+| `bun run test` | Vitest watch |
+| `bun run typecheck` | TypeScript type checking |
+| `bun run lint` | ESLint |
 
 ---
 
@@ -116,7 +116,7 @@ When a user provides an **image, URL, or description** and asks you to build a s
 5. **Use `:::children`** for section indexes, `:::html` for custom HTML, HTMX syntax for dynamic links
 6. **Create components** only if reusable UI doesn't exist yet (use `add-component` skill)
 7. **Write tests** for any new TypeScript code
-8. **Build and verify**: `npm run build && npm run test:run`
+8. **Build and verify**: `bun run build && bun run test:run`
 
 ---
 

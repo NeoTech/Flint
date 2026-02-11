@@ -2,27 +2,29 @@
 
 Flint has two build pipelines that work together:
 
-1. **Site build** (`npm run build`) — Node.js script that compiles Markdown → HTML
-2. **Asset build** (`npm run dev`) — Rspack that bundles TypeScript + CSS for the browser
+1. **Site build** (`bun run build`) — Bun script that compiles Markdown → HTML
+2. **Asset build** (`bun run dev`) — Rspack that bundles TypeScript + CSS for the browser
+
+**Runtime:** [Bun](https://bun.sh) — used for package management (`bun install`), running build scripts (native TypeScript execution, no `tsx` needed), and launching Vitest/Rspack.
 
 ## Commands
 
 | Command | What it does | When to use |
 |---|---|---|
-| `npm run build` | Compile all Markdown to `dist/` + copy static assets | Before deploying |
-| `npm run dev` | Start Rspack dev server with HMR on port 3000 | During development |
-| `npm run test` | Run Vitest in watch mode | While writing code |
-| `npm run test:run` | Run Vitest once | Before committing |
-| `npm run typecheck` | TypeScript type checking (`tsc --noEmit`) | Before committing |
-| `npm run lint` | ESLint check | Before committing |
-| `npm run lint:fix` | ESLint auto-fix | To clean up |
+| `bun run build` | Compile all Markdown to `dist/` + copy static assets | Before deploying |
+| `bun run dev` | Start Rspack dev server with HMR on port 3000 | During development |
+| `bun run test` | Run Vitest in watch mode | While writing code |
+| `bun run test:run` | Run Vitest once | Before committing |
+| `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) | Before committing |
+| `bun run lint` | ESLint check | Before committing |
+| `bun run lint:fix` | ESLint auto-fix | To clean up |
 
 ## Site Build Pipeline
 
 **Entry point:** `scripts/build.ts`  
 **Engine:** `src/core/builder.ts` → `SiteBuilder`
 
-### What happens during `npm run build`
+### What happens during `bun run build`
 
 ```
 1. Create SiteBuilder with config
@@ -176,10 +178,10 @@ historyApiFallback: {
 
 ```bash
 # Terminal 1: Build the site from Markdown
-npm run build
+bun run build
 
 # Terminal 2: Start the dev server (serves dist/ with HMR for CSS/JS)
-npm run dev
+bun run dev
 
 # Terminal 3 (optional): Expose via ngrok
 ngrok http 3000
@@ -188,7 +190,7 @@ ngrok http 3000
 ### Making content changes
 
 1. Edit a `.md` file in `content/`
-2. Run `npm run build` to regenerate `dist/`
+2. Run `bun run build` to regenerate `dist/`
 3. The dev server serves the new HTML immediately (static file serving)
 
 ### Making style/JS changes

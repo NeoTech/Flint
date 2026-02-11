@@ -18,12 +18,12 @@ Core commands for building the site, running tests, and checking code quality.
 
 | Command | Purpose |
 |---------|---------|
-| `npm run build` | Compile all Markdown → HTML in `dist/` |
-| `npm run dev` | Start Rspack dev server on port 3000 with HMR |
-| `npm run test:run` | Run all Vitest tests once |
-| `npm run test` | Run Vitest in watch mode |
-| `npm run typecheck` | TypeScript type checking |
-| `npm run lint` | ESLint |
+| `bun run build` | Compile all Markdown → HTML in `dist/` |
+| `bun run dev` | Start Rspack dev server on port 3000 with HMR |
+| `bun run test:run` | Run all Vitest tests once |
+| `bun run test` | Run Vitest in watch mode |
+| `bun run typecheck` | TypeScript type checking |
+| `bun run lint` | ESLint |
 
 ## Build Pipeline
 
@@ -34,23 +34,23 @@ Core commands for building the site, running tests, and checking code quality.
 5. **Assets** — copy `static/` files to `dist/`
 
 ```bash
-npm run build
+bun run build
 ```
 
 ## Running Tests
 
 ```bash
 # All tests once
-npm run test:run
+bun run test:run
 
 # Specific file
-npm run test:run -- src/core/frontmatter.test.ts
+bun run test:run -- src/core/frontmatter.test.ts
 
 # Pattern match
-npm run test:run -- -t "should parse"
+bun run test:run -- -t "should parse"
 
 # With coverage
-npm run test:run -- --coverage
+bun run test:run -- --coverage
 ```
 
 Tests are co-located with source files:
@@ -91,7 +91,7 @@ describe('MyClass', () => {
 ## Pre-commit Checklist
 
 ```bash
-npm run typecheck && npm run lint && npm run test:run
+bun run typecheck && bun run lint && bun run test:run
 ```
 
 All must pass before committing.
@@ -100,11 +100,11 @@ All must pass before committing.
 
 **Tests fail:**
 - Check imports use `.js` extension
-- Run single file to isolate: `npm run test:run -- src/core/specific.test.ts`
+- Run single file to isolate: `bun run test:run -- src/core/specific.test.ts`
 - Focus with `.only`: `describe.only(...)` or `it.only(...)`
 
 **Build fails:**
-- Run `npm run typecheck` to find type errors
+- Run `bun run typecheck` to find type errors
 - Check frontmatter syntax in content files
 - Verify `content/` directory exists
 

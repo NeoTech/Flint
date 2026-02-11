@@ -30,19 +30,33 @@ Most static site generators make you choose: **simple but ugly**, or **pretty bu
 
 ## 🚀 Get Started in 60 Seconds
 
+### Prerequisites
+
+Install [Bun](https://bun.sh) (fast JavaScript runtime & package manager):
+
+```bash
+# macOS / Linux
+curl -fsSL https://bun.sh/install | bash
+
+# Windows
+powershell -c "irm bun.sh/install.ps1 | iex"
+```
+
+### Setup
+
 ```bash
 # Clone the repo
 git clone https://github.com/your-username/flint.git
 cd flint
 
 # Install dependencies
-npm install
+bun install
 
 # Start the dev server with hot reload
-npm run dev
+bun run dev
 
 # Build the production site
-npm run build
+bun run build
 ```
 
 Your site is now in `dist/`. Deploy it anywhere — GitHub Pages, Netlify, Cloudflare, or a $5 VPS.
@@ -178,16 +192,16 @@ Every module ships with co-located tests. 29 test files, 397 assertions, all gre
 
 ```bash
 # Run tests once
-npm run test:run
+bun run test:run
 
 # Watch mode during development
-npm run test
+bun run test
 
 # Type-check without emitting
-npm run typecheck
+bun run typecheck
 
 # Lint
-npm run lint
+bun run lint
 ```
 
 ---
@@ -196,6 +210,7 @@ npm run lint
 
 | Layer | Tool | Why |
 |---|---|---|
+| **Runtime** | Bun | Fast installs, native TypeScript execution, no transpiler needed |
 | **Language** | TypeScript 5.7 (strict) | Type safety without compromise |
 | **Markdown** | Marked 15 | Fast, extensible, standards-compliant |
 | **Frontmatter** | gray-matter | Battle-tested YAML parsing |
@@ -213,13 +228,13 @@ npm run lint
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start dev server with hot reload (port 3000) |
-| `npm run build` | Generate production site to `dist/` |
-| `npm run test` | Run tests in watch mode |
-| `npm run test:run` | Run tests once |
-| `npm run typecheck` | TypeScript type checking |
-| `npm run lint` | ESLint check |
-| `npm run lint:fix` | ESLint auto-fix |
+| `bun run dev` | Start dev server with hot reload (port 3000) |
+| `bun run build` | Generate production site to `dist/` |
+| `bun run test` | Run tests in watch mode |
+| `bun run test:run` | Run tests once |
+| `bun run typecheck` | TypeScript type checking |
+| `bun run lint` | ESLint check |
+| `bun run lint:fix` | ESLint auto-fix |
 
 ---
 
