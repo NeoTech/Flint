@@ -34,7 +34,7 @@ Hero:
 Features:
   heading: "Everything you need. Nothing you don't."
   subtitle: "A complete toolkit for building production-ready static sites — batteries included."
-  features:
+  items:
     - icon: "⚡"
       title: Blazing Fast Builds
       description: "Full site compiles in under 200ms with Bun. Rspack bundles your assets at Rust speed."

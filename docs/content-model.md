@@ -52,7 +52,18 @@ Arbitrary YAML that drives **data-driven components**. Any key in frontmatter fl
 
 | Field | Type | Example | Used by |
 |---|---|---|---|
+| `Hero` | `CtaSectionProps` | See index.md | `{{hero}}` tag → CtaSection component (hero variant) |
+| `CTA` | `CtaSectionProps` | See index.md | `{{call-to-action}}` tag → CtaSection component (banner variant) |
+| `Features` | `CardGridProps` | See index.md | `{{feature-grid}}` tag → CardGrid component |
+| `Showcase` | `CardGridProps` | See index.md | `{{showcase-grid}}` tag → CardGrid component |
+| `Stats` | `StatsBarProps` | See index.md | `{{stats-bar}}` tag → StatsBar component |
 | `Skills` | `SkillInfo[]` | See agent.md | `{{skill-cards}}` tag → SkillCards component |
+
+**CtaSection props** (`Hero:` / `CTA:`): `heading`, `subtitle?`, `tagline?` (hero only), `primaryCta: { label, href }`, `secondaryCta?: { label, href }`.
+
+**CardGrid props** (`Features:` / `Showcase:`): `heading`, `subtitle?`, `items[]` where each item has `icon`, `title`, `description`, `href?`, `color?`.
+
+**StatsBar props** (`Stats:`): `stats[]` where each stat has `value`, `label`, `color`.
 
 The `Skills` array contains objects with: `name`, `icon`, `description`, `tags` (string[]), `color` (green\|blue\|purple\|amber\|gray\|rose\|teal).
 

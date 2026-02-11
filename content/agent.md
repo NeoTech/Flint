@@ -34,6 +34,11 @@ Skills:
     description: Create or edit reusable UI components — TypeScript classes extending Component<T> invoked via template tags.
     tags: ["Component<T>", escapeHtml, tag-engine]
     color: purple
+  - name: add-documentation
+    icon: 📖
+    description: Create or edit developer documentation — internal reference docs in docs/ that explain how the system works.
+    tags: [architecture, file-reference, content-model]
+    color: teal
   - name: build-and-test
     icon: 🧪
     description: Build the site, run tests, type-check, and lint. The core development loop for compiling Markdown to HTML.

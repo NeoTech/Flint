@@ -381,6 +381,59 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
 
 ---
 
+### `cta-section.ts`
+
+**Purpose:** Full-width gradient CTA section — hero or conversion banner variant.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `CtaSection` | class | Renders gradient section with heading, subtitle, and CTA buttons. `variant: 'hero'` for page heroes, `'banner'` for mid-page CTAs. |
+| `CtaSectionProps` | interface | `{ variant?, tagline?, heading, subtitle?, primaryCta, secondaryCta? }` |
+| `CtaButton` | interface | `{ label, href }` |
+
+**Used by:** `tag-engine.ts` (tags: `hero`, `call-to-action`)
+
+---
+
+### `card-grid.ts`
+
+**Purpose:** Responsive grid of icon cards — plain or linked, with optional coloured backgrounds.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `CardGrid` | class | Renders responsive grid. Cards with `href` become links; cards with `color` get coloured icon backgrounds. |
+| `CardGridProps` | interface | `{ heading, subtitle?, items: CardItem[] }` |
+| `CardItem` | interface | `{ icon, title, description, href?, color? }` |
+| `CardColor` | type | `'blue' \| 'green' \| 'purple' \| 'orange' \| 'cyan' \| 'pink' \| 'amber' \| 'red' \| 'teal' \| 'gray'` |
+
+**Used by:** `tag-engine.ts` (tags: `feature-grid`, `showcase-grid`)
+
+---
+
+### `stats-bar.ts`
+
+**Purpose:** Dark-background row of headline statistics with coloured accent values.
+
+**Dependencies:** `component.ts`
+
+**Exports:**
+| Export | Type | Description |
+|---|---|---|
+| `StatsBar` | class | Renders responsive stat grid on dark background. |
+| `StatsBarProps` | interface | `{ stats: StatItem[] }` |
+| `StatItem` | interface | `{ value, label, color }` |
+| `StatColor` | type | Same values as `CardColor` |
+
+**Used by:** `tag-engine.ts` (tag: `stats-bar`)
+
+---
+
 ### `skill-cards.ts`
 
 **Purpose:** Responsive grid of skill info cards with coloured tag badges.
@@ -509,9 +562,11 @@ Browser-side modules bundled by Rspack. These run in the browser, not at build t
 | `default.html` | Standard page layout with navigation, content area, label footer |
 | `blank.html` | Minimal shell — content and scripts only |
 | `blog-post.html` | Article layout with byline header, narrower max-width |
+| `landing.html` | Landing page with hero, features, stats, showcase, CTA (all data-driven) |
 | `shop.html` | E-commerce layout with cart sidebar |
 | `agent-info.html` | Two-column layout with skill cards and sidebar |
 | `product-demo.html` | Product detail page with product card |
+| `product-detail.html` | Product detail page with cart widget |
 | `component-demo.html` | Interactive component demo layout |
 
 ---
@@ -542,6 +597,7 @@ Browser-side modules bundled by Rspack. These run in the browser, not at build t
 | `add-content` | Create/edit Flint content pages (Markdown + YAML frontmatter) |
 | `add-template` | Create/edit Flint page templates (HTML with {{tag}} placeholders) |
 | `add-component` | Create/edit Flint UI components (TypeScript classes extending Component) |
+| `add-documentation` | Create/edit Flint developer documentation (docs/*.md) |
 | `build-and-test` | Build the Flint static site and run tests |
 | `create-skill` | Guide for creating effective skills following best practices |
 
@@ -563,6 +619,9 @@ markdown blocks      |  footer  ├── tree-menu.ts     ← hierarchy.ts
                   index-generator.ts ← page-metadata.ts
 
   tag-engine.ts
+    ├── cta-section.ts  ← ctx.frontmatter (data-driven: hero, call-to-action)
+    ├── card-grid.ts    ← ctx.frontmatter (data-driven: feature-grid, showcase-grid)
+    ├── stats-bar.ts    ← ctx.frontmatter (data-driven: stats-bar)
     ├── product.ts      ← ctx.frontmatter (data-driven)
     ├── skill-cards.ts  ← ctx.frontmatter (data-driven)
     ├── cart.ts

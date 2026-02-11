@@ -188,6 +188,88 @@ interface LabelFooterProps extends ComponentProps {
 
 **Data flow:** Builder → `collectSiteLabels()` → `PageData.siteLabels` → Layout → LabelFooter
 
+### CtaSection
+
+**File:** `src/components/cta-section.ts`
+
+A full-width gradient call-to-action section with heading, subtitle, and one or two CTA buttons. Serves two tags via a `variant` prop: `{{hero}}` (large page hero) and `{{call-to-action}}` (mid/end-page conversion banner). **Data-driven** — the tag engine reads `Hero:` or `CTA:` from frontmatter.
+
+```typescript
+interface CtaButton {
+  label: string;    // Button text
+  href: string;     // Link target
+}
+
+interface CtaSectionProps extends ComponentProps {
+  variant?: 'hero' | 'banner';  // Default: 'hero'
+  tagline?: string;             // Small text above heading (hero only)
+  heading: string;              // Main headline
+  subtitle?: string;            // Paragraph below heading
+  primaryCta: CtaButton;        // Solid white button
+  secondaryCta?: CtaButton;     // Outlined button
+}
+```
+
+**Behaviour:**
+- Hero variant: `<h1>`, decorative blur circles, tagline slot, `bg-gradient-to-br`
+- Banner variant: `<h2>`, clean gradient, no tagline, `bg-gradient-to-r`
+- Returns empty string when frontmatter data is missing (tag engine guard)
+
+### CardGrid
+
+**File:** `src/components/card-grid.ts`
+
+A responsive grid of icon cards with optional links and coloured backgrounds. Serves two tags: `{{feature-grid}}` (plain info cards from `Features:`) and `{{showcase-grid}}` (linked cards from `Showcase:`). **Data-driven** — reads from frontmatter.
+
+```typescript
+type CardColor = 'blue' | 'green' | 'purple' | 'orange' | 'cyan' | 'pink' | 'amber' | 'red' | 'teal' | 'gray';
+
+interface CardItem {
+  icon: string;         // Emoji icon
+  title: string;        // Card heading
+  description: string;  // Card body
+  href?: string;        // Makes card a clickable link
+  color?: CardColor;    // Coloured icon background
+}
+
+interface CardGridProps extends ComponentProps {
+  heading: string;      // Section heading
+  subtitle?: string;    // Optional subtitle
+  items: CardItem[];    // Array of cards
+}
+```
+
+**Behaviour:**
+- Cards with `href` render as `<a>` with hover shadow/translate effects
+- Cards with `color` get a coloured icon container background
+- Cards without either render as plain `<div>` with neutral icon styling
+- Returns empty string when items are missing/empty
+
+### StatsBar
+
+**File:** `src/components/stats-bar.ts`
+
+A dark-background row of headline statistics with coloured accent values. **Data-driven** — tag engine reads `Stats:` from frontmatter.
+
+```typescript
+type StatColor = 'blue' | 'green' | 'purple' | 'orange' | 'cyan' | 'pink' | 'amber' | 'red' | 'teal' | 'gray';
+
+interface StatItem {
+  value: string;     // The prominent number (e.g. "1000+")
+  label: string;     // Label below the value
+  color: StatColor;  // Accent colour for the value text
+}
+
+interface StatsBarProps extends ComponentProps {
+  stats: StatItem[];
+}
+```
+
+**Behaviour:**
+- Renders a responsive grid on dark slate-900 background
+- Each stat: large coloured value with smaller grey label
+- Returns empty string when stats are missing/empty
+
 ### Product
 
 **File:** `src/components/product.ts`
@@ -305,8 +387,15 @@ Some components receive their props from **page frontmatter** rather than hardco
 
 | Tag | Frontmatter Fields | Component |
 |-----|-------------------|-----------|
+| `{{hero}}` | `Hero` (object with heading, subtitle, primaryCta, etc.) | `CtaSection` (hero variant) |
+| `{{call-to-action}}` | `CTA` (same shape as Hero) | `CtaSection` (banner variant) |
+| `{{feature-grid}}` | `Features` (object with heading, subtitle?, items[]) | `CardGrid` |
+| `{{showcase-grid}}` | `Showcase` (same shape as Features) | `CardGrid` |
+| `{{stats-bar}}` | `Stats` (object with stats[] of value, label, color) | `StatsBar` |
 | `{{product}}` | `Short-URI`, `PriceCents`, `Description`, `Image` | `Product` |
 | `{{skill-cards}}` | `Skills` (array of objects) | `SkillCards` |
+
+Note: `CtaSection` serves two tags (`hero` and `call-to-action`) via its `variant` prop. `CardGrid` serves two tags (`feature-grid` and `showcase-grid`) — the same component with different frontmatter sources.
 
 **How it works:**
 

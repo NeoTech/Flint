@@ -84,6 +84,7 @@ Use the appropriate skill for each task:
 | Add/edit a page, post, section, or product | `add-content` |
 | Add/edit a page layout | `add-template` |
 | Add/edit a reusable UI component | `add-component` |
+| Add/edit developer documentation | `add-documentation` |
 | Build, test, lint, typecheck, debug | `build-and-test` |
 
 Skills live in `.github/skills/` with references for detailed field lists, examples, and API docs.

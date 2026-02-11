@@ -11,9 +11,11 @@ templates/
 ├── default.html        # Standard page (nav, content, footer)
 ├── blank.html          # Minimal shell (no nav, no footer)
 ├── blog-post.html      # Article layout (byline, reading time)
+├── landing.html        # Landing page with hero, features, stats, showcase, CTA
 ├── shop.html           # E-commerce layout with cart sidebar
 ├── agent-info.html     # Two-column layout with skill cards + sidebar
 ├── product-demo.html   # Product detail page with product card
+├── product-detail.html # Product detail with cart widget
 └── component-demo.html # Interactive component demo layout
 ```
 
@@ -76,6 +78,11 @@ These tags read their props from the page's **YAML frontmatter**. They return em
 
 | Tag | Frontmatter Fields | Output |
 |-----|-------------------|--------|
+| `{{hero}}` | `Hero` (heading, subtitle, primaryCta, secondaryCta, tagline) | Full-width gradient hero section (CtaSection, hero variant) |
+| `{{call-to-action}}` | `CTA` (heading, subtitle, primaryCta, secondaryCta) | Conversion banner (CtaSection, banner variant) |
+| `{{feature-grid}}` | `Features` (heading, subtitle?, items[]) | Responsive grid of icon cards (CardGrid) |
+| `{{showcase-grid}}` | `Showcase` (heading, subtitle?, items[] with href) | Linked card grid (CardGrid) |
+| `{{stats-bar}}` | `Stats` (stats[] of value, label, color) | Dark statistics row (StatsBar) |
 | `{{product}}` | `Short-URI`, `PriceCents`, `Description`, `Image` | Product card with Add-to-Cart button |
 | `{{skill-cards}}` | `Skills` (array of `{ name, icon, description, tags, color }`) | Responsive grid of skill info cards |
 
@@ -136,6 +143,20 @@ Article layout with:
 
 Designed for `Type: post` content with `Author`, `Date`, `Category`, and `Labels` frontmatter fields.
 
+### landing.html
+
+Full-width landing page layout with data-driven sections:
+- Navigation bar
+- `{{hero}}` — gradient hero section (CtaSection, reads `Hero:` from frontmatter)
+- `{{feature-grid}}` — responsive icon card grid (CardGrid, reads `Features:`)
+- `{{stats-bar}}` — dark statistics row (StatsBar, reads `Stats:`)
+- `{{showcase-grid}}` — linked card grid (CardGrid, reads `Showcase:`)
+- `{{content}}` — Markdown body
+- `{{call-to-action}}` — conversion banner (CtaSection, reads `CTA:`)
+- Label footer
+
+All data-driven tags are wrapped in `{{#if}}` guards so missing sections render cleanly. Used by `content/index.md`.
+
 ### shop.html
 
 E-commerce layout with:
@@ -159,6 +180,15 @@ Product detail page with:
 - Navigation bar
 - `{{product}}` card (data-driven from frontmatter — `Short-URI`, `PriceCents`, `Description`, `Image`)
 - Content area below the product card
+- Label footer
+
+### product-detail.html
+
+Product detail page with cart integration:
+- Navigation bar
+- `{{cart}}` widget (top-right)
+- `{{product}}` card (data-driven from frontmatter)
+- Content area with back-to-shop link
 - Label footer
 
 ### component-demo.html

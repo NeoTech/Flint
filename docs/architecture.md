@@ -13,11 +13,12 @@ content/*.md          src/components/         src/core/
 │ body         │     │ CategoryNav       │   │ htmx-markdown.ts     │
 └──────┬───────┘     │ LabelCloud        │   │ html-blocks.ts       │
        │             │ LabelFooter       │   │ hierarchy.ts         │
-       │             │ Product           │   │ index-generator.ts   │
-       │             │ Cart              │   │ children-directive.ts │
-       │             │ Gadget            │   │ builder.ts           │
-       │             │ SkillCards        │   └──────────┬───────────┘
-       │             │ LabelIndex        │              │
+       │             │ Product / Cart    │   │ index-generator.ts   │
+       │             │ CtaSection        │   │ children-directive.ts │
+       │             │ CardGrid          │   │ builder.ts           │
+       │             │ StatsBar          │   └──────────┬───────────┘
+       │             │ SkillCards        │              │
+       │             │ Gadget / LabelIndex│             │
        │             └───────┬───────────┘              │
        │                     │                          │
        │             templates/              src/templates/
@@ -87,6 +88,9 @@ Pure rendering functions. Each component extends `Component<T>`, accepts typed p
 | `LabelFooter` | Label badges displayed at the bottom of pages |
 | `Product` | Product card with image, price, and Add-to-Cart button (data-driven from frontmatter) |
 | `Cart` | Cart placeholder HTML, hydrated client-side |
+| `CtaSection` | Gradient CTA section — hero or banner variant (data-driven from frontmatter) |
+| `CardGrid` | Responsive grid of icon cards — plain or linked (data-driven from frontmatter) |
+| `StatsBar` | Dark row of headline statistics with coloured values (data-driven from frontmatter) |
 | `Gadget` | Interactive component demo widget |
 | `SkillCards` | Responsive grid of skill info cards with coloured badges (data-driven from frontmatter) |
 | `LabelIndex` | Label index page with page listings |
@@ -104,7 +108,9 @@ HTML template files with `{{tag}}` placeholders. Templates are plain HTML — no
 | `blog-post.html` | Article layout with byline header, narrower max-width |
 | `shop.html` | E-commerce layout with cart sidebar |
 | `agent-info.html` | Two-column layout with skill cards and sidebar |
+| `landing.html` | Landing page with hero, feature grid, stats, showcase, CTA |
 | `product-demo.html` | Product detail page with product card |
+| `product-detail.html` | Product detail page with cart widget |
 | `component-demo.html` | Interactive component demo layout |
 
 **Template engine** (`src/templates/`):
@@ -192,6 +198,11 @@ The template engine selects an HTML template (based on `Template` frontmatter) a
       ├── {{head}}           → renderHead() → <!DOCTYPE html><html><head>...</head>
       ├── {{navigation}}     → Navigation.render() → <nav>...</nav>
       ├── {{content}}        → compiled Markdown HTML
+      ├── {{hero}}           → CtaSection.render(frontmatter, hero variant) (data-driven)
+      ├── {{call-to-action}} → CtaSection.render(frontmatter, banner variant) (data-driven)
+      ├── {{feature-grid}}   → CardGrid.render(frontmatter) (data-driven)
+      ├── {{showcase-grid}}  → CardGrid.render(frontmatter) (data-driven)
+      ├── {{stats-bar}}      → StatsBar.render(frontmatter) (data-driven)
       ├── {{product}}        → Product.render(frontmatter) → product card (data-driven)
       ├── {{skill-cards}}    → SkillCards.render(frontmatter) → skill grid (data-driven)
       ├── {{cart}}           → Cart.render() → cart placeholder
@@ -250,8 +261,8 @@ Rspack handles the **browser bundle** (Tailwind CSS + HTMX JS). The **site build
 
 ### Why co-located tests?
 
-Every module has a `.test.ts` file next to it. This makes it obvious which tests cover which code, and ensures tests are updated when the module changes. The project has **397 tests** across 29 test files.
+Every module has a `.test.ts` file next to it. This makes it obvious which tests cover which code, and ensures tests are updated when the module changes. The project has **461 tests** across 34 test files.
 
 ### Why data-driven components?
 
-Some tags (`{{product}}`, `{{skill-cards}}`) read their props directly from `ctx.frontmatter` in the tag engine rather than receiving hardcoded values. This means **content files drive component data** — the YAML frontmatter is the single source of truth. Adding a new product or skill means editing a Markdown file, not touching TypeScript. The tag engine maps frontmatter keys to typed component props.
+Many tags (`{{hero}}`, `{{call-to-action}}`, `{{feature-grid}}`, `{{showcase-grid}}`, `{{stats-bar}}`, `{{product}}`, `{{skill-cards}}`) read their props directly from `ctx.frontmatter` in the tag engine rather than receiving hardcoded values. This means **content files drive component data** — the YAML frontmatter is the single source of truth. Adding a new product, skill card, or landing page section means editing a Markdown file, not touching TypeScript. The tag engine maps frontmatter keys to typed component props. Some components serve multiple tags via a variant prop (e.g. `CtaSection` renders both `{{hero}}` and `{{call-to-action}}`; `CardGrid` renders both `{{feature-grid}}` and `{{showcase-grid}}`).
