@@ -25,6 +25,11 @@
  *   {{cart}}           — shopping cart widget (hydrated client-side)
  *   {{product}}        — product card or detail hero from frontmatter (auto-detects mode from Template)
  *   {{skill-cards}}    — grid of skill info cards from frontmatter Skills array
+ *   {{hero}}           — full-width gradient hero section from frontmatter Hero object
+ *   {{feature-grid}}   — responsive feature card grid from frontmatter Features array
+ *   {{stats-bar}}      — dark-background statistics bar from frontmatter Stats array
+ *   {{showcase-grid}}  — linked showcase card grid from frontmatter Showcase array
+ *   {{call-to-action}} — gradient CTA section from frontmatter CTA object
  */
 
 import { Navigation } from '../components/navigation.js';
@@ -33,6 +38,11 @@ import { Gadget } from '../components/gadget.js';
 import { Cart } from '../components/cart.js';
 import { Product } from '../components/product.js';
 import { SkillCards, type SkillInfo } from '../components/skill-cards.js';
+import { Hero, type HeroProps } from '../components/hero.js';
+import { FeatureGrid, type FeatureGridProps } from '../components/feature-grid.js';
+import { StatsBar, type StatsBarProps } from '../components/stats-bar.js';
+import { ShowcaseGrid, type ShowcaseGridProps } from '../components/showcase-grid.js';
+import { CallToAction, type CallToActionProps } from '../components/call-to-action.js';
 import { renderHead, renderFootScripts } from './helpers.js';
 import type { TemplateContext } from './template-registry.js';
 
@@ -181,6 +191,36 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
       const skills = ctx.frontmatter['Skills'] as SkillInfo[] | undefined;
       if (!skills || !Array.isArray(skills) || skills.length === 0) return '';
       return SkillCards.render({ skills });
+    }
+
+    case 'hero': {
+      const hero = ctx.frontmatter['Hero'] as HeroProps | undefined;
+      if (!hero) return '';
+      return Hero.render(hero);
+    }
+
+    case 'feature-grid': {
+      const fg = ctx.frontmatter['Features'] as FeatureGridProps | undefined;
+      if (!fg || !fg.features || fg.features.length === 0) return '';
+      return FeatureGrid.render(fg);
+    }
+
+    case 'stats-bar': {
+      const sb = ctx.frontmatter['Stats'] as StatsBarProps | undefined;
+      if (!sb || !sb.stats || sb.stats.length === 0) return '';
+      return StatsBar.render(sb);
+    }
+
+    case 'showcase-grid': {
+      const sg = ctx.frontmatter['Showcase'] as ShowcaseGridProps | undefined;
+      if (!sg || !sg.items || sg.items.length === 0) return '';
+      return ShowcaseGrid.render(sg);
+    }
+
+    case 'call-to-action': {
+      const cta = ctx.frontmatter['CTA'] as CallToActionProps | undefined;
+      if (!cta) return '';
+      return CallToAction.render(cta);
     }
 
     default:

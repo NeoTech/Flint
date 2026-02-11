@@ -41,6 +41,16 @@ declare global {
 // Client-side hydration modules (bundled by rspack)
 import './client/cart-hydrate.js';
 import './client/product-hydrate.js';
+import { initNavToggle } from './client/nav-toggle.js';
+
+// Initialise navigation toggle on DOMContentLoaded
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNavToggle);
+  } else {
+    initNavToggle();
+  }
+}
 
 // --- Page Index types (mirrors PageIndexEntry from page-index.ts) ---
 interface PageIndexEntry {
