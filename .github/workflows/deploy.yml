@@ -40,8 +40,10 @@ jobs:
 
       # Sync products with Stripe (creates/updates Prices + Payment Links),
       # then generates static HTML from the updated products.yaml
+      # Use build:sync (not :force) — force deactivates all links on every push
+      # Run build:sync:force locally only when SITE_URL or address settings change
       - name: Sync Stripe & build pages
-        run: bun run build:sync:force
+        run: bun run build:sync
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}

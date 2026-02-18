@@ -224,8 +224,11 @@ async function ensurePaymentLink(
           const hasBilling = match.billing_address_collection === billingAddress;
           const hasShipping = match.shipping_address_collection != null &&
             match.shipping_address_collection.allowed_countries?.length > 0;
+          const sameSuccessUrl =
+            match.after_completion?.type === 'redirect' &&
+            match.after_completion.redirect?.url === successUrl;
 
-          if (samePriceId && hasBilling && hasShipping) {
+          if (samePriceId && hasBilling && hasShipping && sameSuccessUrl) {
             return match.url;
           }
         }
