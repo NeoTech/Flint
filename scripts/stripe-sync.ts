@@ -171,23 +171,32 @@ async function ensurePrice(
 }
 
 /**
- * Read SITE_URL from environment or .env file.
+ * Read SITE_URL + BASE_PATH from environment or .env file.
  * Used as the after_completion redirect for Payment Links.
  */
 function getSiteUrl(): string {
   let siteUrl = process.env.SITE_URL;
+  let basePath = process.env.BASE_PATH;
 
-  if (!siteUrl) {
+  if (!siteUrl || basePath === undefined) {
     try {
       const envFile = readFileSync(join(ROOT, '.env'), 'utf-8');
-      const match = envFile.match(/^SITE_URL=(.+)$/m);
-      if (match) siteUrl = match[1].trim();
+      if (!siteUrl) {
+        const match = envFile.match(/^SITE_URL=(.+)$/m);
+        if (match) siteUrl = match[1].trim();
+      }
+      if (basePath === undefined) {
+        const match = envFile.match(/^BASE_PATH=(.*)$/m);
+        if (match) basePath = match[1].trim();
+      }
     } catch {
       // .env may not exist
     }
   }
 
-  return (siteUrl || 'http://localhost:3000').replace(/\/$/, '');
+  const base = (siteUrl || 'http://localhost:3000').replace(/\/$/, '');
+  const path = (basePath || '').replace(/\/$/, '');
+  return `${base}${path}`;
 }
 
 /**
@@ -203,7 +212,7 @@ async function ensurePaymentLink(
   force = false,
 ): Promise<string> {
   const siteUrl = getSiteUrl();
-  const successUrl = `${siteUrl}/checkout/success`;
+  const successUrl = `${siteUrl}/shop`;
 
   const billingAddress = (process.env.STRIPE_BILLING_ADDRESS || 'required') as 'required' | 'auto';
   const shippingCountries = (process.env.STRIPE_SHIPPING_COUNTRIES || 'US,GB')

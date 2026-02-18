@@ -7,6 +7,7 @@ declare const __STRIPE_KEY_MASK__: string;
 declare const __STRIPE_KEY_DATA__: string;
 declare const __CHECKOUT_MODE__: string;
 declare const __CHECKOUT_ENDPOINT__: string;
+declare const __BASE_PATH__: string;
 
 function deobfuscateKey(): string {
   try {
@@ -234,8 +235,9 @@ function wireUI(): void {
         if (missing.length) { alert('Some items not available for checkout: ' + missing.join(', ')); return; }
 
         const endpoint: string = (typeof __CHECKOUT_ENDPOINT__ !== 'undefined' ? __CHECKOUT_ENDPOINT__ : 'http://localhost:3001');
-        const cfg = (window as any).__FLINT_CONFIG__ || {};
-        const siteUrl = cfg.siteUrl || window.location.origin;
+        const basePath: string = (typeof __BASE_PATH__ !== 'undefined' ? __BASE_PATH__ : '');
+        const successUrl = `${window.location.origin}${basePath}/shop`;
+        const cancelUrl = window.location.href;
 
         checkoutBtn.setAttribute('disabled', 'true');
         checkoutBtn.textContent = 'Redirecting…';
@@ -245,8 +247,8 @@ function wireUI(): void {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             items: lineItems,
-            successUrl: `${siteUrl}/checkout/success`,
-            cancelUrl: `${siteUrl}/checkout/cancel`,
+            successUrl,
+            cancelUrl,
           }),
         });
 

@@ -85,6 +85,7 @@ export default defineConfig({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
       __CHECKOUT_MODE__: JSON.stringify(getEnvVar('CHECKOUT_MODE', 'payment-links')),
       __CHECKOUT_ENDPOINT__: JSON.stringify(getEnvVar('CHECKOUT_ENDPOINT', 'http://localhost:3001')),
+      __BASE_PATH__: JSON.stringify(getEnvVar('BASE_PATH', '')),
       ...getKeyDefines(),
     }),
     // Copy static files if they exist

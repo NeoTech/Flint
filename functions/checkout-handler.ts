@@ -109,7 +109,7 @@ export async function handleCheckout(
     }
   }
 
-  const successUrl = body.successUrl || `${siteUrl}/checkout/success`;
+  const successUrl = body.successUrl || `${siteUrl}/shop`;
   const cancelUrl = body.cancelUrl || siteUrl;
 
   const billingAddress = config?.billingAddress ?? 'required';
