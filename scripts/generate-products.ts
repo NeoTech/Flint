@@ -1,14 +1,17 @@
 /**
  * Generate content/shop/<id>.md files from products.yaml
  *
- * Called as the first step of the build pipeline.
- * Generated files are ephemeral — gitignored and recreated every build.
+ * Product files are tracked in git so custom body content is preserved.
+ * On every build, Stripe frontmatter fields (StripePriceId, StripePaymentLink)
+ * are patched from products.yaml without touching the body content.
+ * New products get a scaffold body with a marker comment; removing the marker
+ * has no effect now — all files are treated the same way.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import yaml from 'js-yaml';
-import { stringifyFrontmatter } from '../src/core/frontmatter.js';
+import { parseFrontmatter, stringifyFrontmatter } from '../src/core/frontmatter.js';
 import { normaliseProduct, type ProductEntry, type ProductCatalogue } from './products-schema.js';
 
 const ROOT = process.cwd();
@@ -92,11 +95,16 @@ export function generateProducts(): void {
 
   for (const product of products) {
     const filePath = join(SHOP_DIR, `${product.id}.md`);
-    // Skip files that exist and have already been customised (no scaffold marker)
+    // For user-edited files (no scaffold marker), patch only Stripe frontmatter fields
+    // and preserve the body content. For new/scaffold files, write the full scaffold.
     try {
       const existing = readFileSync(filePath, 'utf-8');
       if (!existing.includes(SCAFFOLD_MARKER)) {
-        continue; // user-edited — leave it alone
+        // User-edited: replace entire frontmatter from products.yaml, preserve body
+        const parsed = parseFrontmatter(existing);
+        const frontmatter = buildFrontmatter(product);
+        writeFileSync(filePath, stringifyFrontmatter(frontmatter, parsed.content), 'utf-8');
+        continue;
       }
     } catch {
       // File doesn't exist — generate it

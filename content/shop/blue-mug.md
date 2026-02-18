@@ -20,7 +20,7 @@ Description: >-
 PriceCents: 1200
 Currency: usd
 StripePriceId: price_1T26lM5RwVcf7QBB9F3K1lZA
-StripePaymentLink: 'https://buy.stripe.com/test_4gM5kw8fW1B96vI5xJ6AM07'
+StripePaymentLink: 'https://buy.stripe.com/test_9B6bIU1Ry1B98DQ4tF6AM0f'
 Image: ☕
 Keywords: *ref_0
 ---

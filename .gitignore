@@ -3,7 +3,3 @@ dist/
 build/
 *.lock
 .env
-
-# Generated product pages (rebuilt from products.yaml each build)
-content/shop/*.md
-!content/shop/index.md
