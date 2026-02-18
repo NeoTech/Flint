@@ -1,99 +1,69 @@
-##
-## Product Catalogue — Single source of truth
-##
-## Each entry generates a scaffold content/shop/<id>.md at build time.
-## Run `bun run build:sync` to create/update products + prices in Stripe
-## and write back real stripe_price_id and stripe_payment_link values.
-##
-## Fields:
-##   id            — URL slug (required, unique)
-##   title         — Product display name (required)
-##   description   — Short description (one or two sentences, plain text)
-##   price_cents   — Price in smallest currency unit, e.g. 1200 = $12.00 (required)
-##   currency      — ISO 4217 code (default: usd)
-##   image         — Emoji or image URL (default: 📦)
-##   order         — Sort order on the shop page (default: 100)
-##   labels        — Array of labels (default: [shop])
-##   stripe_price_id    — Written back by --stripe-sync (leave blank for new products)
-##   stripe_payment_link — Written back by --stripe-sync (leave blank for new products)
-##   tax_code           — Stripe tax code for automatic tax (optional)
-##                          txcd_99999999 = tangible goods
-##                          txcd_20030000 = general service
-##
-## Body content (specs, care instructions, etc.) lives in the generated
-## content/shop/<id>.md scaffold — edit that file directly after build:sync.
-##
-
 products:
   - id: blue-mug
     title: Blue Ceramic Mug
     description: >-
-      A beautiful hand-crafted ceramic mug, perfect for your morning coffee.
-      Each mug is individually glazed in our signature ocean-blue finish.
-      Holds 12 oz of your favourite beverage.
+      A beautiful hand-crafted ceramic mug, perfect for your morning coffee. Each mug is individually glazed in our
+      signature ocean-blue finish. Holds 12 oz of your favourite beverage.
     price_cents: 1200
     currency: usd
-    image: "☕"
+    image: ☕
     order: 1
     labels:
       - shop
       - mug
       - ceramic
       - coffee
-    stripe_price_id: "price_1T26lM5RwVcf7QBB9F3K1lZA"
-    stripe_payment_link: "https://buy.stripe.com/test_9B6bIU1Ry1B98DQ4tF6AM0f"
-    tax_code: "txcd_99999999"
-
+    stripe_price_id: ""
+    stripe_payment_link: ""
+    tax_code: txcd_99999999
   - id: red-plate
     title: Red Dinner Plate
     description: >-
-      A vibrant hand-painted ceramic dinner plate in bold crimson.
-      Microwave and dishwasher safe. 10.5 inch diameter — perfect for everyday meals.
+      A vibrant hand-painted ceramic dinner plate in bold crimson. Microwave and dishwasher safe. 10.5 inch diameter —
+      perfect for everyday meals.
     price_cents: 1800
     currency: usd
-    image: "🍽️"
+    image: 🍽️
     order: 2
     labels:
       - shop
       - plate
       - ceramic
       - kitchen
-    stripe_price_id: "price_1T27T15RwVcf7QBB6IMxYX70"
-    stripe_payment_link: "https://buy.stripe.com/test_dRm00c3ZGdjR5rE3pB6AM0g"
-    tax_code: "txcd_99999999"
-
+    stripe_price_id: ""
+    stripe_payment_link: ""
+    tax_code: txcd_99999999
   - id: classic-sneakers
     title: Classic Canvas Sneakers
     description: >-
-      Timeless low-top canvas sneakers with a vulcanised rubber sole.
-      Lightweight, breathable, and available in white. Unisex sizing.
+      Timeless low-top canvas sneakers with a vulcanised rubber sole. Lightweight, breathable, and available in white.
+      Unisex sizing.
     price_cents: 5500
     currency: usd
-    image: "👟"
+    image: 👟
     order: 3
     labels:
       - shop
       - sneakers
       - footwear
       - fashion
-    stripe_price_id: "price_1T27T35RwVcf7QBB4p9kzPX4"
-    stripe_payment_link: "https://buy.stripe.com/test_3cIfZaeEk5Rpf2e6BN6AM0h"
-    tax_code: "txcd_99999999"
-
+    stripe_price_id: ""
+    stripe_payment_link: ""
+    tax_code: txcd_99999999
   - id: luxury-yacht
     title: Luxury Motor Yacht
     description: >-
-      A 42-metre flybridge motor yacht with twin diesel engines,
-      five staterooms, and a sun deck with jacuzzi. Hull in pearl white.
+      A 42-metre flybridge motor yacht with twin diesel engines, five staterooms, and a sun deck with jacuzzi. Hull in
+      pearl white.
     price_cents: 19998999
     currency: usd
-    image: "🛥️"
+    image: 🛥️
     order: 4
     labels:
       - shop
       - yacht
       - luxury
       - marine
-    stripe_price_id: "price_1T27Tu5RwVcf7QBBAGoIs8I6"
-    stripe_payment_link: "https://buy.stripe.com/test_7sY00c2VC2Fd6vI7FR6AM0i"
-    tax_code: "txcd_20030000"
+    stripe_price_id: ""
+    stripe_payment_link: ""
+    tax_code: txcd_20030000

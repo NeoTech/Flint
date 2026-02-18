@@ -7,6 +7,7 @@
     "build": "bun scripts/build.ts",
     "build:sync": "bun scripts/build.ts --stripe-sync",
     "build:sync:force": "bun scripts/build.ts --stripe-sync --force",
+    "stripe:cleanup": "bun scripts/stripe-cleanup.ts",
     "generate": "bun scripts/generate-products.ts",
     "serve:checkout": "bun run functions/checkout-server.ts",
     "start:checkout": "NODE_ENV=production bun run functions/checkout-server.ts",
