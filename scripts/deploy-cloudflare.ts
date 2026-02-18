@@ -11,7 +11,7 @@
  * Steps:
  *   1. Read config from .env
  *   2. wrangler deploy  â†’ bundles + uploads Worker + enables workers.dev
- *   3. wrangler secret put  â†’ sets STRIPE_SECRET_KEY, SITE_URL, address vars
+ *   3. wrangler secret put  → sets STRIPE_SECRET_KEY, SITE_URL (combined with BASE_PATH), address vars
  *   4. Creates a zone route if CLOUDFLARE_ZONE_ID + CLOUDFLARE_WORKER_ROUTE are set
  *
  * Run: bun run deploy:checkout:cloudflare
@@ -129,9 +129,24 @@ async function wrangler(args: string[], stdin?: string): Promise<string> {
 
 async function deployWorker(): Promise<void> {
   console.log('  Deploying Worker via wrangler...');
-  const output = await wrangler(['deploy', '--config', 'wrangler.toml', '--name', WORKER_NAME]);
-  const urlMatch = output.match(/https:\/\/[\w-]+\.[\w.-]+workers\.dev/);
-  console.log(`  âœ“ Deployed${urlMatch ? ` â†’ ${urlMatch[0]}` : ''}`);
+  await wrangler(['deploy', '--config', 'wrangler.toml', '--name', WORKER_NAME]);
+  console.log('  ✔ Deployed');
+}
+
+/* ------------------------------------------------------------------ */
+/*  Resolve Worker URL from CF API                                     */
+/* ------------------------------------------------------------------ */
+
+async function getWorkerUrl(): Promise<string> {
+  const accountId = getEnv('CLOUDFLARE_ACCOUNT_ID');
+  if (!accountId) return `https://${WORKER_NAME}.workers.dev`;
+  try {
+    const result = (await cfFetch(`/accounts/${accountId}/workers/subdomain`)) as { subdomain: string };
+    if (result?.subdomain) return `https://${WORKER_NAME}.${result.subdomain}.workers.dev`;
+  } catch {
+    // ignore — fall through to generic URL
+  }
+  return `https://${WORKER_NAME}.workers.dev`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -150,9 +165,18 @@ async function setSecrets(): Promise<void> {
   if (!stripeKey) throw new Error('STRIPE_SECRET_KEY not found in .env');
   await putSecret('STRIPE_SECRET_KEY', stripeKey);
 
-  const siteUrl = getEnv('SITE_URL');
-  if (!siteUrl) throw new Error('SITE_URL not found in .env');
-  await putSecret('SITE_URL', siteUrl.replace(/\/$/, ''));
+  // CLOUDFLARE_SITE_URL overrides SITE_URL+BASE_PATH — set it to your production URL
+  // so local SITE_URL (localhost) doesn't get pushed to the Worker.
+  const fullSiteUrl = (() => {
+    const override = getEnv('CLOUDFLARE_SITE_URL');
+    if (override) return override.replace(/\/$/, '');
+    const siteUrl = getEnv('SITE_URL');
+    if (!siteUrl) throw new Error('SITE_URL or CLOUDFLARE_SITE_URL not found in .env');
+    const basePath = getEnv('BASE_PATH').replace(/\/$/, '');
+    return siteUrl.replace(/\/$/, '') + basePath;
+  })();
+  await putSecret('SITE_URL', fullSiteUrl);
+  console.log(`  ℹ SITE_URL secret → ${fullSiteUrl}`);
 
   const billing = getEnv('STRIPE_BILLING_ADDRESS');
   if (billing) await putSecret('STRIPE_BILLING_ADDRESS', billing);
@@ -258,12 +282,13 @@ async function deploy(): Promise<void> {
   await enableSubdomain();
   await ensureRoute();
 
+  const workerUrl = await getWorkerUrl();
   console.log('\n✅ Deployed!\n');
-  console.log(`  Worker: https://${WORKER_NAME}.workers.dev/checkout`);
-  console.log(`  Health: https://${WORKER_NAME}.workers.dev/health`);
-  console.log('\n  Ensure .env has:');
+  console.log(`  Worker: ${workerUrl}/checkout`);
+  console.log(`  Health: ${workerUrl}/health`);
+  console.log('\n  Ensure .env and GitHub Variables have:');
   console.log('    CHECKOUT_MODE=serverless');
-  console.log(`    CHECKOUT_ENDPOINT=https://${WORKER_NAME}.workers.dev\n`);
+  console.log(`    CHECKOUT_ENDPOINT=${workerUrl}\n`);
 }
 
 deploy().catch((err) => {

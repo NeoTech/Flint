@@ -316,138 +316,153 @@ STRIPE_SECRET_KEY=sk_live_... SITE_URL=https://yoursite.com bun run start:checko
 
 ## CI/CD — GitHub Actions
 
-### Required secrets
+The deploy workflow lives in `.github/workflows/deploy.yml`. It:
 
-Go to your repository → **Settings → Secrets and variables → Actions → New repository secret** and add:
+1. Builds the site and syncs Stripe products
+2. Bundles client JS (with `CHECKOUT_MODE` and `CHECKOUT_ENDPOINT` baked in at compile time)
+3. Deploys to GitHub Pages
+4. Health-checks the checkout endpoint (Cloudflare Worker or Bun server) and warns if unreachable
 
-| Secret name | Value | Notes |
-|-------------|-------|-------|
-| `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | Used by `--stripe-sync` at build time only |
-| `STRIPE_PUBLISHABLE_KEY` | `pk_test_...` or `pk_live_...` | Injected (obfuscated) into client bundle |
+The Worker is **not deployed by CI** — deploy it manually once with `bun run deploy:checkout:cloudflare`, then CI just verifies it's still reachable on every push.
 
-For `payment-links` mode, also add:
+---
 
-| Secret/variable name | Value | Notes |
-|----------------------|-------|-------|
-| `SITE_URL` | `https://yoursite.com` | Used to set `after_completion` redirect on Payment Links |
+### GitHub Actions — Secrets vs Variables
 
-For `serverless` mode, also add:
+GitHub separates **Secrets** (encrypted, for sensitive values) from **Variables** (plaintext, for non-sensitive config). Getting this wrong causes silent failures — `secrets.X` returns empty string if `X` is a variable, not a secret.
 
-| Secret/variable name | Value | Notes |
-|----------------------|-------|-------|
-| `CHECKOUT_ENDPOINT` | `https://checkout.yoursite.com` | Public URL of your deployed Bun checkout server |
+#### Secrets tab
+**Settings → Secrets and variables → Actions → Secrets**
 
-### Workflow file — `payment-links` mode (static host, no server)
+| Secret | Value | Notes |
+|--------|-------|-------|
+| `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | Build-time only — never reaches the client bundle |
+| `STRIPE_PUBLISHABLE_KEY` | `pk_test_...` or `pk_live_...` | XOR-obfuscated into client bundle |
+| `STRIPE_BILLING_ADDRESS` | `required` or `auto` | Passed to Cloudflare Worker as a secret |
+| `STRIPE_SHIPPING_COUNTRIES` | `US,GB,AU,CA,...` | Passed to Cloudflare Worker as a secret |
 
-Save as `.github/workflows/deploy.yml`:
+#### Variables tab
+**Settings → Secrets and variables → Actions → Variables**
 
-```yaml
-name: Build & Deploy
+| Variable | Value | Notes |
+|----------|-------|-------|
+| `CHECKOUT_MODE` | `serverless` | Baked into JS bundle at build time |
+| `CHECKOUT_RUNTIME` | `cloudflare` or `bun` | Controls which health-check step runs |
+| `CHECKOUT_ENDPOINT` | `https://flint-checkout.<subdomain>.workers.dev` | Baked into JS bundle; also used for health check |
+| `SITE_URL` | `https://yourusername.github.io` | Used for Stripe redirect URLs |
+| `BASE_PATH` | `/your-repo-name` | GitHub Pages base path (e.g. `/Flint`) |
 
-on:
-  push:
-    branches: [main]
+> **Why are `CHECKOUT_MODE`, `CHECKOUT_ENDPOINT`, and `SITE_URL` variables and not secrets?**  
+> They contain no sensitive values and need to be readable in workflow condition expressions (`if: vars.X == 'y'`). GitHub secrets cannot be read in `if:` conditions.
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+---
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+### Cloudflare Workers Setup
 
-      - name: Install dependencies
-        run: bun install
+The checkout server runs as a Cloudflare Worker. It is deployed **once manually** — CI only health-checks it on subsequent pushes.
 
-      - name: Sync products to Stripe & build
-        run: bun run build:sync
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-          CHECKOUT_MODE: payment-links
-          SITE_URL: ${{ secrets.SITE_URL }}
+#### 1. Get your Cloudflare credentials
 
-      # Commit the updated products.yaml (contains new stripe_price_id + stripe_payment_link)
-      - name: Commit updated products.yaml
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: update stripe_price_id and stripe_payment_link [skip ci]"
-          file_pattern: products.yaml
+1. Log in to [dash.cloudflare.com](https://dash.cloudflare.com)
+2. **Account ID** — visible in the right sidebar of any zone, or at `dash.cloudflare.com/?to=/:account/workers`
+3. **Global API Key** — go to **My Profile → API Tokens → API Keys → Global API Key → View**
+4. Your **email** is the one you log in with
 
-      # Deploy dist/ to your host — replace this step as needed
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+#### 2. Add Cloudflare vars to your local `.env`
+
+```dotenv
+# ── Cloudflare Workers ──────────────────────────────────────────
+CHECKOUT_RUNTIME=cloudflare
+CLOUDFLARE_EMAIL=you@example.com
+CLOUDFLARE_GLOBAL_API_KEY=your_global_api_key_here
+CLOUDFLARE_ACCOUNT_ID=your_account_id_here
+# CLOUDFLARE_ZONE_ID=      (only needed for a custom domain)
+# CLOUDFLARE_WORKER_ROUTE= (only needed for a custom domain)
 ```
 
-### Workflow file — `serverless` mode (Bun checkout server + static site)
+#### 3. Deploy the Worker
 
-The static site is deployed as above. The checkout server is deployed separately:
-
-```yaml
-name: Build & Deploy (Serverless)
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Sync products to Stripe & build
-        run: bun run build:sync
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-          CHECKOUT_MODE: serverless
-          CHECKOUT_ENDPOINT: ${{ secrets.CHECKOUT_ENDPOINT }}
-          SITE_URL: ${{ secrets.SITE_URL }}
-
-      - name: Commit updated products.yaml
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: update stripe_price_id [skip ci]"
-          file_pattern: products.yaml
-
-      # Deploy static site
-      - name: Deploy static site
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-
-      # Deploy checkout server — adjust for your host (Railway, Fly.io, VPS, etc.)
-      - name: Deploy checkout server
-        run: echo "Add your server deploy step here (e.g. fly deploy, railway up)"
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          SITE_URL: ${{ secrets.SITE_URL }}
+```bash
+bun run deploy:checkout:cloudflare
 ```
 
-### Why `products.yaml` is committed back
+This will:
+- Bundle `functions/checkout-cloudflare.ts` and upload it to Cloudflare
+- Set `STRIPE_SECRET_KEY`, `SITE_URL`, `STRIPE_BILLING_ADDRESS`, `STRIPE_SHIPPING_COUNTRIES` as Worker secrets
+- Enable the `*.workers.dev` subdomain
 
-`bun run build:sync` writes real `stripe_price_id` and `stripe_payment_link` values back to `products.yaml`. Committing this file ensures:
-- The next build doesn't re-create Prices/Links unnecessarily
-- Developers pulling the branch get the current Stripe IDs
-- The `[skip ci]` message prevents an infinite trigger loop
+The script prints the Worker URL on completion — copy it into `CHECKOUT_ENDPOINT` in your `.env` and in the GitHub Variables tab.
 
-If you prefer not to commit `products.yaml` from CI, remove the auto-commit step — the sync will re-run on every deploy (harmless but slower).
+#### 4. Verify the Worker is live
+
+```bash
+curl https://flint-checkout.<subdomain>.workers.dev/health
+# → {"ok":true}
+```
+
+#### 5. Update `.env` for local dev
+
+```dotenv
+CHECKOUT_MODE=serverless
+CHECKOUT_ENDPOINT=https://flint-checkout.<subdomain>.workers.dev
+```
+
+The site built locally will now POST checkout requests to the deployed Worker. You do not need to run a local checkout server.
+
+#### Redeploying the Worker
+
+Redeploy any time you change `functions/checkout-cloudflare.ts` or need to rotate secrets:
+
+```bash
+bun run deploy:checkout:cloudflare
+```
+
+CI does **not** redeploy automatically — this is intentional to avoid pushing broken Workers on every commit.
+
+---
+
+### Full GitHub Settings Checklist
+
+Use this checklist when setting up a new repository or rotating credentials.
+
+**Secrets tab** (`Settings → Secrets and variables → Actions → Secrets`):
+
+- [ ] `STRIPE_SECRET_KEY`
+- [ ] `STRIPE_PUBLISHABLE_KEY`
+- [ ] `STRIPE_BILLING_ADDRESS`
+- [ ] `STRIPE_SHIPPING_COUNTRIES`
+
+**Variables tab** (`Settings → Secrets and variables → Actions → Variables`):
+
+- [ ] `CHECKOUT_MODE` → `serverless`
+- [ ] `CHECKOUT_RUNTIME` → `cloudflare`
+- [ ] `CHECKOUT_ENDPOINT` → `https://flint-checkout.<subdomain>.workers.dev`
+- [ ] `SITE_URL` → `https://yourusername.github.io`
+- [ ] `BASE_PATH` → `/your-repo-name`
+
+**GitHub Pages** (`Settings → Pages`):
+
+- [ ] Source: **GitHub Actions**
+
+---
+
+### CI health-check behaviour
+
+On every push to `main`, the workflow checks the checkout endpoint:
+
+- If `CHECKOUT_RUNTIME=cloudflare` — curls `$CHECKOUT_ENDPOINT/health` and warns (yellow annotation) if unreachable
+- If `CHECKOUT_RUNTIME=bun` — same check, plus instructions for deploying a Bun server
+- The build **never fails** due to a missing checkout server — the static HTML is always valid
+
+A warning looks like this in the Actions UI:
+
+```
+⚠ Cloudflare Worker is NOT reachable at https://...workers.dev/health
+Deploy the Worker manually:
+  bun run deploy:checkout:cloudflare
+```
+
+
 
 ---
 

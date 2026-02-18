@@ -110,7 +110,7 @@ export async function handleCheckout(
   }
 
   const successUrl = body.successUrl || `${siteUrl}/checkout/success`;
-  const cancelUrl = body.cancelUrl || `${siteUrl}/checkout/cancel`;
+  const cancelUrl = body.cancelUrl || siteUrl;
 
   const billingAddress = config?.billingAddress ?? 'required';
   const shippingCountries = (

@@ -81,7 +81,7 @@ describe('handleCheckout', () => {
 
     const createCall = (stripe.checkout.sessions.create as ReturnType<typeof mock>).mock.calls[0];
     expect(createCall[0].success_url).toBe('https://mysite.com/checkout/success');
-    expect(createCall[0].cancel_url).toBe('https://mysite.com/checkout/cancel');
+    expect(createCall[0].cancel_url).toBe('https://mysite.com');
   });
 
   it('should throw when items array is empty', async () => {
