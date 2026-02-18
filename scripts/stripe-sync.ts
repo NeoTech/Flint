@@ -76,7 +76,9 @@ async function findOrCreateProduct(
     query: `metadata["flint_id"]:"${product.id}"`,
   });
 
-  if (existing.data.length > 0) {
+  // Only reuse an active product — if it was archived (e.g. after stripe:cleanup),
+  // fall through and create a new one so Stripe doesn't reject prices/payment links.
+  if (existing.data.length > 0 && existing.data[0].active) {
     const sp = existing.data[0];
     // Update name/description/tax_code if they changed
     const needsUpdate =
@@ -95,7 +97,7 @@ async function findOrCreateProduct(
     return { stripeProduct: sp, created: false, updated: false };
   }
 
-  // Create new product
+  // Create new product (either none exists, or the existing one is archived)
   const created = await stripe.products.create({
     name: product.title,
     description: product.description,

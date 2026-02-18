@@ -19,8 +19,8 @@ Description: >-
   your favourite beverage.
 PriceCents: 1200
 Currency: usd
-StripePriceId: price_1T26lM5RwVcf7QBB9F3K1lZA
-StripePaymentLink: 'https://buy.stripe.com/test_9B6bIU1Ry1B98DQ4tF6AM0f'
+StripePriceId: price_placeholder_blue-mug
+StripePaymentLink: ''
 Image: ☕
 Keywords: *ref_0
 ---

@@ -18,8 +18,8 @@ Description: >-
   and a sun deck with jacuzzi. Hull in pearl white.
 PriceCents: 19998999
 Currency: usd
-StripePriceId: price_1T27Tu5RwVcf7QBBAGoIs8I6
-StripePaymentLink: 'https://buy.stripe.com/test_7sY00c2VC2Fd6vI7FR6AM0i'
+StripePriceId: price_placeholder_luxury-yacht
+StripePaymentLink: ''
 Image: "\U0001F6E5️"
 Keywords: *ref_0
 ---

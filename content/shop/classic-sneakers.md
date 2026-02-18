@@ -18,8 +18,8 @@ Description: >-
   breathable, and available in white. Unisex sizing.
 PriceCents: 5500
 Currency: usd
-StripePriceId: price_1T27T35RwVcf7QBB4p9kzPX4
-StripePaymentLink: 'https://buy.stripe.com/test_3cIfZaeEk5Rpf2e6BN6AM0h'
+StripePriceId: price_placeholder_classic-sneakers
+StripePaymentLink: ''
 Image: "\U0001F45F"
 Keywords: *ref_0
 ---

@@ -18,8 +18,8 @@ Description: >-
   dishwasher safe. 10.5 inch diameter — perfect for everyday meals.
 PriceCents: 1800
 Currency: usd
-StripePriceId: price_1T27T15RwVcf7QBB6IMxYX70
-StripePaymentLink: 'https://buy.stripe.com/test_dRm00c3ZGdjR5rE3pB6AM0g'
+StripePriceId: price_placeholder_red-plate
+StripePaymentLink: ''
 Image: "\U0001F37D️"
 Keywords: *ref_0
 ---
