@@ -1,5 +1,6 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
-import { handleCheckout, type CheckoutRequestBody } from './checkout-server.js';
+import { handleCheckout, type CheckoutRequestBody } from './checkout-handler.js';
+import { getCorsHeaders } from './checkout-handler.js';
 import type Stripe from 'stripe';
 
 /* ------------------------------------------------------------------ */
@@ -128,5 +129,46 @@ describe('handleCheckout', () => {
         'http://localhost:3000',
       ),
     ).rejects.toThrow('session URL');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  getCorsHeaders tests                                               */
+/* ------------------------------------------------------------------ */
+
+describe('getCorsHeaders', () => {
+  it('reflects origin when it is in allowedOrigins', () => {
+    const headers = getCorsHeaders('https://mysite.com', ['https://mysite.com']);
+    expect(headers['Access-Control-Allow-Origin']).toBe('https://mysite.com');
+  });
+
+  it('reflects origin when it matches siteUrl', () => {
+    const headers = getCorsHeaders('https://mysite.com', [], 'https://mysite.com');
+    expect(headers['Access-Control-Allow-Origin']).toBe('https://mysite.com');
+  });
+
+  it('reflects localhost origin in dev mode', () => {
+    const headers = getCorsHeaders('http://localhost:3000', [], '', true);
+    expect(headers['Access-Control-Allow-Origin']).toBe('http://localhost:3000');
+  });
+
+  it('blocks localhost origin in production mode', () => {
+    const headers = getCorsHeaders('http://localhost:3000', ['https://mysite.com'], 'https://mysite.com', false);
+    expect(headers['Access-Control-Allow-Origin']).not.toBe('http://localhost:3000');
+  });
+
+  it('falls back to first allowed origin when request origin is not permitted', () => {
+    const headers = getCorsHeaders('https://evil.com', ['https://mysite.com']);
+    expect(headers['Access-Control-Allow-Origin']).toBe('https://mysite.com');
+  });
+
+  it('returns wildcard when no allowed origins are configured', () => {
+    const headers = getCorsHeaders(undefined, []);
+    expect(headers['Access-Control-Allow-Origin']).toBe('*');
+  });
+
+  it('strips trailing slash from siteUrl when matching', () => {
+    const headers = getCorsHeaders('https://mysite.com', [], 'https://mysite.com/');
+    expect(headers['Access-Control-Allow-Origin']).toBe('https://mysite.com');
   });
 });

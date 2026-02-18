@@ -1,8 +1,8 @@
 /**
- * Bun Serverless Checkout Function
+ * Bun HTTP adapter for the Flint checkout handler.
  *
- * Creates Stripe Checkout Sessions from cart lineItems.
- * Used when CHECKOUT_MODE=serverless in .env.
+ * Wraps the platform-agnostic handleCheckout() in a Bun.serve() server.
+ * Used when CHECKOUT_MODE=serverless and CHECKOUT_RUNTIME=bun.
  *
  * Run:   bun run serve:checkout   (dev, reads .env)
  *        bun run start:checkout   (production)
@@ -18,6 +18,13 @@
 import Stripe from 'stripe';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import {
+  handleCheckout,
+  corsJson,
+  getCorsHeaders,
+  type CheckoutRequestBody,
+  type CheckoutConfig,
+} from './checkout-handler.js';
 
 const ROOT = process.cwd();
 
@@ -65,95 +72,37 @@ function getPort(): number {
 }
 
 /* ------------------------------------------------------------------ */
-/*  CORS helpers                                                       */
+/*  Re-export handler types for backward compatibility                 */
 /* ------------------------------------------------------------------ */
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-function corsJson(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-  });
-}
-
-/* ------------------------------------------------------------------ */
-/*  Request handlers                                                   */
-/* ------------------------------------------------------------------ */
-
-export interface CheckoutRequestBody {
-  items: Array<{ priceId: string; qty: number }>;
-  successUrl?: string;
-  cancelUrl?: string;
-}
-
-export async function handleCheckout(
-  body: CheckoutRequestBody,
-  stripe: Stripe,
-  siteUrl: string,
-): Promise<{ url: string }> {
-  if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
-    throw new Error('items array is required and must not be empty');
-  }
-
-  for (const item of body.items) {
-    if (!item.priceId || typeof item.priceId !== 'string') {
-      throw new Error('Each item must have a priceId string');
-    }
-    if (!item.qty || typeof item.qty !== 'number' || item.qty < 1) {
-      throw new Error('Each item must have a qty >= 1');
-    }
-  }
-
-  const successUrl = body.successUrl || `${siteUrl}/checkout/success`;
-  const cancelUrl = body.cancelUrl || `${siteUrl}/checkout/cancel`;
-
-  const billingAddress = (getEnv('STRIPE_BILLING_ADDRESS') || 'required') as 'required' | 'auto';
-  const shippingCountries = (getEnv('STRIPE_SHIPPING_COUNTRIES') || 'US,GB')
-    .split(',')
-    .map(c => c.trim()) as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[];
-
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: body.items.map((item) => ({
-      price: item.priceId,
-      quantity: item.qty,
-    })),
-    billing_address_collection: billingAddress,
-    shipping_address_collection: { allowed_countries: shippingCountries },
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-  });
-
-  if (!session.url) {
-    throw new Error('Stripe did not return a session URL');
-  }
-
-  return { url: session.url };
-}
+export { handleCheckout, type CheckoutRequestBody } from './checkout-handler.js';
 
 /* ------------------------------------------------------------------ */
 /*  Bun HTTP server                                                    */
 /* ------------------------------------------------------------------ */
 
 export function createServer(stripe: Stripe, siteUrl: string) {
+  const allowedOrigins = (getEnv('ALLOWED_ORIGINS') || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const isDev = getEnv('NODE_ENV') !== 'production';
+
   return Bun.serve({
     port: getPort(),
     async fetch(req) {
+      const origin = req.headers.get('Origin') ?? undefined;
+      const cors = getCorsHeaders(origin, allowedOrigins, siteUrl, isDev);
       const url = new URL(req.url);
 
       // CORS preflight
       if (req.method === 'OPTIONS') {
-        return new Response(null, { status: 204, headers: CORS_HEADERS });
+        return new Response(null, { status: 204, headers: cors });
       }
 
       // Health check
       if (url.pathname === '/health' && req.method === 'GET') {
-        return corsJson({ ok: true });
+        return corsJson({ ok: true }, 200, cors);
       }
 
       // Checkout
@@ -162,20 +111,26 @@ export function createServer(stripe: Stripe, siteUrl: string) {
         try {
           body = (await req.json()) as CheckoutRequestBody;
         } catch {
-          return corsJson({ error: 'Invalid JSON body' }, 400);
+          return corsJson({ error: 'Invalid JSON body' }, 400, cors);
         }
 
         try {
-          const result = await handleCheckout(body, stripe, siteUrl);
-          return corsJson(result);
+          const config: CheckoutConfig = {
+            billingAddress: (getEnv('STRIPE_BILLING_ADDRESS') || 'required') as 'required' | 'auto',
+            shippingCountries: (getEnv('STRIPE_SHIPPING_COUNTRIES') || 'US,GB')
+              .split(',')
+              .map((c) => c.trim()),
+          };
+          const result = await handleCheckout(body, stripe, siteUrl, config);
+          return corsJson(result, 200, cors);
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Unknown error';
           console.error('checkout error:', message);
-          return corsJson({ error: message }, 400);
+          return corsJson({ error: message }, 400, cors);
         }
       }
 
-      return corsJson({ error: 'Not found' }, 404);
+      return corsJson({ error: 'Not found' }, 404, cors);
     },
   });
 }

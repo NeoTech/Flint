@@ -1,0 +1,18 @@
+# Cloudflare Workers config for the Flint checkout function.
+# Deploy with:  bun run deploy:checkout:cloudflare
+#
+# All runtime config is managed as Worker secrets — never add secret values here.
+# Secrets set by deploy script:
+#   STRIPE_SECRET_KEY, SITE_URL, STRIPE_BILLING_ADDRESS, STRIPE_SHIPPING_COUNTRIES
+
+name = "flint-checkout"
+main = "functions/checkout-cloudflare.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# workers.dev subdomain is enabled by the deploy script via the Cloudflare API.
+# Set to true here so wrangler local dev works without a custom domain.
+workers_dev = true
+
+# All runtime config is managed as secrets via the deploy script.
+# Do NOT add STRIPE_* vars here — they conflict with secrets of the same name.

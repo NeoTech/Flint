@@ -23,8 +23,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      BASE_PATH: /Flint
-      SITE_URL: https://neotech.github.io
+      BASE_PATH: ${{ vars.BASE_PATH }}
+      SITE_URL: ${{ vars.SITE_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,7 +48,7 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
           CHECKOUT_MODE: ${{ secrets.CHECKOUT_MODE }}
-          CHECKOUT_ENDPOINT: ${{ secrets.CHECKOUT_ENDPOINT }}
+          CHECKOUT_ENDPOINT: ${{ vars.CHECKOUT_ENDPOINT }}
           STRIPE_BILLING_ADDRESS: ${{ secrets.STRIPE_BILLING_ADDRESS }}
           STRIPE_SHIPPING_COUNTRIES: ${{ secrets.STRIPE_SHIPPING_COUNTRIES }}
 
@@ -63,6 +63,64 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+      # When using Cloudflare Workers, verify the Worker is reachable.
+      # This is a warning-only step — deploy the Worker separately with:
+      #   bun run deploy:checkout:cloudflare
+      - name: Verify Cloudflare Worker
+        if: vars.CHECKOUT_RUNTIME == 'cloudflare'
+        env:
+          CHECKOUT_ENDPOINT: ${{ vars.CHECKOUT_ENDPOINT }}
+        run: |
+          if [ -z "$CHECKOUT_ENDPOINT" ]; then
+            echo "::warning::CHECKOUT_ENDPOINT variable is not set. Serverless checkout will not work."
+            echo "Add CHECKOUT_ENDPOINT as a repository variable pointing to your Workers URL."
+            exit 0
+          fi
+
+          echo "Checking Cloudflare Worker at ${CHECKOUT_ENDPOINT}/health ..."
+          if curl -sf "${CHECKOUT_ENDPOINT}/health" --max-time 10 > /dev/null 2>&1; then
+            echo "✅ Cloudflare Worker is reachable at ${CHECKOUT_ENDPOINT}"
+          else
+            echo "::warning::Cloudflare Worker is NOT reachable at ${CHECKOUT_ENDPOINT}/health"
+            echo ""
+            echo "The site is built with CHECKOUT_MODE=serverless (Cloudflare Workers runtime)."
+            echo "Checkout will not work until the Worker is deployed and accessible."
+            echo ""
+            echo "Deploy the Worker manually:"
+            echo "  bun run deploy:checkout:cloudflare"
+          fi
+
+      # When using a self-hosted Bun server, verify the checkout endpoint is reachable.
+      # This is a warning-only step — it never fails the build, since the static
+      # HTML is valid regardless. It just surfaces the problem early.
+      - name: Verify Bun checkout server
+        if: vars.CHECKOUT_RUNTIME == 'bun'
+        env:
+          CHECKOUT_ENDPOINT: ${{ vars.CHECKOUT_ENDPOINT }}
+        run: |
+          if [ -z "$CHECKOUT_ENDPOINT" ]; then
+            echo "::warning::CHECKOUT_ENDPOINT secret is not set. Serverless checkout will not work."
+            echo "Set CHECKOUT_ENDPOINT in GitHub repository secrets to the URL of your running Bun checkout server."
+            exit 0
+          fi
+
+          echo "Checking Bun checkout server at ${CHECKOUT_ENDPOINT}/health ..."
+          if curl -sf "${CHECKOUT_ENDPOINT}/health" --max-time 10 > /dev/null 2>&1; then
+            echo "✅ Bun checkout server is reachable at ${CHECKOUT_ENDPOINT}"
+          else
+            echo "::warning::Bun checkout server is NOT reachable at ${CHECKOUT_ENDPOINT}/health"
+            echo ""
+            echo "The site is built with CHECKOUT_MODE=serverless (Bun runtime)."
+            echo "Checkout will not work until the server is running and accessible."
+            echo ""
+            echo "Options:"
+            echo "  1. Start the Bun server on your host:"
+            echo "       bun run start:checkout"
+            echo "  2. Deploy to a platform (Railway, Fly.io, or a VPS) and update CHECKOUT_ENDPOINT."
+            echo "  3. Switch to Cloudflare Workers — set CHECKOUT_RUNTIME=cloudflare in GitHub"
+            echo "     repository variables and CLOUDFLARE_WORKERS_TOKEN in secrets, then redeploy."
+          fi
 
   deploy:
     needs: build
