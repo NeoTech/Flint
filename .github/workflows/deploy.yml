@@ -47,7 +47,7 @@ jobs:
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-          CHECKOUT_MODE: ${{ secrets.CHECKOUT_MODE }}
+          CHECKOUT_MODE: ${{ vars.CHECKOUT_MODE }}
           CHECKOUT_ENDPOINT: ${{ vars.CHECKOUT_ENDPOINT }}
           STRIPE_BILLING_ADDRESS: ${{ secrets.STRIPE_BILLING_ADDRESS }}
           STRIPE_SHIPPING_COUNTRIES: ${{ secrets.STRIPE_SHIPPING_COUNTRIES }}
@@ -57,8 +57,8 @@ jobs:
         run: bunx --bun rspack build --mode production
         env:
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-          CHECKOUT_MODE: ${{ secrets.CHECKOUT_MODE }}
-          CHECKOUT_ENDPOINT: ${{ secrets.CHECKOUT_ENDPOINT }}
+          CHECKOUT_MODE: ${{ vars.CHECKOUT_MODE }}
+          CHECKOUT_ENDPOINT: ${{ vars.CHECKOUT_ENDPOINT }}
 
       - uses: actions/upload-pages-artifact@v3
         with:
