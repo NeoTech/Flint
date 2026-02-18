@@ -38,9 +38,25 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - run: bun run build
+      # Sync products with Stripe (creates/updates Prices + Payment Links),
+      # then generates static HTML from the updated products.yaml
+      - name: Sync Stripe & build pages
+        run: bun run build:sync:force
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          CHECKOUT_MODE: ${{ secrets.CHECKOUT_MODE }}
+          CHECKOUT_ENDPOINT: ${{ secrets.CHECKOUT_ENDPOINT }}
+          STRIPE_BILLING_ADDRESS: ${{ secrets.STRIPE_BILLING_ADDRESS }}
+          STRIPE_SHIPPING_COUNTRIES: ${{ secrets.STRIPE_SHIPPING_COUNTRIES }}
 
-      - run: bunx --bun rspack build --mode production
+      # Bundle client JS with build-time constants (CHECKOUT_MODE, keys, etc.)
+      - name: Bundle client JS
+        run: bunx --bun rspack build --mode production
+        env:
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          CHECKOUT_MODE: ${{ secrets.CHECKOUT_MODE }}
+          CHECKOUT_ENDPOINT: ${{ secrets.CHECKOUT_ENDPOINT }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

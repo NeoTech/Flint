@@ -13,6 +13,8 @@ export interface ProductProps extends ComponentProps {
   description?: string;
   /** When true, render a full-page detail layout instead of a compact card */
   detail?: boolean;
+  /** Stripe Payment Link URL — used in payment-links checkout mode */
+  stripePaymentLink?: string;
 }
 
 /**
@@ -37,7 +39,7 @@ export class Product extends Component<ProductProps> {
 
   /** Compact card for listing pages */
   private renderCard(): string {
-    const { id, title, price = '', description = '', image, className } = this.props;
+    const { id, title, price = '', description = '', image, className, stripePaymentLink } = this.props;
     const extraClass = className ? ` ${className}` : '';
 
     const imageHtml = image
@@ -57,6 +59,7 @@ export class Product extends Component<ProductProps> {
         class="flint-add-to-cart bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
         data-id="${this.escapeHtml(id)}"
         data-qty="1"
+        ${stripePaymentLink ? `data-payment-link="${this.escapeHtml(stripePaymentLink)}"` : ''}
         aria-label="Add ${this.escapeHtml(title)} to cart"
       >Add to Cart</button>
     </div>
@@ -66,7 +69,7 @@ export class Product extends Component<ProductProps> {
 
   /** Full-page detail hero for individual product pages */
   private renderDetail(): string {
-    const { id, title, price = '', description = '', image } = this.props;
+    const { id, title, price = '', description = '', image, stripePaymentLink } = this.props;
 
     const imageHtml = image && this.isEmoji(image)
       ? `<span class="text-8xl">${image}</span>`
@@ -89,6 +92,7 @@ export class Product extends Component<ProductProps> {
         class="flint-add-to-cart bg-blue-600 text-white px-6 py-3 rounded-lg text-base font-medium hover:bg-blue-700 transition-colors"
         data-id="${this.escapeHtml(id)}"
         data-qty="1"
+        ${stripePaymentLink ? `data-payment-link="${this.escapeHtml(stripePaymentLink)}"` : ''}
         aria-label="Add ${this.escapeHtml(title)} to cart"
       >Add to Cart</button>
     </div>

@@ -178,8 +178,9 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
       const image = (fm['Image'] ?? '') as string;
       const description = (fm['Description'] ?? '') as string;
       const detail = (fm['Template'] ?? '') === 'product-detail';
+      const stripePaymentLink = (fm['StripePaymentLink'] ?? '') as string;
       if (!id) return '';
-      return Product.render({ id, title: ctx.title, price, description, image: image || undefined, detail });
+      return Product.render({ id, title: ctx.title, price, description, image: image || undefined, detail, stripePaymentLink: stripePaymentLink || undefined });
     }
 
     case 'cart':

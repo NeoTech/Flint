@@ -29,6 +29,8 @@ describe('SiteBuilder', () => {
   }
 
   beforeEach(() => {
+    // Prevent SITE_URL from .env bleeding into tests that expect no SEO files
+    delete process.env.SITE_URL;
     tempDir = mkdtempSync(join(tmpdir(), 'site-builder-test-'));
     contentDir = join(tempDir, 'content');
     outputDir = join(tempDir, 'dist');
@@ -51,6 +53,7 @@ describe('SiteBuilder', () => {
 
   afterEach(() => {
     delete process.env.BASE_PATH;
+    delete process.env.SITE_URL;
     rmSync(tempDir, { recursive: true, force: true });
   });
 

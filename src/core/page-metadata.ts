@@ -23,6 +23,8 @@ export interface PageMetadata {
   stripePriceId: string;
   /** Product-specific: image URL or emoji placeholder */
   image: string;
+  /** Product-specific: Stripe Payment Link URL for direct checkout */
+  stripePaymentLink: string;
 }
 
 const VALID_TYPES: PageType[] = ['page', 'post', 'section', 'product'];
@@ -80,6 +82,7 @@ export function parsePageMetadata(content: string): PageMetadata {
     currency: (data['Currency'] as string) || 'usd',
     stripePriceId: (data['StripePriceId'] as string) || (data['Stripe-Price-Id'] as string) || '',
     image: (data['Image'] as string) || '',
+    stripePaymentLink: (data['StripePaymentLink'] as string) || '',
   };
 }
 

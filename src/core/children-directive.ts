@@ -59,6 +59,8 @@ export interface ChildPageData {
   currency: string;
   /** Product-specific: Stripe Price ID */
   stripePriceId: string;
+  /** Product-specific: Stripe Payment Link URL */
+  stripePaymentLink: string;
   /** Product-specific: image URL or emoji */
   image: string;
 }
@@ -80,6 +82,28 @@ const DEFAULT_TEMPLATE = `<div class="border border-gray-200 rounded p-4 hover:s
   <p class="text-sm text-gray-500 mt-1">{date} · {category} {labels:badges}</p>
   <p class="text-gray-600 mt-2">{description}</p>
 </div>`;
+
+const DEFAULT_PRODUCT_TEMPLATE = `<article class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+  <a href="{url}" class="block">
+    <div class="w-full h-48 bg-gray-50 flex items-center justify-center">
+      <span class="text-6xl">{image}</span>
+    </div>
+    <div class="p-5">
+      <h3 class="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+      <p class="text-sm text-gray-500 mb-3 line-clamp-2">{description}</p>
+    </div>
+  </a>
+  <div class="px-5 pb-5 flex items-center justify-between">
+    <span class="text-xl font-bold text-gray-900">{price}</span>
+    <button
+      class="flint-add-to-cart bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+      data-id="{short-uri}"
+      data-qty="1"
+      data-payment-link="{stripe-payment-link}"
+      aria-label="Add {title} to cart"
+    >Add to Cart</button>
+  </div>
+</article>`;
 
 /**
  * Parse options from the :::children opening line.
@@ -171,6 +195,7 @@ export function renderChildTemplate(template: string, page: ChildPageData): stri
     .replace(/\{price-cents\}/g, String(page.priceCents || 0))
     .replace(/\{currency\}/g, page.currency || '')
     .replace(/\{stripe-price-id\}/g, page.stripePriceId || '')
+    .replace(/\{stripe-payment-link\}/g, page.stripePaymentLink || '')
     .replace(/\{image\}/g, page.image || '');
 }
 
@@ -233,8 +258,10 @@ export function processChildrenDirectives(
       return '';
     }
 
-    const template = body.trim() || DEFAULT_TEMPLATE;
-    const wrapperClass = options.wrapperClass || 'space-y-4';
+    const template = body.trim()
+      || (options.filterType === 'product' ? DEFAULT_PRODUCT_TEMPLATE : DEFAULT_TEMPLATE);
+    const wrapperClass = options.wrapperClass
+      || (options.filterType === 'product' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4');
 
     const items = pages.map(page => renderChildTemplate(template, page));
 

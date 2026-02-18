@@ -2,10 +2,34 @@ import { defineConfig } from '@rspack/cli';
 import { rspack } from '@rspack/core';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
+import { getKeyDefines } from './scripts/obfuscate-key.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
 const basePath = process.env.BASE_PATH || '';
+
+function readDotEnv(): Record<string, string> {
+  try {
+    return Object.fromEntries(
+      readFileSync(path.join(__dirname, '.env'), 'utf-8')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith('#') && l.includes('='))
+        .map((l) => {
+          const idx = l.indexOf('=');
+          return [l.slice(0, idx).trim(), l.slice(idx + 1).trim()] as [string, string];
+        }),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function getEnvVar(key: string, fallback: string): string {
+  const env = readDotEnv();
+  return process.env[key] || env[key] || fallback;
+}
 
 export default defineConfig({
   entry: {
@@ -59,6 +83,9 @@ export default defineConfig({
     }),
     new rspack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      __CHECKOUT_MODE__: JSON.stringify(getEnvVar('CHECKOUT_MODE', 'payment-links')),
+      __CHECKOUT_ENDPOINT__: JSON.stringify(getEnvVar('CHECKOUT_ENDPOINT', 'http://localhost:3001')),
+      ...getKeyDefines(),
     }),
     // Copy static files if they exist
     new rspack.CopyRspackPlugin({

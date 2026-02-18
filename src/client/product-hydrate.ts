@@ -1,7 +1,11 @@
 // Hydration for product add-to-cart buttons
 import CartAPI from './cart-api.js';
 
+declare const __CHECKOUT_MODE__: string;
+
 function attachButtons(root: ParentNode = document): void {
+  const isPaymentLinks = __CHECKOUT_MODE__ === 'payment-links';
+
   root.querySelectorAll('.flint-add-to-cart').forEach((el) => {
     const btn = el as HTMLButtonElement;
     if (btn.dataset.flintBound) return;
@@ -9,9 +13,23 @@ function attachButtons(root: ParentNode = document): void {
 
     const id = btn.dataset.id;
     const qty = parseInt(btn.dataset.qty || '1', 10) || 1;
+    const paymentLink = btn.dataset.paymentLink;
+
+    // In payment-links mode, relabel buttons that have a payment link
+    if (isPaymentLinks && paymentLink) {
+      btn.textContent = 'Buy Now';
+    }
 
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
+
+      // Payment-links mode: redirect directly to Stripe
+      if (isPaymentLinks && paymentLink?.startsWith('https://')) {
+        window.location.href = paymentLink;
+        return;
+      }
+
+      // Serverless / cart mode
       try {
         if ((window as any).CartAPI && typeof (window as any).CartAPI.addItem === 'function') {
           await (window as any).CartAPI.addItem(id, qty);
@@ -50,3 +68,4 @@ document.addEventListener('htmx:afterSwap', () => {
 });
 
 export default {};
+

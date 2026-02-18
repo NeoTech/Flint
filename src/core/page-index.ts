@@ -15,6 +15,7 @@ export interface PageIndexEntry {
   labels: string[];
   category: string;
   date: string | null;
+  type?: string;
 }
 
 /**
@@ -53,5 +54,6 @@ export function generatePageIndex(
     labels: page.labels,
     category: page.category,
     date: formatDate(page.date),
+    type: page.type,
   }));
 }

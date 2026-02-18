@@ -1,6 +1,29 @@
 import CartAPI from './cart-api.js';
 
 /* ------------------------------------------------------------------ */
+/*  Build-time constants (injected by Rspack DefinePlugin)            */
+/* ------------------------------------------------------------------ */
+declare const __STRIPE_KEY_MASK__: string;
+declare const __STRIPE_KEY_DATA__: string;
+declare const __CHECKOUT_MODE__: string;
+declare const __CHECKOUT_ENDPOINT__: string;
+
+function deobfuscateKey(): string {
+  try {
+    const mask = __STRIPE_KEY_MASK__;
+    const data = __STRIPE_KEY_DATA__;
+    if (!mask || !data) return '';
+    const m = new Uint8Array(mask.match(/.{2}/g)!.map(h => parseInt(h, 16)));
+    const d = new Uint8Array(data.match(/.{2}/g)!.map(h => parseInt(h, 16)));
+    const out = new Uint8Array(m.length);
+    for (let i = 0; i < m.length; i++) out[i] = m[i] ^ d[i];
+    return new TextDecoder().decode(out);
+  } catch {
+    return '';
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Product-index cache (prices, titles, images)                      */
 /* ------------------------------------------------------------------ */
 type ProductMeta = {
@@ -8,6 +31,8 @@ type ProductMeta = {
   title: string;
   price_cents: number;
   currency: string;
+  stripe_price_id?: string;
+  stripe_payment_link?: string;
   image?: string;
 };
 
@@ -139,6 +164,7 @@ async function renderItems(items: Array<{ id: string; qty: number }>): Promise<v
 function wireUI(): void {
   const toggle = document.getElementById('flint-cart-toggle');
   const panel = document.getElementById('flint-cart-panel');
+  const checkoutMode: string = (typeof __CHECKOUT_MODE__ !== 'undefined' ? __CHECKOUT_MODE__ : 'payment-links');
 
   if (toggle && panel) {
     toggle.addEventListener('click', () => {
@@ -157,6 +183,21 @@ function wireUI(): void {
     });
   }
 
+  // In payment-links mode: intercept "Add to Cart" buttons that have a payment link
+  if (checkoutMode === 'payment-links') {
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.flint-add-to-cart') as HTMLElement | null;
+      if (!btn) return;
+      const paymentLink = btn.dataset.paymentLink;
+      if (paymentLink && paymentLink.startsWith('https://')) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = paymentLink;
+      }
+      // If no payment link, allow normal cart behaviour (falls through to cart-api)
+    }, true); // capture phase so it fires before cart-api handlers
+  }
+
   const checkoutBtn = document.getElementById('flint-cart-checkout');
   if (checkoutBtn) {
     checkoutBtn.addEventListener('click', async () => {
@@ -165,40 +206,60 @@ function wireUI(): void {
         const items = await CartAPI.getItems();
         if (!items || !items.length) { alert('Cart is empty'); return; }
 
-        const lineItems: Array<{ price: string; quantity: number }> = [];
+        if (checkoutMode === 'payment-links') {
+          // Payment-links mode: one product at a time
+          if (items.length > 1) {
+            alert('Payment Links support one product at a time.\nPlease use "Buy Now" on each product page to checkout individually.');
+            return;
+          }
+          const item = items[0];
+          const meta = index[item.id];
+          const link = (meta as ProductMeta)?.stripe_payment_link;
+          if (link && link.startsWith('https://')) {
+            window.location.href = link;
+          } else {
+            alert('No payment link available for this product yet. Run bun run build:sync first.');
+          }
+          return;
+        }
+
+        // Serverless mode: POST cart to Bun checkout server
+        const lineItems: Array<{ priceId: string; qty: number }> = [];
         const missing: string[] = [];
         items.forEach((it) => {
-          const meta = index[it.id] as any;
-          if (!meta || !meta.stripe_price_id) missing.push(it.id);
-          else lineItems.push({ price: meta.stripe_price_id, quantity: it.qty });
+          const meta = index[it.id] as ProductMeta;
+          if (!meta?.stripe_price_id) missing.push(it.id);
+          else lineItems.push({ priceId: meta.stripe_price_id, qty: it.qty });
         });
         if (missing.length) { alert('Some items not available for checkout: ' + missing.join(', ')); return; }
 
+        const endpoint: string = (typeof __CHECKOUT_ENDPOINT__ !== 'undefined' ? __CHECKOUT_ENDPOINT__ : 'http://localhost:3001');
         const cfg = (window as any).__FLINT_CONFIG__ || {};
-        const publishable = cfg.stripePublishableKey;
         const siteUrl = cfg.siteUrl || window.location.origin;
-        if (!publishable) { alert('Payment not configured.'); return; }
 
-        // Dynamic Stripe.js load
-        await new Promise<void>((resolve, reject) => {
-          if ((window as any).Stripe) return resolve();
-          const s = document.createElement('script');
-          s.src = 'https://js.stripe.com/v3';
-          s.onload = () => resolve();
-          s.onerror = () => reject(new Error('Stripe.js load failed'));
-          document.head.appendChild(s);
+        checkoutBtn.setAttribute('disabled', 'true');
+        checkoutBtn.textContent = 'Redirecting…';
+
+        const res = await fetch(`${endpoint}/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: lineItems,
+            successUrl: `${siteUrl}/checkout/success`,
+            cancelUrl: `${siteUrl}/checkout/cancel`,
+          }),
         });
 
-        const stripe = (window as any).Stripe(publishable);
-        stripe.redirectToCheckout({
-          lineItems,
-          mode: 'payment',
-          successUrl: siteUrl.replace(/\/$/, '') + '/checkout/success',
-          cancelUrl: siteUrl.replace(/\/$/, '') + '/checkout/cancel',
-        });
+        const data = await res.json() as { url?: string; error?: string };
+        if (!res.ok || !data.url) {
+          throw new Error(data.error || 'Checkout server error');
+        }
+        window.location.href = data.url;
       } catch (e) {
         console.error('checkout', e);
-        alert('Checkout failed');
+        alert('Checkout failed: ' + (e instanceof Error ? e.message : String(e)));
+        const btn = document.getElementById('flint-cart-checkout');
+        if (btn) { btn.removeAttribute('disabled'); btn.textContent = 'Checkout'; }
       }
     });
   }
@@ -212,6 +273,13 @@ document.addEventListener('DOMContentLoaded', () => {
     drainQueue();
 
     if (!(window as any).CartAPI) (window as any).CartAPI = CartAPI;
+
+    // In payment-links mode, hide the cart widget entirely — users go direct to Stripe
+    const checkoutMode: string = (typeof __CHECKOUT_MODE__ !== 'undefined' ? __CHECKOUT_MODE__ : 'payment-links');
+    if (checkoutMode === 'payment-links') {
+      const cartEl = document.getElementById('flint-cart');
+      if (cartEl) cartEl.hidden = true;
+    }
 
     // Initial render
     CartAPI.getItems().then(items => renderItems(items)).catch(() => {});

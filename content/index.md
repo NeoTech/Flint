@@ -1,5 +1,5 @@
 ---
-title: Flint — The TypeScript Static Site Generator
+title: Flint v1.0
 Short-URI: home
 Template: landing
 Type: page

@@ -1,6 +1,8 @@
 import { SiteBuilder, type BuildConfig } from '../src/core/builder.js';
 import { mkdirSync, existsSync, copyFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
+import { generateProducts } from './generate-products.js';
+import { stripeSync } from './stripe-sync.js';
 
 // Default build configuration
 const config: BuildConfig = {
@@ -54,6 +56,17 @@ async function build(): Promise<void> {
   const startTime = Date.now();
 
   try {
+    // Step 1: Generate product .md files from products.yaml
+    generateProducts();
+
+    // Step 2: Optionally sync products to Stripe
+    if (process.argv.includes('--stripe-sync')) {
+      const force = process.argv.includes('--force');
+      await stripeSync(force);
+      // Re-generate after sync (stripe_price_id values updated in YAML)
+      generateProducts();
+    }
+
     // Ensure output directory exists
     mkdirSync(config.outputDir, { recursive: true });
 

@@ -24,6 +24,7 @@ const sampleChildren: ChildPageData[] = [
     priceCents: 0,
     currency: '',
     stripePriceId: '',
+    stripePaymentLink: '',
     image: '',
   },
   {
@@ -41,6 +42,7 @@ const sampleChildren: ChildPageData[] = [
     priceCents: 0,
     currency: '',
     stripePriceId: '',
+    stripePaymentLink: '',
     image: '',
   },
   {
@@ -58,6 +60,7 @@ const sampleChildren: ChildPageData[] = [
     priceCents: 0,
     currency: '',
     stripePriceId: '',
+    stripePaymentLink: '',
     image: '',
   },
 ];
@@ -77,6 +80,7 @@ const sampleProduct: ChildPageData = {
   priceCents: 1200,
   currency: 'usd',
   stripePriceId: 'price_1ExampleBlueMug',
+  stripePaymentLink: 'https://buy.stripe.com/test_example',
   image: '☕',
 };
 
@@ -263,6 +267,11 @@ describe('Children Directive', () => {
     it('should replace {stripe-price-id} placeholder', () => {
       const result = renderChildTemplate('{stripe-price-id}', sampleProduct);
       expect(result).toBe('price_1ExampleBlueMug');
+    });
+
+    it('should replace {stripe-payment-link} placeholder', () => {
+      const result = renderChildTemplate('{stripe-payment-link}', sampleProduct);
+      expect(result).toBe('https://buy.stripe.com/test_example');
     });
 
     it('should replace {image} placeholder', () => {
@@ -476,6 +485,33 @@ describe('Children Directive', () => {
       expect(result).toContain('Blue Ceramic Mug');
       expect(result).not.toContain('Red Ceramic Mug');
       expect(result).not.toContain('Getting Started');
+    });
+
+    it('should use default product template when type=product and no body', () => {
+      const mixed = [...sampleChildren, sampleProduct];
+      const markdown = ':::children type=product\n:::';
+      const result = processChildrenDirectives(markdown, mixed);
+
+      // Should use the product card template with image, price, and Add to Cart button
+      expect(result).toContain('Blue Ceramic Mug');
+      expect(result).toContain('$12.00');
+      expect(result).toContain('☕');
+      expect(result).toContain('flint-add-to-cart');
+      expect(result).toContain('data-id="blue-mug"');
+      expect(result).toContain('data-payment-link="https://buy.stripe.com/test_example"');
+      expect(result).toContain('Add to Cart');
+      expect(result).toContain('rounded-xl shadow-sm');
+      // Should use grid layout by default
+      expect(result).toContain('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6');
+    });
+
+    it('should use default blog template when type is not product and no body', () => {
+      const markdown = ':::children\n:::';
+      const result = processChildrenDirectives(markdown, sampleChildren);
+
+      // Should use the generic card template, not the product one
+      expect(result).toContain('space-y-4');
+      expect(result).not.toContain('flint-add-to-cart');
     });
   });
 });

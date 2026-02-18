@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { generateSitemap, generateRobotsTxt } from './seo.js';
+import { generateSitemap, generateRobotsTxt, generateLlmsTxt } from './seo.js';
 import type { PageIndexEntry } from './page-index.js';
 
 describe('generateRobotsTxt', () => {
@@ -91,5 +91,102 @@ describe('generateSitemap', () => {
     expect(xml).not.toContain('/label/htmx');
     const urlCount = (xml.match(/<url>/g) || []).length;
     expect(urlCount).toBe(3);
+  });
+});
+
+describe('generateLlmsTxt', () => {
+  const pages: PageIndexEntry[] = [
+    { url: '/', title: 'Home', description: 'Welcome to the site', labels: [], category: 'General', date: null, type: 'page' },
+    { url: '/about', title: 'About', description: 'About us', labels: [], category: 'General', date: null, type: 'page' },
+    { url: '/shop', title: 'Shop', description: 'Browse products', labels: [], category: 'Shop', date: null, type: 'section' },
+    { url: '/shop/mug', title: 'Blue Mug', description: 'A ceramic mug', labels: [], category: 'Shop', date: null, type: 'product' },
+    { url: '/blog/post-1', title: 'First Post', description: 'My first post', labels: [], category: 'Blog', date: '2024-01-01', type: 'post' },
+    { url: '/blog/post-2', title: 'Second Post', description: 'Another post', labels: [], category: 'Blog', date: '2024-02-01', type: 'post' },
+    { url: '/label/htmx', title: 'Label: htmx', description: '', labels: [], category: '', date: null },
+  ];
+
+  it('should start with an H1 site name', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site');
+    expect(result).toMatch(/^# My Site\n/);
+  });
+
+  it('should include a blockquote description when provided', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site', 'A great site.');
+    expect(result).toContain('> A great site.');
+  });
+
+  it('should omit blockquote when description is empty', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site', '');
+    expect(result).not.toContain('> ');
+  });
+
+  it('should create H2 sections per category', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site');
+    expect(result).toContain('## General');
+    expect(result).toContain('## Shop');
+  });
+
+  it('should put posts in ## Optional section', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site');
+    expect(result).toContain('## Optional');
+    const optionalIdx = result.indexOf('## Optional');
+    expect(result.indexOf('First Post')).toBeGreaterThan(optionalIdx);
+    expect(result.indexOf('Second Post')).toBeGreaterThan(optionalIdx);
+  });
+
+  it('should not put posts in category sections', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site');
+    expect(result).not.toContain('## Blog');
+  });
+
+  it('should omit ## Optional when no posts exist', () => {
+    const noPosts = pages.filter(p => p.type !== 'post');
+    const result = generateLlmsTxt(noPosts, 'https://example.com', '', 'My Site');
+    expect(result).not.toContain('## Optional');
+  });
+
+  it('should produce full URLs for each entry', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site');
+    expect(result).toContain('(https://example.com/about)');
+    expect(result).toContain('(https://example.com/shop/mug)');
+  });
+
+  it('should include description after colon', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site');
+    expect(result).toContain('[About](https://example.com/about): About us');
+  });
+
+  it('should exclude label index pages', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com', '', 'My Site');
+    expect(result).not.toContain('/label/htmx');
+  });
+
+  it('should respect basePath in URL prefix and label exclusion', () => {
+    const withBasePath: PageIndexEntry[] = [
+      ...pages.filter(p => p.type !== 'post' && p.url !== '/label/htmx'),
+      { url: '/Flint/label/htmx', title: 'Label: htmx', description: '', labels: [], category: '', date: null },
+    ];
+    const result = generateLlmsTxt(withBasePath, 'https://example.com', '/Flint', 'My Site');
+    expect(result).toContain('(https://example.com/about)');
+    expect(result).not.toContain('/Flint/label/htmx');
+  });
+
+  it('should handle empty page list', () => {
+    const result = generateLlmsTxt([], 'https://example.com', '', 'Empty Site');
+    expect(result).toContain('# Empty Site');
+    expect(result).not.toContain('## Optional');
+  });
+
+  it('should strip trailing slash from siteUrl', () => {
+    const result = generateLlmsTxt(pages, 'https://example.com/', '', 'My Site');
+    expect(result).not.toContain('https://example.com//');
+  });
+
+  it('should use Docs as fallback category for uncategorised pages', () => {
+    const uncategorised: PageIndexEntry[] = [
+      { url: '/mystery', title: 'Mystery', description: 'Unknown', labels: [], category: '', date: null, type: 'page' },
+    ];
+    const result = generateLlmsTxt(uncategorised, 'https://example.com', '', 'My Site');
+    expect(result).toContain('## Docs');
   });
 });

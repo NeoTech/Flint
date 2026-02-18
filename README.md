@@ -63,6 +63,44 @@ Your site is now in `dist/`. Deploy it anywhere — GitHub Pages, Netlify, Cloud
 
 ---
 
+## 🛒 Shop & Products Quick Start
+
+Products are managed from a single file — `products.yaml` at the project root. No manual Markdown files, no Stripe Dashboard clicks.
+
+**1. Add a product:**
+
+```yaml
+# products.yaml
+products:
+  - id: red-plate
+    title: Red Dinner Plate
+    description: A vibrant hand-painted ceramic dinner plate.
+    price_cents: 1800
+    image: "🍽️"
+    order: 2
+```
+
+**2. Sync to Stripe and build:**
+
+```bash
+# First time / after price changes — creates products in Stripe
+bun run build:sync
+
+# Day-to-day — just builds the site
+bun run build
+```
+
+**3. Start the dev server:**
+
+```bash
+bun run dev
+# Open http://localhost:3000/shop
+```
+
+That's it. The build generates product Markdown pages from the YAML, syncs prices to Stripe, and renders the shop. See [docs/ecommerce.md](docs/ecommerce.md) for full setup (Stripe sandbox keys, CI/CD, test cards).
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -230,6 +268,8 @@ bun run lint
 |---|---|
 | `bun run dev` | Start dev server with hot reload (port 3000) |
 | `bun run build` | Generate production site to `dist/` |
+| `bun run build:sync` | Sync products to Stripe + build site |
+| `bun run generate` | Generate product pages from `products.yaml` |
 | `bun run test` | Run tests in watch mode |
 | `bun run test:run` | Run tests once |
 | `bun run typecheck` | TypeScript type checking |

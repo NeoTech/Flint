@@ -6,7 +6,7 @@ import { parseFrontmatter, type FrontmatterData } from './frontmatter.js';
 import { parsePageMetadata, type PageMetadata } from './page-metadata.js';
 import { processChildrenDirectives, type ChildPageData } from './children-directive.js';
 import { generatePageIndex, generateLabelSlug, type PageIndexEntry } from './page-index.js';
-import { generateSitemap, generateRobotsTxt } from './seo.js';
+import { generateSitemap, generateRobotsTxt, generateLlmsTxt } from './seo.js';
 import { rewriteAbsolutePaths } from './base-path.js';
 import { LabelIndex } from '../components/label-index.js';
 import { loadTemplatesFromDir, type TemplateContext } from '../templates/index.js';
@@ -19,6 +19,7 @@ export interface BuildConfig {
   navigation?: NavItem[];
   defaultTitle?: string;
   siteUrl?: string;
+  siteDescription?: string;
 }
 
 export interface ContentFile {
@@ -240,6 +241,13 @@ export class SiteBuilder {
         generateSitemap(pageIndex, siteUrl, basePath),
         'utf-8',
       );
+      const siteName = this.config.defaultTitle || 'Site';
+      const siteDescription = this.config.siteDescription || '';
+      writeFileSync(
+        join(this.config.outputDir, 'llms.txt'),
+        generateLlmsTxt(pageIndex, siteUrl, basePath, siteName, siteDescription),
+        'utf-8',
+      );
     }
   }
 
@@ -312,6 +320,7 @@ export class SiteBuilder {
           priceCents: metadata.priceCents,
           currency: metadata.currency,
           stripePriceId: metadata.stripePriceId,
+          stripePaymentLink: metadata.stripePaymentLink ?? '',
           image: metadata.image,
         });
       } catch {
@@ -443,6 +452,7 @@ export class SiteBuilder {
       price_cents: number;
       currency: string;
       stripe_price_id: string;
+      stripe_payment_link: string;
       description: string;
       url: string;
       image: string;
@@ -455,6 +465,7 @@ export class SiteBuilder {
         price_cents: p.priceCents,
         currency: p.currency,
         stripe_price_id: p.stripePriceId,
+        stripe_payment_link: p.stripePaymentLink ?? '',
         description: p.description,
         url: p.url,
         image: p.image,

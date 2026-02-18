@@ -39,6 +39,11 @@ Skills:
     description: Create or edit developer documentation — internal reference docs in docs/ that explain how the system works.
     tags: [architecture, file-reference, content-model]
     color: teal
+  - name: add-product
+    icon: 🛒
+    description: Add or update a shop product — edit products.yaml, run build:sync to sync with Stripe, then customise the generated scaffold page.
+    tags: [products.yaml, build:sync, Stripe]
+    color: orange
   - name: build-and-test
     icon: 🧪
     description: Build the site, run tests, type-check, and lint. The core development loop for compiling Markdown to HTML.

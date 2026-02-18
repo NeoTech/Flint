@@ -5,21 +5,24 @@ Template: product-detail
 Type: product
 Category: Shop
 Order: 1
-Labels:
-  - shop
-Parent: shop
-Author: System
-Date: 2024-02-01
-Description: A beautiful hand-crafted ceramic mug, perfect for your morning coffee. Each mug is individually glazed in our signature ocean-blue finish. Holds 12 oz of your favourite beverage.
-PriceCents: 1200
-Currency: usd
-StripePriceId: price_1ExampleBlueMug
-Image: ☕
-Keywords:
+Labels: &ref_0
   - shop
   - mug
   - ceramic
   - coffee
+Parent: shop
+Author: System
+Date: '2026-02-18'
+Description: >-
+  A beautiful hand-crafted ceramic mug, perfect for your morning coffee. Each
+  mug is individually glazed in our signature ocean-blue finish. Holds 12 oz of
+  your favourite beverage.
+PriceCents: 1200
+Currency: usd
+StripePriceId: price_1T26lM5RwVcf7QBB9F3K1lZA
+StripePaymentLink: 'https://buy.stripe.com/test_4gM5kw8fW1B96vI5xJ6AM07'
+Image: ☕
+Keywords: *ref_0
 ---
 
 ## Details
@@ -34,4 +37,5 @@ Keywords:
 
 ## Care Instructions
 
-Hand-wash recommended for best results, though the mug is dishwasher safe. Avoid sudden temperature changes to preserve the glaze finish.
+Hand-wash recommended for best results, though the mug is dishwasher safe.
+Avoid sudden temperature changes to preserve the glaze finish.
