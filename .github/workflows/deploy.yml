@@ -25,6 +25,7 @@ jobs:
     env:
       BASE_PATH: ${{ vars.BASE_PATH }}
       SITE_URL: ${{ vars.SITE_URL }}
+      THEME: ${{ vars.THEME }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,6 +52,7 @@ jobs:
           CHECKOUT_ENDPOINT: ${{ vars.CHECKOUT_ENDPOINT }}
           STRIPE_BILLING_ADDRESS: ${{ secrets.STRIPE_BILLING_ADDRESS }}
           STRIPE_SHIPPING_COUNTRIES: ${{ secrets.STRIPE_SHIPPING_COUNTRIES }}
+          THEME: ${{ vars.THEME }}
 
       # Bundle client JS with build-time constants (CHECKOUT_MODE, keys, etc.)
       - name: Bundle client JS
@@ -59,6 +61,7 @@ jobs:
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
           CHECKOUT_MODE: ${{ vars.CHECKOUT_MODE }}
           CHECKOUT_ENDPOINT: ${{ vars.CHECKOUT_ENDPOINT }}
+          THEME: ${{ vars.THEME }}
 
       - uses: actions/upload-pages-artifact@v3
         with:
