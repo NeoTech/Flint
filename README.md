@@ -2,7 +2,9 @@
   <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/HTMX-2.0-3366CC?logo=htmx&logoColor=white" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/Bun_test-401_tests-f472b6?logo=bun&logoColor=white" />
+  <img src="https://img.shields.io/badge/Bun_test-515_tests-f472b6?logo=bun&logoColor=white" />
+  <img src="https://img.shields.io/badge/Stripe-payments-635BFF?logo=stripe&logoColor=white" />
+  <img src="https://img.shields.io/badge/Cloudflare_Workers-edge-F38020?logo=cloudflare&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-yellow" />
 </p>
 
@@ -23,8 +25,9 @@ Most static site generators make you choose: **simple but ugly**, or **pretty bu
 | "I need a framework for interactivity" | HTMX gives you dynamic behavior **from HTML attributes** — no JS framework required |
 | "SSGs are hard to customize" | Component-driven architecture with a clean `Component<T>` base class |
 | "Markdown is too limited" | Extended frontmatter with categories, labels, hierarchy, ordering — your content is structured data |
-| "Testing is an afterthought" | **401 tests** baked in from day one. Every module has co-located test files |
+| "Testing is an afterthought" | **515 tests** baked in from day one. Every module has co-located test files |
 | "Build tools are a nightmare" | Rspack builds in **under 100ms**. Hot reload included |
+| "E-commerce needs a big backend" | Stripe Payment Links need zero server. Multi-item cart uses a 50-line Cloudflare Worker |
 
 ---
 
@@ -99,6 +102,21 @@ bun run dev
 
 That's it. The build generates product Markdown pages from the YAML, syncs prices to Stripe, and renders the shop. See [docs/ecommerce.md](docs/ecommerce.md) for full setup (Stripe sandbox keys, CI/CD, test cards).
 
+### Checkout modes
+
+**`payment-links`** (default — zero infrastructure)  
+Each product gets a pre-generated Stripe Payment Link created at build time. Clicking Add to Cart goes straight to Stripe's hosted page — no server needed. One product per session.
+
+**`serverless`** (multi-item cart)  
+Items accumulate in an encrypted IndexedDB cart. Checkout POSTs the full cart to a checkout server which creates a Stripe Checkout Session. Choose your runtime:
+
+| Runtime | How to run | Best for |
+|---------|-----------|----------|
+| **Bun server** | `bun run serve:checkout` | Local dev, self-hosted VPS |
+| **Cloudflare Workers** | `bun run deploy:checkout:cloudflare` | Production — edge-deployed, scales to zero |
+
+Set `CHECKOUT_MODE=serverless`, `CHECKOUT_RUNTIME=cloudflare` (or `bun`), and `CHECKOUT_ENDPOINT` to the server URL in `.env`. See [docs/ecommerce.md](docs/ecommerce.md) for the full GitHub Actions and Cloudflare setup.
+
 ---
 
 ## 📁 Project Structure
@@ -114,17 +132,23 @@ That's it. The build generates product Markdown pages from the YAML, syncs price
 │   │   └── *.md          ← Individual posts
 │   └── shop/             ← E-commerce section
 │       ├── index.md      ← Shop listing page
-│       └── *.md          ← Product pages
+│       └── *.md          ← Product pages (generated from products.yaml)
+├── functions/            ← Checkout server
+│   ├── checkout-handler.ts      ← Platform-agnostic checkout logic
+│   ├── checkout-server.ts       ← Bun HTTP adapter
+│   └── checkout-cloudflare.ts   ← Cloudflare Worker adapter
 ├── templates/            ← HTML page layouts with {{tag}} placeholders
 ├── src/
 │   ├── components/       ← Reusable server-rendered UI components
-│   ├── client/           ← Browser-side JS (cart, product hydration)
+│   ├── client/           ← Browser-side JS (cart, product hydration, nav)
 │   ├── core/             ← Engine (markdown, frontmatter, templates, builder)
 │   ├── templates/        ← Tag engine and template registry
 │   └── styles/           ← Tailwind CSS entry point
+├── scripts/              ← Build scripts (Stripe sync, product generation, cleanup, CF deploy)
 ├── static/               ← Static assets (copied to dist as-is)
+├── products.yaml         ← Single source of truth for all products
+├── wrangler.toml         ← Cloudflare Worker config
 ├── .github/skills/       ← AI agent skill definitions
-├── scripts/              ← Build scripts
 └── dist/                 ← Generated site (git-ignored)
 ```
 
@@ -226,7 +250,7 @@ No virtual DOM. No hydration. No runtime overhead. Just strings.
 
 ## 🧪 Test-First, Always
 
-Every module ships with co-located tests. 30 test files, 401 assertions, all green.
+Every module ships with co-located tests. 38 test files, 515 tests, all green.
 
 ```bash
 # Run tests once
@@ -255,10 +279,12 @@ bun run lint
 | **Interactivity** | HTMX 2.0 | Dynamic HTML without a JS framework |
 | **Styling** | Tailwind CSS 3.4 | Utility-first, zero unused CSS in prod |
 | **Bundler** | Rspack | Rust-powered builds — 5-10x faster than Webpack |
+| **Payments** | Stripe | Products, prices, checkout sessions, payment links |
+| **Edge functions** | Cloudflare Workers | Serverless checkout — globally distributed, zero cold start |
 | **Testing** | Bun test runner + happy-dom | Lightning-fast unit tests with DOM support |
 | **Linting** | ESLint + @typescript-eslint | Consistent code quality |
 
-**Production dependencies: 3.** That's not a typo.
+**Production dependencies: 3** (site). The checkout Worker adds Stripe SDK — only runs server-side, never in the browser.
 
 ---
 
@@ -269,7 +295,12 @@ bun run lint
 | `bun run dev` | Start dev server with hot reload (port 3000) |
 | `bun run build` | Generate production site to `dist/` |
 | `bun run build:sync` | Sync products to Stripe + build site |
+| `bun run build:sync:force` | Force-recreate all Stripe Payment Links + build |
 | `bun run generate` | Generate product pages from `products.yaml` |
+| `bun run serve:checkout` | Start Bun checkout server (dev, port 3001) |
+| `bun run start:checkout` | Start Bun checkout server (production) |
+| `bun run deploy:checkout:cloudflare` | Deploy checkout function to Cloudflare Workers |
+| `bun run stripe:cleanup` | Archive all Flint-managed Stripe products + clear YAML IDs |
 | `bun run test` | Run tests in watch mode |
 | `bun run test:run` | Run tests once |
 | `bun run typecheck` | TypeScript type checking |
@@ -284,9 +315,20 @@ Flint generates plain HTML, CSS, and JS. Deploy the `dist/` folder to:
 
 - **GitHub Pages** — free, automatic with Actions
 - **Netlify / Vercel** — drag-and-drop or git push
-- **Cloudflare Pages** — edge-cached globally
+- **Cloudflare Pages / S3 / any CDN** — edge-cached globally
 - **Any web server** — it's just files
 - **ngrok** — built-in support for tunnel previews during development
+
+### Checkout server (serverless mode only)
+
+If you're using `CHECKOUT_MODE=serverless`, you also need a checkout server to create Stripe Checkout Sessions:
+
+| Where | Command | Notes |
+|-------|---------|-------|
+| **Cloudflare Workers** | `bun run deploy:checkout:cloudflare` | Recommended for production — edge-deployed, scales to zero |
+| **Local / VPS (Bun)** | `bun run start:checkout` | Self-hosted, set `CHECKOUT_ENDPOINT` to your server URL |
+
+See [docs/ecommerce.md](docs/ecommerce.md) for the full GitHub Actions workflow and required secrets.
 
 ---
 
