@@ -130,13 +130,13 @@ Returning `''` when data is missing makes `{{#if feature-grid}}` conditionals wo
 
 ```
 content/index.md          templates/landing.html       src/components/card-grid.ts
-┌──────────────┐          ┌────────────────────┐       ┌─────────────────────┐
-│ Features:    │          │ {{#if feature-grid}}│       │ CardGrid.render()   │
-│   heading:…  │──────▶   │   {{feature-grid}}  │──▶    │   → <section>…      │
-│   items:     │  YAML    │ {{/if}}            │  tag   │     <div class=grid>│
-│     - icon…  │          └────────────────────┘ engine │       <div>card</div>
-│     - icon…  │                                       │     </div>           │
-└──────────────┘                                       └─────────────────────┘
+┌──────────────┐        ┌─────────────────────┐       ┌─────────────────────┐
+│ Features:    │        │{{#if feature-grid}} │       │ CardGrid.render()   │
+│   heading:…  │──────> │  {{feature-grid}}   │────>  │  <section>…         │
+│   items:     │ YAML   │ {{/if}}             │  tag  │   <div class=grid>  │
+│     - icon…  │        └─────────────────────┘ engine│    <div>card</div>  |
+│     - icon…  │                                      │   </div>            │
+└──────────────┘                                      └─────────────────────┘
 ```
 
 Content authors control **what** data appears. Components control **how** it looks. Templates control **where** it goes. No layer reaches into another.
