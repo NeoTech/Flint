@@ -4,11 +4,14 @@ import { join } from 'path';
 import { generateProducts } from './generate-products.js';
 import { stripeSync } from './stripe-sync.js';
 
+// Active theme — set THEME in .env or environment to switch themes
+const theme = process.env.THEME || 'default';
+
 // Default build configuration
 const config: BuildConfig = {
   contentDir: join(process.cwd(), 'content'),
   outputDir: join(process.cwd(), 'dist'),
-  templatesDir: join(process.cwd(), 'templates'),
+  theme,
   defaultTitle: 'My Static Site',
   siteUrl: process.env.SITE_URL || '',
 };

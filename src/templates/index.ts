@@ -11,7 +11,7 @@
  *   3. That's it — no TypeScript needed
  */
 
-export { TemplateRegistry, loadTemplatesFromDir } from './template-registry.js';
+export { TemplateRegistry, loadTemplatesFromDir, overlayTemplatesFromDir } from './template-registry.js';
 export type { TemplateContext } from './template-registry.js';
 export { processTemplate, resolveTag, estimateReadingTime, formatDate } from './tag-engine.js';
 export { renderHead, renderFootScripts } from './helpers.js';

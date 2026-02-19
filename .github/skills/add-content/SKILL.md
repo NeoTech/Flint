@@ -7,6 +7,18 @@ description: Create or edit Flint content pages (Markdown + YAML frontmatter). U
 
 Create or modify content pages in `content/`. Each `.md` file becomes an HTML page at build time. The file path determines the URL; frontmatter determines everything else.
 
+## Trigger Phrases
+
+- "Add a page about [topic]"
+- "Create a blog post about [topic]"
+- "Add a new section called [name]"
+- "Write content for [page]"
+- "Create a landing page for [topic]"
+- "Add [name] to the blog"
+- "Update the frontmatter on [page]"
+- "Add a child page under [section]"
+- "Create a product page for [name]"
+
 ## When to Use
 
 - Adding a new page, blog post, section index, or product
@@ -77,7 +89,7 @@ See `references/directives.md` for full options and placeholders.
 
 - `Short-URI` is unique across all content files
 - `Parent` matches an existing section's `Short-URI` or is `root`
-- `Template` matches a file in `templates/` (without `.html`)
+- `Template` matches a file in `themes/default/templates/` (without `.html`)
 - `Type` is one of: `page`, `post`, `section`, `product`
 - Section indexes include a `:::children` directive
 - Products have all four product fields

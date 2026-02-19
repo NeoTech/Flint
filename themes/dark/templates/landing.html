@@ -1,0 +1,42 @@
+{{head}}
+<body class="min-h-screen" style="background-color:#0f0818;color:#e0d0ff;">
+    <div id="app" class="flex flex-col min-h-screen overflow-x-hidden">
+        {{#if navigation}}{{navigation}}{{/if}}
+
+        <!-- Stats bar sits right under the nav — quick social proof before the hero -->
+        {{#if stats-bar}}
+        <div class="border-b" style="border-color:#2a1540;">
+            {{stats-bar}}
+        </div>
+        {{/if}}
+
+        <!-- Hero — full-width, centred, no side padding cap -->
+        <section class="w-full">
+            {{#if hero}}{{hero}}{{/if}}
+        </section>
+
+        <main class="flex-grow">
+            <div class="overflow-hidden">
+
+                <!-- Feature grid — comes straight after hero so value props land early -->
+                {{#if feature-grid}}{{feature-grid}}{{/if}}
+
+                <!-- Markdown body (intro text, links, etc.) -->
+                <div class="max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+                    {{content}}
+                </div>
+
+                <!-- Showcase grid — secondary social proof further down the page -->
+                {{#if showcase-grid}}{{showcase-grid}}{{/if}}
+
+                <!-- CTA at the very bottom of the content area -->
+                {{#if call-to-action}}{{call-to-action}}{{/if}}
+
+            </div>
+        </main>
+
+        {{#if label-footer}}{{label-footer}}{{/if}}
+    </div>
+    {{foot-scripts}}
+</body>
+</html>

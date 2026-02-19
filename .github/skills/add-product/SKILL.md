@@ -8,6 +8,18 @@ description: Add or update a product in the Flint ecommerce shop. Use when the u
 
 Products are managed through `products.yaml`. The build pipeline generates scaffold content pages, syncs with Stripe, and writes back Payment Link URLs automatically.
 
+## Trigger Phrases
+
+- "Add a new product called [name]"
+- "Add [name] to the shop"
+- "Change the price of [product] to [amount]"
+- "Update the description for [product]"
+- "Remove [product] from the shop"
+- "Sync products to Stripe"
+- "The payment link for [product] is wrong"
+- "Add a [name] product at $[price]"
+- "Update products.yaml"
+
 ## Workflow
 
 ### 1. Add the entry to `products.yaml`

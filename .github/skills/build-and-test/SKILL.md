@@ -7,6 +7,19 @@ description: Build the Flint static site and run tests. Use when compiling Markd
 
 Core commands for building the site, running tests, and checking code quality.
 
+## Trigger Phrases
+
+- "Build the site"
+- "Run the tests"
+- "Run `bun run build`"
+- "Check for type errors"
+- "Lint the code"
+- "Why is the build failing?"
+- "Fix the test failures"
+- "Start the dev server"
+- "Typecheck everything"
+- "Debug the build error"
+
 ## When to Use
 
 - After creating or editing content, templates, or components

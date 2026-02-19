@@ -1,6 +1,6 @@
 # Template Examples
 
-## Default Page (`templates/default.html`)
+## Default Page (`themes/default/templates/default.html`)
 
 Standard page with navigation, centered content, and label footer.
 
@@ -21,7 +21,7 @@ Standard page with navigation, centered content, and label footer.
 </html>
 ```
 
-## Blog Post (`templates/blog-post.html`)
+## Blog Post (`themes/default/templates/blog-post.html`)
 
 Article layout with byline header wrapped in `<article>` with prose styling.
 
@@ -45,7 +45,7 @@ Article layout with byline header wrapped in `<article>` with prose styling.
 </html>
 ```
 
-## Shop (`templates/shop.html`)
+## Shop (`themes/default/templates/shop.html`)
 
 Shop layout with cart widget positioned top-right.
 
@@ -95,7 +95,7 @@ Two-column layout with sidebar navigation. Not in codebase — illustrates the p
 </html>
 ```
 
-## Agent Info (`templates/agent-info.html`)
+## Agent Info (`themes/default/templates/agent-info.html`)
 
 Two-column layout with content + data-driven skill cards on left, sticky sidebar on right. Demonstrates frontmatter-driven component tags.
 

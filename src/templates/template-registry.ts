@@ -118,3 +118,23 @@ export function loadTemplatesFromDir(dir: string): TemplateRegistry {
 
   return registry;
 }
+
+/**
+ * Overlay .html template files from a theme directory onto an existing registry.
+ * Only files present in the theme directory are overwritten; the rest are kept.
+ * Silently skips if the directory does not exist.
+ */
+export function overlayTemplatesFromDir(dir: string, registry: TemplateRegistry): void {
+  if (!existsSync(dir)) {
+    return;
+  }
+
+  const files = readdirSync(dir);
+  for (const file of files) {
+    if (file.endsWith('.html')) {
+      const name = basename(file, '.html');
+      const content = readFileSync(join(dir, file), 'utf-8');
+      registry.register(name, content);
+    }
+  }
+}

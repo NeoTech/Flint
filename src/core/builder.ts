@@ -9,13 +9,15 @@ import { generatePageIndex, generateLabelSlug, type PageIndexEntry } from './pag
 import { generateSitemap, generateRobotsTxt, generateLlmsTxt } from './seo.js';
 import { rewriteAbsolutePaths } from './base-path.js';
 import { LabelIndex } from '../components/label-index.js';
-import { loadTemplatesFromDir, type TemplateContext } from '../templates/index.js';
+import { loadTemplatesFromDir, overlayTemplatesFromDir, type TemplateContext } from '../templates/index.js';
 import type { TemplateRegistry } from '../templates/template-registry.js';
 
 export interface BuildConfig {
   contentDir: string;
   outputDir: string;
   templatesDir?: string;
+  /** Active theme name — must match a subdirectory under themes/. Defaults to 'default'. */
+  theme?: string;
   navigation?: NavItem[];
   defaultTitle?: string;
   siteUrl?: string;
@@ -46,8 +48,16 @@ export class SiteBuilder {
   constructor(config: BuildConfig) {
     this.config = config;
     this.compiler = new MarkdownCompiler();
-    const templatesDir = config.templatesDir || join(dirname(config.contentDir), 'templates');
+    const root = dirname(config.contentDir);
+    const defaultTemplatesDir = join(root, 'themes', 'default', 'templates');
+    const templatesDir = config.templatesDir || defaultTemplatesDir;
     this.templateRegistry = loadTemplatesFromDir(templatesDir);
+    // Overlay theme-specific templates (only if theme is not 'default')
+    const theme = config.theme || 'default';
+    if (theme !== 'default') {
+      const themeTemplatesDir = join(root, 'themes', theme, 'templates');
+      overlayTemplatesFromDir(themeTemplatesDir, this.templateRegistry);
+    }
   }
 
   /**

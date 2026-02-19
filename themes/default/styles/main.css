@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply antialiased;
+  }
+  
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+  
+  h1 {
+    @apply text-2xl sm:text-4xl mb-6;
+  }
+  
+  h2 {
+    @apply text-xl sm:text-3xl mb-4 mt-8;
+  }
+  
+  h3 {
+    @apply text-lg sm:text-2xl mb-3 mt-6;
+  }
+  
+  p {
+    @apply mb-4 leading-relaxed;
+  }
+  
+  /* Link styles */
+  a {
+    @apply text-blue-600 hover:text-blue-800 transition-colors;
+  }
+  
+  /* List styles */
+  ul, ol {
+    @apply mb-4 ml-6;
+  }
+  
+  ul {
+    @apply list-disc;
+  }
+  
+  ol {
+    @apply list-decimal;
+  }
+  
+  li {
+    @apply mb-1;
+  }
+  
+  /* Code styles */
+  code {
+    @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+  
+  pre {
+    @apply bg-gray-900 text-gray-100 p-3 sm:p-4 rounded-lg overflow-x-auto mb-4 text-sm;
+    max-width: 100%;
+  }
+  
+  pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+  
+  /* Blockquote styles */
+  blockquote {
+    @apply border-l-4 border-gray-300 pl-4 italic my-4 text-gray-700;
+  }
+  
+  /* Table styles — wrap in scrollable container for mobile */
+  table {
+    @apply w-full border-collapse mb-4;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  th, td {
+    @apply border border-gray-300 px-3 py-2 text-left text-sm sm:text-base sm:px-4;
+  }
+  
+  th {
+    @apply bg-gray-100 font-semibold;
+  }
+  
+  tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+  
+  /* Horizontal rule */
+  hr {
+    @apply my-8 border-gray-300;
+  }
+
+  /* Prevent content overflow on mobile */
+  img, video, iframe, embed, object {
+    @apply max-w-full h-auto;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .prose {
+    @apply max-w-none;
+  }
+  
+  .btn {
+    @apply px-4 py-2 rounded font-medium transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+}
+
+/* HTMX indicator styles */
+.htmx-indicator {
+  @apply opacity-0 transition-opacity duration-200;
+}
+
+.htmx-request .htmx-indicator {
+  @apply opacity-100;
+}
+
+.htmx-request.htmx-indicator {
+  @apply opacity-100;
+}

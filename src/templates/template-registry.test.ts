@@ -5,6 +5,7 @@ import { join } from 'path';
 import {
   TemplateRegistry,
   loadTemplatesFromDir,
+  overlayTemplatesFromDir,
   type TemplateContext,
 } from './template-registry.js';
 
@@ -131,5 +132,72 @@ describe('loadTemplatesFromDir', () => {
     const ctx = makeContext({ title: 'Loaded', content: '<p>Works</p>' });
     const html = registry.render('test', ctx);
     expect(html).toBe('<h1>Loaded</h1><main><p>Works</p></main>');
+  });
+});
+
+describe('overlayTemplatesFromDir', () => {
+  let baseDir: string;
+  let themeDir: string;
+
+  beforeEach(() => {
+    baseDir = mkdtempSync(join(tmpdir(), 'overlay-base-'));
+    themeDir = mkdtempSync(join(tmpdir(), 'overlay-theme-'));
+  });
+
+  afterEach(() => {
+    rmSync(baseDir, { recursive: true, force: true });
+    rmSync(themeDir, { recursive: true, force: true });
+  });
+
+  it('should overwrite only the templates present in the theme dir', () => {
+    writeFileSync(join(baseDir, 'default.html'), '<p>base default</p>');
+    writeFileSync(join(baseDir, 'blog-post.html'), '<p>base blog</p>');
+    writeFileSync(join(themeDir, 'default.html'), '<p>theme default</p>');
+
+    const registry = loadTemplatesFromDir(baseDir);
+    overlayTemplatesFromDir(themeDir, registry);
+
+    expect(registry.get('default')).toBe('<p>theme default</p>');
+    expect(registry.get('blog-post')).toBe('<p>base blog</p>');
+  });
+
+  it('should add new templates defined only in the theme dir', () => {
+    writeFileSync(join(baseDir, 'default.html'), '<p>base</p>');
+    writeFileSync(join(themeDir, 'custom.html'), '<p>theme only</p>');
+
+    const registry = loadTemplatesFromDir(baseDir);
+    overlayTemplatesFromDir(themeDir, registry);
+
+    expect(registry.has('custom')).toBe(true);
+    expect(registry.get('custom')).toBe('<p>theme only</p>');
+  });
+
+  it('should silently do nothing when the theme dir does not exist', () => {
+    writeFileSync(join(baseDir, 'default.html'), '<p>base</p>');
+    const registry = loadTemplatesFromDir(baseDir);
+    expect(() => overlayTemplatesFromDir('/tmp/no-such-theme-xyz', registry)).not.toThrow();
+    expect(registry.get('default')).toBe('<p>base</p>');
+  });
+
+  it('should ignore non-.html files in the theme dir', () => {
+    writeFileSync(join(baseDir, 'default.html'), '<p>base</p>');
+    writeFileSync(join(themeDir, 'README.md'), '# theme readme');
+    writeFileSync(join(themeDir, 'config.json'), '{}');
+
+    const registry = loadTemplatesFromDir(baseDir);
+    overlayTemplatesFromDir(themeDir, registry);
+
+    expect(registry.names()).toEqual(['default']);
+  });
+
+  it('should leave all base templates unchanged when theme dir is empty', () => {
+    writeFileSync(join(baseDir, 'default.html'), '<p>base default</p>');
+    writeFileSync(join(baseDir, 'blank.html'), '<p>base blank</p>');
+
+    const registry = loadTemplatesFromDir(baseDir);
+    overlayTemplatesFromDir(themeDir, registry);
+
+    expect(registry.names().sort()).toEqual(['blank', 'default']);
+    expect(registry.get('default')).toBe('<p>base default</p>');
   });
 });

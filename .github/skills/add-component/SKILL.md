@@ -7,6 +7,16 @@ description: Create or edit Flint UI components (TypeScript classes extending Co
 
 Create or modify reusable UI components in `src/components/`. Components are TypeScript classes that return HTML strings, invoked via `{{tag}}` placeholders in templates.
 
+## Trigger Phrases
+
+- "Create a [name] component"
+- "Add a reusable [card / banner / alert / grid] UI element"
+- "Build a [name] widget that appears on multiple pages"
+- "I need a {{tag}} that renders [description]"
+- "Add a [testimonial / pricing / FAQ] section component"
+- "Make the [name] component show [new data]"
+- "Extend the [existing component] to support [variant]"
+
 ## When to Use
 
 - Building reusable UI that appears on multiple pages (nav, footer, card, alert)
@@ -109,7 +119,7 @@ The tag-engine case reads this and passes it to the component. Content authors c
 
 ### 5. Use in templates
 
-Add `{{my-tag}}` to `templates/*.html`. Guard optional tags:
+Add `{{my-tag}}` to `themes/default/templates/*.html` (or the active theme's template). Guard optional tags:
 ```html
 {{#if my-tag}}{{my-tag}}{{/if}}
 ```

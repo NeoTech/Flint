@@ -2,12 +2,23 @@ import { defineConfig } from '@rspack/cli';
 import { rspack } from '@rspack/core';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { getKeyDefines } from './scripts/obfuscate-key.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
 const basePath = process.env.BASE_PATH || '';
+
+// Resolve the active theme's CSS, falling back to the default theme
+const _theme = (process.env.THEME || '').trim();
+function resolveThemeCss(): string {
+  if (_theme && _theme !== 'default') {
+    const themed = path.resolve(__dirname, `themes/${_theme}/styles/main.css`);
+    if (existsSync(themed)) return themed;
+  }
+  return path.resolve(__dirname, 'themes/default/styles/main.css');
+}
+const resolvedThemeCss = resolveThemeCss();
 
 function readDotEnv(): Record<string, string> {
   try {
@@ -42,6 +53,9 @@ export default defineConfig({
     clean: false, // Don't clean - static builder outputs to dist too
   },
   resolve: {
+    alias: {
+      'flint-theme-styles': resolvedThemeCss,
+    },
     extensions: ['.ts', '.js'],
     extensionAlias: {
       '.js': ['.ts', '.js'],
@@ -83,6 +97,7 @@ export default defineConfig({
     }),
     new rspack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      __THEME__: JSON.stringify(_theme || 'default'),
       __CHECKOUT_MODE__: JSON.stringify(getEnvVar('CHECKOUT_MODE', 'payment-links')),
       __CHECKOUT_ENDPOINT__: JSON.stringify(getEnvVar('CHECKOUT_ENDPOINT', 'http://localhost:3001')),
       __BASE_PATH__: JSON.stringify(getEnvVar('BASE_PATH', '')),

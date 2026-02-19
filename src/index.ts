@@ -2,7 +2,7 @@
 // This file is bundled by Rspack and includes HTMX
 
 import 'htmx.org';
-import './styles/main.css';
+import 'flint-theme-styles';
 
 // --- Cart queue stub ---
 // Provides window.CartAPI stub + queue so product fragments can call

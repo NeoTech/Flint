@@ -5,7 +5,17 @@ description: Create or edit Flint page templates (HTML with {{tag}} placeholders
 
 # Add / Edit a Template
 
-Create or modify HTML page templates in `templates/`. Templates define page structure and layout using `{{tag}}` placeholders — no TypeScript needed.
+Create or modify HTML page templates in `themes/default/templates/`. Templates define page structure and layout using `{{tag}}` placeholders — no TypeScript needed.
+
+## Trigger Phrases
+
+- "Create a new template for [layout]"
+- "Add a [sidebar / full-width / article] layout"
+- "Change the page structure for [page type]"
+- "Move the navigation to the side"
+- "Make a two-column layout template"
+- "Add a new page layout"
+- "Create a template that shows [component] after the content"
 
 ## When to Use
 
@@ -17,7 +27,7 @@ Create or modify HTML page templates in `templates/`. Templates define page stru
 
 ### 1. Check existing templates
 
-Before creating a new template, check `templates/` — reuse or copy an existing one if close enough.
+Before creating a new template, check `themes/default/templates/` — reuse or copy an existing one if close enough.
 
 | Name | Purpose |
 |------|---------|
@@ -29,7 +39,7 @@ Before creating a new template, check `templates/` — reuse or copy an existing
 
 ### 2. Create the file
 
-Create `templates/<name>.html`. Start from this skeleton:
+Create `themes/default/templates/<name>.html`. Start from this skeleton:
 
 ```html
 {{head}}

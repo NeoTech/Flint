@@ -58,7 +58,7 @@ Detailed inventory of every file in `docs/`. Use this to decide which doc to upd
 **Sections:** Location and listing, Selecting a template, Tag reference table, Conditionals (`{{#if}}`), Creating a template, Constraints.
 
 **Update when:**
-- Adding a new template to `templates/`
+- Adding a new template to `themes/default/templates/`
 - Adding a new `{{tag}}` to the tag engine
 - Changing how conditionals work
 - Modifying the template rendering pipeline

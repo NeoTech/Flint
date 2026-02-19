@@ -7,6 +7,16 @@ description: Create or edit Flint developer documentation (docs/*.md). Use when 
 
 Create or modify developer documentation in `docs/`. These are **internal reference docs** for contributors and AI agents — not site content pages. They explain how the system works, not what the site says.
 
+## Trigger Phrases
+
+- "Document how [system / module] works"
+- "Update the docs for [feature]"
+- "Write a deep-dive on [topic]"
+- "Add API reference for [module]"
+- "The docs are out of date for [feature] — update them"
+- "Document this architecture decision"
+- "Add docs explaining the [pipeline / build system / component model]"
+
 ## When to Use
 
 - Adding a new doc for a system area (new module, new integration)

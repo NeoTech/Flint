@@ -66,7 +66,7 @@ Every decision starts with: **which layer does this belong in?**
 | Layer | Location | Responsibility |
 |-------|----------|----------------|
 | **Content** | `content/*.md` | Page text, frontmatter data, `:::children`/`:::html`/HTMX links |
-| **Templates** | `templates/*.html` | Page skeleton with `{{tag}}` placeholders — no logic |
+| **Templates** | `themes/default/templates/*.html` | Page skeleton with `{{tag}}` placeholders — no logic |
 | **Components** | `src/components/*.ts` | Reusable server-rendered UI with typed props |
 | **Client** | `src/client/*.ts` | Browser-side JS (DOM events, fetch, IndexedDB) — bundled by Rspack |
 | **Styles** | Tailwind classes | Inline in templates, components, and `:::html` blocks |
@@ -109,6 +109,7 @@ Use the appropriate skill for each task:
 | Add/edit developer documentation | `add-documentation` |
 | Add/update a shop product (products.yaml + Stripe) | `add-product` |
 | Build, test, lint, typecheck, debug | `build-and-test` |
+| Build a Flint template from a URL or screenshot | `design-to-template` |
 
 Skills live in `.github/skills/` with references for detailed field lists, examples, and API docs.
 
