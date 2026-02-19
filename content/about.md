@@ -19,7 +19,7 @@ Keywords:
 
 # About This Project
 
-This static site generator demonstrates a modern approach to building websites:
+This static site generator demonstrates a modern approach to building websites — including a full e-commerce pipeline with Stripe, a multi-item cart, and serverless checkout.
 
 ## Technology Stack
 
@@ -30,16 +30,68 @@ This static site generator demonstrates a modern approach to building websites:
 | Markdown | Content authoring |
 | HTMX | Dynamic interactions |
 | Tailwind CSS | Styling |
-| Bun test | Testing |
+| Bun | Runtime, test runner, checkout server |
+| Cloudflare Workers | Serverless checkout function (edge-deployed) |
+| Stripe | Payments, products, checkout sessions |
 
 ## Architecture
 
 The project follows a **test-first, component-driven** architecture:
 
-1. **Core Layer** - Frontmatter parsing, Markdown compilation
-2. **Component Layer** - Reusable UI components
-3. **Template Layer** - Page assembly
-4. **Build Layer** - File processing and output
+1. **Core Layer** — Frontmatter parsing, Markdown compilation
+2. **Component Layer** — Reusable UI components
+3. **Template Layer** — Page assembly
+4. **Build Layer** — File processing and output
+5. **E-commerce Layer** — Stripe sync, cart, checkout server
+
+## Checkout Modes
+
+The cart supports two checkout strategies — choose the one that fits your hosting setup.
+
+### Payment Links (default — no server)
+
+```
+Add to Cart → window.location.href = stripe_payment_link
+```
+
+Each product gets a pre-generated [Stripe Payment Link](https://stripe.com/docs/payment-links) created at build time by `bun run build:sync`. Clicking **Add to Cart** navigates directly to that product's hosted Stripe page — no server involved.
+
+**Best for:** Simple stores, GitHub Pages, any static host.  
+**Limitation:** One product per checkout session. No multi-item cart.
+
+### Serverless (multi-item cart)
+
+```
+Add to Cart → IndexedDB cart → POST /checkout → Stripe Session URL → redirect
+```
+
+Items accumulate in a persistent cart (stored in IndexedDB, AES-GCM encrypted on HTTPS). Clicking **Checkout** posts the full cart to a checkout server, which creates a Stripe Checkout Session and returns the redirect URL.
+
+**Best for:** Stores where customers buy multiple items at once.  
+**Requires:** A running checkout server — either a local Bun process or a deployed Cloudflare Worker.
+
+## Checkout Runtimes (serverless mode)
+
+When `CHECKOUT_MODE=serverless`, you choose where the checkout server runs:
+
+### Bun Server
+
+```bash
+bun run serve:checkout   # dev — reads .env
+bun run start:checkout   # production
+```
+
+A lightweight Bun HTTP server (`functions/checkout-server.ts`) that handles `POST /checkout` and `GET /health`. Needs to be hosted on a VPS, Railway, Fly.io, or similar.
+
+### Cloudflare Workers
+
+```bash
+bun run deploy:checkout:cloudflare
+```
+
+The same checkout logic (`functions/checkout-cloudflare.ts`) deployed as a Cloudflare Worker — globally distributed, no server to manage, scales to zero. The deploy script bundles the function, sets secrets, and enables the `*.workers.dev` subdomain automatically.
+
+Set `CHECKOUT_RUNTIME=cloudflare` and `CHECKOUT_ENDPOINT` to the Worker URL in your `.env` and GitHub repository variables.
 
 ## Development Workflow
 
@@ -69,11 +121,11 @@ The trick is pre-building small `.html` fragments at build time and serving them
 
 ## Source Code
 
-The source code is organized as follows:
-
-- `src/core/` - Core functionality (parsing, compilation)
-- `src/components/` - UI components
-- `content/` - Markdown content files
-- `scripts/` - Build scripts
+- `src/core/` — Core functionality (parsing, compilation)
+- `src/components/` — UI components
+- `src/client/` — Browser-side JS (cart, checkout, navigation)
+- `functions/` — Checkout server (Bun adapter + Cloudflare Worker adapter)
+- `scripts/` — Build scripts (Stripe sync, product generation, cleanup, Cloudflare deploy)
+- `content/` — Markdown content files
 
 [← Back to Home](/)
