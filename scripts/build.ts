@@ -1,6 +1,6 @@
 import { SiteBuilder, type BuildConfig } from '../src/core/builder.js';
 import { mkdirSync, existsSync, copyFileSync, readdirSync } from 'fs';
-import { join, extname } from 'path';
+import { join } from 'path';
 import { generateProducts } from './generate-products.js';
 import { stripeSync } from './stripe-sync.js';
 

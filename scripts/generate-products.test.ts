@@ -1,12 +1,10 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'fs';
+import { describe, test, expect } from 'bun:test';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { normaliseProduct, PRODUCT_DEFAULTS } from './products-schema.js';
 import { generateProducts, loadProductCatalogue } from './generate-products.js';
-import yaml from 'js-yaml';
 
 const ROOT = process.cwd();
-const YAML_PATH = join(ROOT, 'products.yaml');
 const SHOP_DIR = join(ROOT, 'content', 'shop');
 
 /* ------------------------------------------------------------------ */

@@ -54,7 +54,7 @@ export class TreeMenu extends Component<TreeMenuProps> {
       const displayStyle = isExpanded ? 'block' : 'none';
       html += `
       <div class="children ml-2 mt-1 space-y-1" style="display: ${displayStyle}">
-        ${node.children!.map(child => this.renderNode(child, currentUri, useHtmx, depth + 1)).join('')}
+        ${(node.children ?? []).map(child => this.renderNode(child, currentUri, useHtmx, depth + 1)).join('')}
       </div>`;
     }
 

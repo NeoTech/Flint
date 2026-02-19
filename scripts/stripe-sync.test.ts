@@ -7,8 +7,8 @@
  * Run with: STRIPE_SECRET_KEY=sk_test_... bun test scripts/stripe-sync.test.ts
  */
 
-import { describe, test, expect, beforeAll } from 'bun:test';
-import { readFileSync, writeFileSync } from 'fs';
+import { describe, test, expect } from 'bun:test';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const ROOT = process.cwd();
@@ -50,11 +50,6 @@ try {
 const describeStripe = stripeKeyValid ? describe : describe.skip;
 
 describeStripe('stripe-sync (integration)', () => {
-  let originalYaml: string;
-
-  beforeAll(() => {
-    originalYaml = readFileSync(YAML_PATH, 'utf-8');
-  });
 
   test('stripeSync creates products and writes back price IDs', async () => {
     // Dynamic import to avoid loading Stripe when key is absent

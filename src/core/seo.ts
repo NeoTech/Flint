@@ -44,7 +44,7 @@ export function generateLlmsTxt(
   for (const page of nonPosts) {
     const key = page.category || 'Docs';
     if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(page);
+    groups.get(key)?.push(page);
   }
 
   const lines: string[] = [];

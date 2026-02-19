@@ -17,7 +17,7 @@
  * Run: bun run deploy:checkout:cloudflare
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const ROOT = process.cwd();
@@ -51,18 +51,6 @@ function getEnv(key: string): string {
   return process.env[key] || envFile[key] || '';
 }
 
-function patchEnvFile(key: string, value: string): void {
-  const envPath = join(ROOT, '.env');
-  let contents = existsSync(envPath) ? readFileSync(envPath, 'utf-8') : '';
-  const regex = new RegExp(`^${key}=.*$`, 'm');
-  if (regex.test(contents)) {
-    contents = contents.replace(regex, `${key}=${value}`);
-  } else {
-    contents += `\n${key}=${value}\n`;
-  }
-  writeFileSync(envPath, contents, 'utf-8');
-  console.log(`  âœ“ Written ${key} to .env`);
-}
 
 /* ------------------------------------------------------------------ */
 /*  Wrangler auth env                                                  */

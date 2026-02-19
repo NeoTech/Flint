@@ -1,5 +1,5 @@
-import { readdirSync, statSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join, dirname, extname, basename, relative } from 'path';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join, dirname, extname, relative } from 'path';
 import { MarkdownCompiler } from './markdown.js';
 import type { NavItem } from '../components/navigation.js';
 import { parseFrontmatter, type FrontmatterData } from './frontmatter.js';
@@ -271,7 +271,7 @@ export class SiteBuilder {
             order: metadata.order,
           });
         }
-      } catch (error) {
+      } catch {
         // Skip files that can't be parsed
         continue;
       }
@@ -305,7 +305,7 @@ export class SiteBuilder {
           childrenMap.set(parent, []);
         }
 
-        childrenMap.get(parent)!.push({
+        childrenMap.get(parent)?.push({
           title: metadata.title,
           url,
           description: metadata.description,
@@ -390,7 +390,7 @@ export class SiteBuilder {
         if (!labelPages.has(label)) {
           labelPages.set(label, []);
         }
-        labelPages.get(label)!.push(entry);
+        labelPages.get(label)?.push(entry);
       }
     }
 

@@ -23,7 +23,7 @@ const PATH_ATTRS = ['hx-get', 'hx-post', 'hx-put', 'hx-delete', 'hx-patch', 'hre
 function buildPattern(attrs: string[]): RegExp {
   const attrGroup = attrs.join('|');
   // Match: attr="/" where the value starts with / but not //
-  return new RegExp(`(${attrGroup})=(['"])(\/(?!\\/)[^'"]*?)\\2`, 'g');
+  return new RegExp(`(${attrGroup})=(['"])(/(?!/)[^'"]*?)\\2`, 'g');
 }
 
 const ATTR_RE = buildPattern(PATH_ATTRS);

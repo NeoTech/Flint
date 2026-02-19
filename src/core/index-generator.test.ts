@@ -3,7 +3,6 @@ import {
   generateCategoryIndex,
   generateLabelIndex,
   generateAllIndexes,
-  type IndexPage 
 } from './index-generator.js';
 
 describe('IndexGenerator', () => {

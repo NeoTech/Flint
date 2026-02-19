@@ -1,5 +1,4 @@
 // Hydration for product add-to-cart buttons
-import CartAPI from './cart-api.js';
 
 declare const __CHECKOUT_MODE__: string;
 

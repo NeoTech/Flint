@@ -40,7 +40,7 @@ async function ensureInit() {
   if (_encrypted && _key && stored && stored.iv && stored.ct) {
     try {
       _items = await crypto.decryptJson(_key, stored.iv, stored.ct);
-    } catch (e) {
+    } catch {
       _items = [];
     }
   } else if (!_encrypted && Array.isArray(stored)) {

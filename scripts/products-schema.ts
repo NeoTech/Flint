@@ -67,12 +67,12 @@ export function normaliseProduct(raw: Record<string, unknown>): ProductEntry {
     title: raw.title as string,
     description: raw.description as string,
     price_cents: raw.price_cents as number,
-    currency: (raw.currency as string) ?? PRODUCT_DEFAULTS.currency!,
-    image: (raw.image as string) ?? PRODUCT_DEFAULTS.image!,
-    order: (raw.order as number) ?? PRODUCT_DEFAULTS.order!,
-    labels: (raw.labels as string[]) ?? PRODUCT_DEFAULTS.labels!,
-    stripe_price_id: (raw.stripe_price_id as string) ?? PRODUCT_DEFAULTS.stripe_price_id!,
-    stripe_payment_link: (raw.stripe_payment_link as string) ?? PRODUCT_DEFAULTS.stripe_payment_link!,
+    currency: (raw.currency as string) ?? PRODUCT_DEFAULTS.currency ?? 'usd',
+    image: (raw.image as string) ?? PRODUCT_DEFAULTS.image ?? '\u{1F4E6}',
+    order: (raw.order as number) ?? PRODUCT_DEFAULTS.order ?? 100,
+    labels: (raw.labels as string[]) ?? PRODUCT_DEFAULTS.labels ?? ['shop'],
+    stripe_price_id: (raw.stripe_price_id as string) ?? PRODUCT_DEFAULTS.stripe_price_id ?? '',
+    stripe_payment_link: (raw.stripe_payment_link as string) ?? PRODUCT_DEFAULTS.stripe_payment_link ?? '',
     tax_code: raw.tax_code ? (raw.tax_code as string) : undefined,
   };
 }

@@ -2,7 +2,6 @@ import { describe, it, expect } from 'bun:test';
 import {
   generatePageIndex,
   generateLabelSlug,
-  type PageIndexEntry,
 } from './page-index.js';
 import type { PageMetadata } from './page-metadata.js';
 

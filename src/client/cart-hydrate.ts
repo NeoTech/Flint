@@ -9,21 +9,6 @@ declare const __CHECKOUT_MODE__: string;
 declare const __CHECKOUT_ENDPOINT__: string;
 declare const __BASE_PATH__: string;
 
-function deobfuscateKey(): string {
-  try {
-    const mask = __STRIPE_KEY_MASK__;
-    const data = __STRIPE_KEY_DATA__;
-    if (!mask || !data) return '';
-    const m = new Uint8Array(mask.match(/.{2}/g)!.map(h => parseInt(h, 16)));
-    const d = new Uint8Array(data.match(/.{2}/g)!.map(h => parseInt(h, 16)));
-    const out = new Uint8Array(m.length);
-    for (let i = 0; i < m.length; i++) out[i] = m[i] ^ d[i];
-    return new TextDecoder().decode(out);
-  } catch {
-    return '';
-  }
-}
-
 /* ------------------------------------------------------------------ */
 /*  Product-index cache (prices, titles, images)                      */
 /* ------------------------------------------------------------------ */
@@ -51,7 +36,7 @@ async function loadProductIndex(): Promise<Record<string, ProductMeta>> {
   } catch {
     _productIndex = {};
   }
-  return _productIndex!;
+  return _productIndex ?? {};
 }
 
 function formatCents(cents: number): string {
@@ -133,7 +118,8 @@ async function renderItems(items: Array<{ id: string; qty: number }>): Promise<v
     btn.dataset.flintBound = '1';
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      const id = btn.dataset.id!;
+      const id = btn.dataset.id ?? '';
+      if (!id) return;
       const delta = parseInt(btn.dataset.delta || '0', 10);
       const current = items.find(i => i.id === id);
       if (!current) return;
@@ -153,7 +139,8 @@ async function renderItems(items: Array<{ id: string; qty: number }>): Promise<v
     btn.dataset.flintBound = '1';
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      const id = btn.dataset.id!;
+      const id = btn.dataset.id ?? '';
+      if (!id) return;
       await CartAPI.removeItem(id);
     });
   });

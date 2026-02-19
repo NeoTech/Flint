@@ -1,4 +1,4 @@
-import { parseFrontmatter, type FrontmatterData } from './frontmatter.js';
+import { parseFrontmatter } from './frontmatter.js';
 
 export type PageType = 'page' | 'post' | 'section' | 'product';
 

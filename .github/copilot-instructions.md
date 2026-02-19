@@ -8,8 +8,10 @@
 
 - **Never open a new terminal** if there is already an agent-controlled terminal open. Reuse the existing terminal.
 - **EADDRINUSE error**: Inform the user the server is already running. Do **not** kill the process.
+- **Stale Rspack process**: If Rspack appears to be running without `bun run dev` being active, a previous dev instance is still alive. Tell the user to run `taskkill /IM bun.exe /F` (Windows) or `pkill bun` (macOS/Linux) to clear it.
 - **Test-first**: Always write or update tests before implementing features.
 - **Build after changes**: Run `bun run build` after content or code changes.
+- **Stripe sync**: After changing `products.yaml`, run `bun run build:sync` to sync prices and rebuild. Use `build:sync:force` to force-recreate all Payment Links. Use `stripe:cleanup` to archive all Flint-managed products and clear IDs before a full reset.
 
 ---
 
@@ -26,14 +28,34 @@ A **TypeScript static site generator** that compiles Markdown files into HTML pa
 
 ## Commands
 
+### Site
+
 | Command | Purpose |
-|---------|---------|
+|---------|--------|
 | `bun run build` | Compile content/ → dist/ |
-| `bun run dev` | Dev server on port 3000 with HMR |
+| `bun run dev` | Dev server on port 3000 with HMR (Rspack) |
+| `bun run build:sync` | Stripe sync + compile |
+| `bun run build:sync:force` | Force-recreate all Stripe Payment Links + compile |
+| `bun run generate` | Regenerate product pages from `products.yaml` |
+| `bun run stripe:cleanup` | Archive all Flint-managed Stripe products + clear `products.yaml` IDs |
+
+### Checkout server (serverless mode only)
+
+| Command | Purpose |
+|---------|--------|
+| `bun run serve:checkout` | Start Bun checkout server in dev mode (port 3001) |
+| `bun run start:checkout` | Start Bun checkout server in production mode |
+| `bun run deploy:checkout:cloudflare` | Deploy checkout function to Cloudflare Workers |
+
+### Quality
+
+| Command | Purpose |
+|---------|--------|
 | `bun run test:run` | Run all tests once |
 | `bun run test` | Test watch mode |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint |
+| `bun run lint:fix` | ESLint auto-fix |
 
 ---
 

@@ -43,7 +43,8 @@ export function buildPageHierarchy(pages: PageNode[]): PageNode | null {
   let rootNode: PageNode | null = null;
   
   for (const page of pages) {
-    const node = pageMap.get(page.shortUri)!;
+    const node = pageMap.get(page.shortUri);
+    if (!node) continue;
     // Only treat as root if parent is null, undefined, or empty string
     // A page with parent: 'root' is a child of the root page, not a root itself
     const isRoot = page.parent === null || page.parent === undefined || page.parent === '';

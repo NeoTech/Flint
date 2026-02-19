@@ -39,7 +39,7 @@ function createMockIDB() {
   const mockDB = {
     objectStoreNames: { contains: () => true },
     createObjectStore: mock(() => {}),
-    transaction: (stores: string[]) => ({
+    transaction: (_stores: string[]) => ({
       objectStore: (name: string) => mockObjectStore(name),
     }),
   };
