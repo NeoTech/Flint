@@ -435,3 +435,155 @@ describe('resolveTag – skill-cards', () => {
     expect(isTagTruthy('skill-cards', ctx)).toBe(true);
   });
 });
+
+// ---- Media tags ------------------------------------------------------------
+
+const IMG_ARRAY = ['/static/a.jpg', '/static/b.png', '/static/c.webp'];
+const IMG_ASSETS = [
+  { src: '/static/a.jpg', alt: 'A' },
+  { src: '/static/b.png', alt: 'B' },
+];
+
+describe('resolveTag – media-gallery', () => {
+  it('renders gallery grid from string[] Image', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = resolveTag('media-gallery', ctx);
+    expect(html).toContain('static-media-gallery');
+    expect(html).toContain('static/a.jpg');
+    expect(html).toContain('static/c.webp');
+  });
+
+  it('renders gallery from a single Image string (legacy)', () => {
+    const ctx = makeCtx({ frontmatter: { Image: '/static/hero.jpg' } });
+    const html = resolveTag('media-gallery', ctx);
+    expect(html).toContain('static-media-gallery');
+    expect(html).toContain('hero.jpg');
+  });
+
+  it('renders gallery from MediaAsset[] with alt/caption', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ASSETS } });
+    const html = resolveTag('media-gallery', ctx);
+    expect(html).toContain('alt="A"');
+    expect(html).toContain('alt="B"');
+  });
+
+  it('returns empty string when Image is absent', () => {
+    const ctx = makeCtx({ frontmatter: {} });
+    expect(resolveTag('media-gallery', ctx)).toBe('');
+  });
+
+  it('is falsy when Image is absent', () => {
+    expect(isTagTruthy('media-gallery', makeCtx({ frontmatter: {} }))).toBe(false);
+  });
+
+  it('is truthy when Image array is populated', () => {
+    expect(isTagTruthy('media-gallery', makeCtx({ frontmatter: { Image: IMG_ARRAY } }))).toBe(true);
+  });
+});
+
+describe('resolveTag – media-carousel', () => {
+  it('renders carousel with overflow-x-auto', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = resolveTag('media-carousel', ctx);
+    expect(html).toContain('static-media-carousel');
+    expect(html).toContain('overflow-x-auto');
+  });
+
+  it('returns empty string when Image is absent', () => {
+    expect(resolveTag('media-carousel', makeCtx({ frontmatter: {} }))).toBe('');
+  });
+});
+
+describe('resolveTag – media-hero', () => {
+  it('renders hero with first image eager-loaded', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = resolveTag('media-hero', ctx);
+    expect(html).toContain('static-media-hero');
+    expect(html).toContain('loading="eager"');
+    expect(html).toContain('static/a.jpg');
+  });
+
+  it('strips remain visible for extra images', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = resolveTag('media-hero', ctx);
+    expect(html).toContain('static-media-strip');
+    expect(html).toContain('static/b.png');
+  });
+
+  it('returns empty string when Image is absent', () => {
+    expect(resolveTag('media-hero', makeCtx({ frontmatter: {} }))).toBe('');
+  });
+});
+
+describe('resolveTag – media-strip', () => {
+  it('renders compact thumbnail row', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = resolveTag('media-strip', ctx);
+    expect(html).toContain('static-media-strip');
+    expect(html).toContain('h-20');
+  });
+
+  it('returns empty string when Image is absent', () => {
+    expect(resolveTag('media-strip', makeCtx({ frontmatter: {} }))).toBe('');
+  });
+});
+
+describe('resolveTag – media:N (indexed)', () => {
+  it('renders a single image at index 0', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = resolveTag('media:0', ctx);
+    expect(html).toContain('static-media-single');
+    expect(html).toContain('static/a.jpg');
+    expect(html).not.toContain('static/b.png');
+  });
+
+  it('renders the correct image at index 2', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = resolveTag('media:2', ctx);
+    expect(html).toContain('static/c.webp');
+    expect(html).not.toContain('static/a.jpg');
+  });
+
+  it('returns empty string for out-of-bounds index', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    expect(resolveTag('media:99', ctx)).toBe('');
+  });
+
+  it('returns empty string when Image is absent', () => {
+    const ctx = makeCtx({ frontmatter: {} });
+    expect(resolveTag('media:0', ctx)).toBe('');
+  });
+
+  it('works in processTemplate with {{media:1}}', () => {
+    const ctx = makeCtx({ frontmatter: { Image: IMG_ARRAY } });
+    const html = processTemplate('<div>{{media:1}}</div>', ctx);
+    expect(html).toContain('static/b.png');
+  });
+});
+
+describe('resolveTag – product with array Image', () => {
+  it('uses the first Image asset for product card', () => {
+    const ctx = makeCtx({
+      frontmatter: {
+        'Short-URI': 'my-prod',
+        Image: ['/static/product-1.jpg', '/static/product-2.jpg'],
+        PriceCents: 1999,
+      },
+    });
+    const html = resolveTag('product', ctx);
+    expect(html).toContain('product-1.jpg');
+    expect(html).not.toContain('product-2.jpg');
+  });
+
+  it('accepts legacy single string Image', () => {
+    const ctx = makeCtx({
+      frontmatter: {
+        'Short-URI': 'my-prod',
+        Image: '/static/single.jpg',
+        PriceCents: 500,
+      },
+    });
+    const html = resolveTag('product', ctx);
+    expect(html).toContain('single.jpg');
+  });
+});

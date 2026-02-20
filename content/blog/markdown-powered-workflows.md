@@ -1,25 +1,19 @@
 ---
-title: Markdown-Powered Workflows
+Title: Markdown-Powered Workflows
 Short-URI: markdown-workflows
-Template: blog-post
+Template: landing
 Type: post
 Category: Tips & Tricks
+Parent: blog
+Order: 4
+Author: Sam Writer
+Keywords: 'markdown,workflow,productivity,content management'
+Description: How to use markdown as the backbone of your content workflow
 Labels:
   - markdown
   - productivity
   - workflow
-Parent: blog
-Order: 4
-Author: Sam Writer
-Date: 2026-01-15
-Description: How to use markdown as the backbone of your content workflow
-Keywords:
-  - markdown
-  - workflow
-  - productivity
-  - content management
 ---
-
 # Markdown-Powered Workflows
 
 Markdown is more than a formatting syntax — it's a workflow tool. When your content lives in `.md` files with structured frontmatter, you unlock powerful automation and collaboration patterns.

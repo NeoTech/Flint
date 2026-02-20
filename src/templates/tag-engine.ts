@@ -30,6 +30,11 @@
  *   {{stats-bar}}      — dark-background statistics bar from frontmatter Stats array
  *   {{showcase-grid}}  — card grid from frontmatter Showcase object (CardGrid)
  *   {{call-to-action}} — banner CTA section (CtaSection variant='banner') from frontmatter CTA object
+ *   {{media-gallery}}  — responsive image grid from frontmatter Image array
+ *   {{media-carousel}} — horizontal-scroll strip from frontmatter Image array
+ *   {{media-hero}}     — first image as hero banner, remainder as strip
+ *   {{media-strip}}    — compact thumbnail row
+ *   {{media:N}}        — render single image at index N from frontmatter Image array
  */
 
 import { Navigation } from '../components/navigation.js';
@@ -41,6 +46,7 @@ import { SkillCards, type SkillInfo } from '../components/skill-cards.js';
 import { CtaSection, type CtaSectionProps } from '../components/cta-section.js';
 import { CardGrid, type CardGridProps } from '../components/card-grid.js';
 import { StatsBar, type StatsBarProps } from '../components/stats-bar.js';
+import { StaticMedia, normaliseMediaAssets } from '../components/static-media.js';
 import { renderHead, renderFootScripts } from './helpers.js';
 import type { TemplateContext } from './template-registry.js';
 
@@ -71,6 +77,14 @@ export function formatDate(date: Date): string {
  * Unknown tags pass through unchanged as {{tagName}}.
  */
 export function resolveTag(tagName: string, ctx: TemplateContext): string {
+  // Indexed media access: {{media:N}} — renders the Nth image (0-based)
+  const mediaIndexMatch = tagName.match(/^media:(\d+)$/);
+  if (mediaIndexMatch) {
+    const index = parseInt(mediaIndexMatch[1], 10);
+    const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+    return StaticMedia.render({ items: assets, index });
+  }
+
   switch (tagName) {
     case 'head':
       return renderHead({
@@ -175,7 +189,9 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
       const price = priceCents > 0
         ? `$${(priceCents / 100).toFixed(2)}`
         : '';
-      const image = (fm['Image'] ?? '') as string;
+      // Image may be a string or array — use first entry
+      const imageAssets = normaliseMediaAssets(fm['Image']);
+      const image = imageAssets[0]?.src ?? '';
       const description = (fm['Description'] ?? '') as string;
       const detail = (fm['Template'] ?? '') === 'product-detail';
       const stripePaymentLink = (fm['StripePaymentLink'] ?? '') as string;
@@ -220,6 +236,30 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
       const cta = ctx.frontmatter['CTA'] as CtaSectionProps | undefined;
       if (!cta) return '';
       return CtaSection.render({ ...cta, variant: 'banner' });
+    }
+
+    case 'media-gallery': {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'gallery' });
+    }
+
+    case 'media-carousel': {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'carousel' });
+    }
+
+    case 'media-hero': {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'hero' });
+    }
+
+    case 'media-strip': {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'strip' });
     }
 
     default:

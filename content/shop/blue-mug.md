@@ -12,7 +12,7 @@ Labels: &ref_0
   - coffee
 Parent: shop
 Author: System
-Date: '2026-02-19'
+Date: '2026-02-20'
 Description: >-
   A beautiful hand-crafted ceramic mug, perfect for your morning coffee. Each
   mug is individually glazed in our signature ocean-blue finish. Holds 12 oz of

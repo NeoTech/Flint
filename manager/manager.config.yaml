@@ -1,0 +1,20 @@
+# Flint Manager — site registry
+# Copy to manager.config.yaml and update the paths.
+# This file is git-ignored so your site list stays local.
+#
+#   cp manager.config.yaml.example manager.config.yaml
+
+sites:
+  - id: main
+    name: My Flint Site
+    # Path relative to the manager/ folder, or an absolute path.
+    path: ../
+    description: Local Flint site
+    theme: default
+
+  # Example: a separate cloned instance
+  # - id: client-a
+  #   name: Client A
+  #   path: ./sites/client-a
+  #   description: Client A production site
+  #   theme: dark

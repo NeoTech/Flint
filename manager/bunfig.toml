@@ -1,0 +1,4 @@
+[test]
+# Manager is a server-side Bun process — no happy-dom preload.
+# happy-dom replaces ReadableStream, TransformStream, Response, etc. with
+# browser polyfills incompatible with Bun's native stream/SSE APIs.

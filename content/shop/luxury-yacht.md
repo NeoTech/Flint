@@ -12,7 +12,7 @@ Labels: &ref_0
   - marine
 Parent: shop
 Author: System
-Date: '2026-02-19'
+Date: '2026-02-20'
 Description: >-
   A 42-metre flybridge motor yacht with twin diesel engines, five staterooms,
   and a sun deck with jacuzzi. Hull in pearl white.

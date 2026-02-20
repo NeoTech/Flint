@@ -1,0 +1,23 @@
+{
+  "name": "flint-manager",
+  "version": "0.1.0",
+  "description": "Flint Site Manager — web UI for managing one or more Flint static site instances",
+  "type": "module",
+  "scripts": {
+    "start": "bun server.ts",
+    "dev": "bun --hot server.ts",
+    "test": "bun test",
+    "test:run": "bun test --no-watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "@types/bun": "latest",
+    "typescript": "^5.7.0"
+  }
+}
