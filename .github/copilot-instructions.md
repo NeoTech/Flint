@@ -26,6 +26,62 @@ A **TypeScript static site generator** that compiles Markdown files into HTML pa
 
 ---
 
+## Workflow orchestration
+
+### 1. Plan Node Default
+- Enter plan mode for any non-trivial task (3+ steps, arhitectural changes, multiple files affected, etc.)
+- If something goes sideways, STOP and re-plan immediatly - don't keep pushing.
+- Use plan mode for verification steps, not just building
+- Write detailed specs upfront to reduce ambiguity and back-and-forth during implementation.
+
+### 2. Subagent Strategy
+- Use subagents liberally to keep main context window, clean.
+- Offload research, exploration, and parallel analysis to subagents.
+- For complex problems, throw more compute at it via subagents instead of trying to do it all in one agent.
+- One task per subagent for focused execution
+
+### 3. Self-improvement loop
+- After ANY correction from the user: update `.github/tasks/lessons.md` with the pattern of the mistake.
+- Write rules for yourself that prevent the same mistake.
+- Ruthlessly iterate on these lessons until the same mistake rate drops.
+- Review lessons at session start for relevant project.
+
+### 4. Verification before done
+- Never mark task complete without proving it works.
+- Diff Behavior between main and your changes when relevant
+- Ask yourself: "Would staff engineer approve this?"
+- Rrun tests, check logs, demonstration correctness
+
+### 5. Demand elegance (Balanced)
+- For non-trivial changes: Paus and ask "is there a simpler or more elegant way?"
+- If a fix feel hacky: "Knowing everything I know now, implement the elegant solution instead of the quick fix"
+- Skip this for simple, obvious fixes - don't over-enggineer
+- Challenge your own work before presenting it
+
+### 6. Automatically bug fixing
+- When given a bug report: Just fix it. Don't ask for hand-holding.
+- Point at logs, errors, failing tests - then resolve them
+- Zero context switching required from the user
+- Go fix failing tests without being told how
+- Go fix failing linting without being todl to
+
+## Task management
+
+1. **Plan first**: Write plan to `.github/tasks/todo.md` with checkable items.
+2. **Verify Plan**: Check in before starting implementation
+3. **Track progress*:: Mark items complete as you go
+4. **Explain changes**: High level summary at each step
+5. **Document results**: Add review section to `.github/tasks/todo.md`
+6. **Cappture lessons**: Update `.github/tasks/lessons.md` after corrections
+
+## Core principles
+
+- **Simpplicity first**: Make very change as simple as possible. Impact minimal code.
+- **No laziness**: Find root causes. No temporary fixes. Senior developer standard.
+- **Minimat impact**: Changes should only touch waht's necessary. Avoid introducing bugs.
+
+---
+
 ## Commands
 
 ### Site

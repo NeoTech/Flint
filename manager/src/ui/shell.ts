@@ -77,6 +77,8 @@ export function shell(opts: ShellOptions): string {
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
   <style>
     /* Prose styles for markdown preview */
     .prose { color: #e2e8f0; line-height: 1.7; }
@@ -103,6 +105,29 @@ export function shell(opts: ShellOptions): string {
     [data-drag-handle]:active { cursor: grabbing; }
     .sortable-ghost { opacity: 0.4; }
     .sortable-chosen { box-shadow: 0 0 0 2px #6366f1; border-radius: 6px; }
+    /* EasyMDE dark theme overrides */
+    .EasyMDEContainer { display: flex; flex-direction: column; flex: 1; min-height: 0; border-radius: 8px; overflow: hidden; border: 1px solid #374151; }
+    .EasyMDEContainer .editor-toolbar { background: #1f2937; border-bottom: 1px solid #374151; border-top: none; border-left: none; border-right: none; padding: 4px 6px; }
+    .EasyMDEContainer .editor-toolbar a, .EasyMDEContainer .editor-toolbar button { color: #9ca3af !important; border-color: transparent; }
+    .EasyMDEContainer .editor-toolbar a:hover, .EasyMDEContainer .editor-toolbar a.active { background: #374151; color: #e5e7eb !important; border-color: #4b5563; border-radius: 4px; }
+    .EasyMDEContainer .editor-toolbar i.separator { border-color: #374151; }
+    .EasyMDEContainer .CodeMirror { background: #030712; color: #e2e8f0; border: none; font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 13px; line-height: 1.6; flex: 1; min-height: 0; height: 100%; }
+    .EasyMDEContainer .CodeMirror-scroll { min-height: 200px; }
+    .EasyMDEContainer .CodeMirror-cursor { border-left-color: #818cf8; }
+    .EasyMDEContainer .CodeMirror-selected { background: #312e81; }
+    .EasyMDEContainer .editor-preview { background: #111827; color: #e2e8f0; border: none; padding: 1rem 1.5rem; }
+    .EasyMDEContainer .editor-preview-side { background: #111827; color: #e2e8f0; border-left: 1px solid #374151; padding: 1rem 1.5rem; }
+    .EasyMDEContainer .editor-statusbar { background: #1f2937; border-top: 1px solid #374151; color: #6b7280; font-size: 11px; padding: 2px 8px; }
+    .EasyMDEContainer .CodeMirror .cm-header { color: #a5b4fc; font-weight: 700; }
+    .EasyMDEContainer .CodeMirror .cm-strong { color: #f1f5f9; font-weight: 700; }
+    .EasyMDEContainer .CodeMirror .cm-em { color: #c7d2fe; font-style: italic; }
+    .EasyMDEContainer .CodeMirror .cm-link { color: #818cf8; }
+    .EasyMDEContainer .CodeMirror .cm-url { color: #6366f1; }
+    .EasyMDEContainer .CodeMirror .cm-quote { color: #94a3b8; }
+    .EasyMDEContainer .CodeMirror .cm-comment { color: #64748b; }
+    .EasyMDEContainer .CodeMirror .cm-variable-2 { color: #a5b4fc; }
+    /* Make EasyMDE fill its flex parent */
+    .body-editor-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
   </style>
   ${head}
 </head>

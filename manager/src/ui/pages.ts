@@ -580,10 +580,8 @@ export function renderEditorPane(siteId: string, pagePath: string, basePath?: st
     })
   );
 
-  // Template tags for the content toolbar
-  const templateTags = (() => {
-    try { return getTemplateTags(sitePath, fval('template') || 'default'); } catch { return []; }
-  })();
+  // Template tags for the content toolbar — removed (tags are template-level, not content-level)
+  // const templateTags = ...
 
   // Serialize compData + compDefs for JS init
   const compDataJson = JSON.stringify(compData);
@@ -688,33 +686,11 @@ export function renderEditorPane(siteId: string, pagePath: string, basePath?: st
       title="Drag to resize"></div>
 
     <!-- Body editor -->
-    <div class="flex-1 flex flex-col min-w-0 p-3 overflow-hidden">
+    <div class="body-editor-wrap flex-1 flex flex-col min-w-0 overflow-hidden">
 
       <!-- Content toolbar -->
-      <div class="flex items-center flex-wrap gap-1 mb-2 pb-2 border-b border-gray-800 shrink-0">
-        ${templateTags.length ? `
-        <span class="text-xs text-gray-600 shrink-0">Tags:</span>
-        ${templateTags.map(tag =>
-          `<button type="button" onclick="insertTag('{{${escHtml(tag)}}}')"
-            title="Insert {{${escHtml(tag)}}}"
-            class="text-xs font-mono bg-gray-800 hover:bg-indigo-900 text-gray-300 hover:text-indigo-200 border border-gray-700 hover:border-indigo-600 rounded px-1.5 py-0.5 transition-colors">{{${escHtml(tag)}}}</button>`
-        ).join('')}
-        <span class="text-gray-700 mx-0.5 shrink-0">|</span>` : ''}
-        <span class="text-xs text-gray-600 shrink-0">Fmt:</span>
-        <button type="button" onclick="wrapBody('**','**')" title="Bold"
-          class="text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-2 py-0.5 transition-colors">B</button>
-        <button type="button" onclick="wrapBody('*','*')" title="Italic"
-          class="text-xs italic bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-2 py-0.5 transition-colors">I</button>
-        <button type="button" onclick="insertBodyLine('## ')" title="Heading 2"
-          class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-1.5 py-0.5 transition-colors">H2</button>
-        <button type="button" onclick="insertBodyLine('### ')" title="Heading 3"
-          class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-1.5 py-0.5 transition-colors">H3</button>
-        <button type="button" onclick="insertBodyLine('- ')" title="List item"
-          class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-1.5 py-0.5 transition-colors">— list</button>
-        <button type="button" onclick="wrapBody('[','](url)')" title="Link"
-          class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-1.5 py-0.5 transition-colors">🔗</button>
-        <button type="button" onclick="wrapBody(String.fromCharCode(96),String.fromCharCode(96))" title="Inline code"
-          class="text-xs font-mono bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-1.5 py-0.5 transition-colors">&#96;code&#96;</button>
+      <div class="flex items-center flex-wrap gap-1 px-3 pt-2 pb-2 border-b border-gray-800 shrink-0">
+        <span class="text-xs text-gray-600 shrink-0">Flint:</span>
         <button type="button" onclick="insertBodySnippet(':::html\\n\\n:::')" title="HTML block"
           class="text-xs font-mono bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded px-1.5 py-0.5 transition-colors">:::html</button>
         <button type="button" onclick="insertBodyTag(':::children')" title="Children list"
@@ -722,7 +698,7 @@ export function renderEditorPane(siteId: string, pagePath: string, basePath?: st
       </div>
 
       <textarea id="body-editor" spellcheck="true"
-        class="flex-1 w-full bg-gray-950 border border-gray-700 text-gray-100 font-mono text-sm rounded-lg p-4 resize-none focus:outline-none focus:border-indigo-500 leading-relaxed"
+        class="hidden"
       >${escHtml(bodyContent)}</textarea>
     </div>
   </div>
@@ -783,19 +759,65 @@ window.switchTab = function(tab) {
   const editBtn = document.getElementById('tab-edit');
   const previewBtn = document.getElementById('tab-preview');
   if (tab === 'preview') {
-    const md = document.getElementById('body-editor')?.value ?? '';
+    const md = window.__bodyEditor ? window.__bodyEditor.value() : (document.getElementById('body-editor')?.value ?? '');
     document.getElementById('preview-content').innerHTML = marked.parse(md);
     previewPane.classList.remove('hidden'); previewPane.classList.add('flex');
     editPane.classList.add('hidden');
-    previewBtn.classList.add('bg-indigo-600','text-white'); previewBtn.classList.remove('text-gray-400','hover:bg-gray-700');
-    editBtn.classList.remove('bg-indigo-600','text-white'); editBtn.classList.add('text-gray-400','hover:bg-gray-700');
+    previewBtn.className = 'px-3 py-1 text-xs rounded-md bg-indigo-600 text-white font-medium';
+    editBtn.className = 'px-3 py-1 text-xs rounded-md text-gray-400 hover:bg-gray-700 font-medium';
   } else {
     previewPane.classList.add('hidden'); previewPane.classList.remove('flex');
     editPane.classList.remove('hidden');
-    editBtn.classList.add('bg-indigo-600','text-white'); editBtn.classList.remove('text-gray-400','hover:bg-gray-700');
-    previewBtn.classList.remove('bg-indigo-600','text-white'); previewBtn.classList.add('text-gray-400','hover:bg-gray-700');
+    editBtn.className = 'px-3 py-1 text-xs rounded-md bg-indigo-600 text-white font-medium';
+    previewBtn.className = 'px-3 py-1 text-xs rounded-md text-gray-400 hover:bg-gray-700 font-medium';
+    if (window.__bodyEditor) window.__bodyEditor.codemirror.refresh();
   }
 };
+
+// ---- EasyMDE body editor init ---------------------------------------------
+(function() {
+  // Destroy any previous EasyMDE instance (HTMX re-injection safety)
+  if (window.__bodyEditor) {
+    try { window.__bodyEditor.toTextArea(); } catch(e) {}
+    window.__bodyEditor = null;
+  }
+  var ta = document.getElementById('body-editor');
+  if (!ta || typeof EasyMDE === 'undefined') return;
+  window.__bodyEditor = new EasyMDE({
+    element: ta,
+    autosave: { enabled: false },
+    spellChecker: false,
+    autoDownloadFontAwesome: true,
+    lineWrapping: true,
+    indentWithTabs: false,
+    tabSize: 2,
+    sideBySideFullscreen: false,
+    minHeight: '300px',
+    toolbar: [
+      'bold', 'italic', 'heading', '|',
+      'quote', 'unordered-list', 'ordered-list', '|',
+      'link', 'image', 'table', 'code', '|',
+      'preview', 'side-by-side', 'fullscreen', '|', 'guide'
+    ],
+    previewRender: function(plainText) {
+      return (window.marked && window.marked.parse)
+        ? window.marked.parse(plainText)
+        : '<pre>' + plainText + '</pre>';
+    },
+  });
+  // Ctrl+S shortcut
+  var cmInstance = window.__bodyEditor.codemirror;
+  cmInstance.setOption('extraKeys', {
+    'Ctrl-S': function() {
+      var btn = document.querySelector('[onclick*="savePage"]');
+      if (btn) btn.click();
+    },
+    'Cmd-S': function() {
+      var btn = document.querySelector('[onclick*="savePage"]');
+      if (btn) btn.click();
+    }
+  });
+})();
 
 // ---- Resizable sidebar ------------------------------------------------------
 (function() {
@@ -894,6 +916,11 @@ document.addEventListener('click', e => {
 
 // ---- Content toolbar helpers ------------------------------------------------
 window.insertTag = function(text) {
+  if (window.__bodyEditor) {
+    window.__bodyEditor.codemirror.replaceSelection(text);
+    window.__bodyEditor.codemirror.focus();
+    return;
+  }
   const ta = document.getElementById('body-editor');
   if (!ta) return;
   const s = ta.selectionStart ?? 0, end = ta.selectionEnd ?? 0;
@@ -903,6 +930,13 @@ window.insertTag = function(text) {
 };
 
 window.wrapBody = function(before, after) {
+  if (window.__bodyEditor) {
+    const cm = window.__bodyEditor.codemirror;
+    const sel = cm.getSelection() || 'text';
+    cm.replaceSelection(before + sel + after);
+    cm.focus();
+    return;
+  }
   const ta = document.getElementById('body-editor');
   if (!ta) return;
   const s = ta.selectionStart, e = ta.selectionEnd;
@@ -915,6 +949,13 @@ window.wrapBody = function(before, after) {
 };
 
 window.insertBodyLine = function(prefix) {
+  if (window.__bodyEditor) {
+    const cm = window.__bodyEditor.codemirror;
+    const cur = cm.getCursor();
+    cm.replaceRange(prefix, { line: cur.line, ch: 0 });
+    cm.focus();
+    return;
+  }
   const ta = document.getElementById('body-editor');
   if (!ta) return;
   const s = ta.selectionStart;
@@ -925,6 +966,15 @@ window.insertBodyLine = function(prefix) {
 };
 
 window.insertBodySnippet = function(snippet) {
+  if (window.__bodyEditor) {
+    const cm = window.__bodyEditor.codemirror;
+    const cur = cm.getCursor();
+    const lineContent = cm.getLine(cur.line) || '';
+    const pre = (cur.ch > 0 || lineContent.trim()) ? '\\n' : '';
+    cm.replaceSelection(pre + snippet + '\\n');
+    cm.focus();
+    return;
+  }
   const ta = document.getElementById('body-editor');
   if (!ta) return;
   const s = ta.selectionStart;
@@ -936,6 +986,15 @@ window.insertBodySnippet = function(snippet) {
 };
 
 window.insertBodyTag = function(text) {
+  if (window.__bodyEditor) {
+    const cm = window.__bodyEditor.codemirror;
+    const cur = cm.getCursor();
+    const lineContent = cm.getLine(cur.line) || '';
+    const pre = (cur.ch > 0 || lineContent.trim()) ? '\\n' : '';
+    cm.replaceSelection(pre + text + '\\n');
+    cm.focus();
+    return;
+  }
   const ta = document.getElementById('body-editor');
   if (!ta) return;
   const s = ta.selectionStart ?? 0;
@@ -982,7 +1041,7 @@ window.collectFrontmatter = function collectFrontmatter() {
 // ---- Page actions -----------------------------------------------------------
 window.savePage = async function(siteId, path, isNew) {
   const frontmatter = collectFrontmatter();
-  const body = document.getElementById('body-editor')?.value ?? '';
+  const body = window.__bodyEditor ? window.__bodyEditor.value() : (document.getElementById('body-editor')?.value ?? '');
   const status = document.getElementById('save-status');
   try {
     const url = isNew ? '/sites/' + siteId + '/pages' : '/sites/' + siteId + '/pages/' + path + '/parsed';

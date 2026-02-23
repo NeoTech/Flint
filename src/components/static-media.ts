@@ -1,4 +1,5 @@
 import { Component, type ComponentProps } from './component.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 /** A single media asset entry. */
 export interface MediaAsset {
@@ -200,3 +201,66 @@ export function normaliseMediaAssets(raw: unknown): MediaAsset[] {
   }
   return [];
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'media-gallery',
+    label: 'Media Gallery',
+    icon: '🖼️',
+    description: 'Responsive image grid from frontmatter Image array.',
+    frontmatterKey: 'Image',
+    resolve: (ctx) => {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'gallery' });
+    },
+  },
+  {
+    tag: 'media-carousel',
+    label: 'Media Carousel',
+    icon: '🎠',
+    description: 'Horizontal-scroll image strip from frontmatter Image array.',
+    frontmatterKey: 'Image',
+    resolve: (ctx) => {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'carousel' });
+    },
+  },
+  {
+    tag: 'media-hero',
+    label: 'Media Hero',
+    icon: '🌄',
+    description: 'First image as hero banner, remainder as strip.',
+    frontmatterKey: 'Image',
+    resolve: (ctx) => {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'hero' });
+    },
+  },
+  {
+    tag: 'media-strip',
+    label: 'Media Strip',
+    icon: '📽️',
+    description: 'Compact thumbnail row from frontmatter Image array.',
+    frontmatterKey: 'Image',
+    resolve: (ctx) => {
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      if (assets.length === 0) return '';
+      return StaticMedia.render({ items: assets, layout: 'strip' });
+    },
+  },
+  {
+    matchTag: (name) => /^media:\d+$/.test(name),
+    label: 'Media Index',
+    icon: '🔢',
+    description: 'Single image at index N from frontmatter Image array (media:N syntax).',
+    frontmatterKey: 'Image',
+    resolve: (ctx, tagName) => {
+      const idx = parseInt(tagName.split(':')[1], 10);
+      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
+      return StaticMedia.render({ items: assets, index: idx });
+    },
+  },
+];

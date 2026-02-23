@@ -1,4 +1,5 @@
 import { Component, type ComponentProps } from './component.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 export interface GadgetProps extends ComponentProps {
   /** Override the initial display text */
@@ -56,3 +57,13 @@ export class Gadget extends Component<GadgetProps> {
 </div>`;
   }
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'gadget',
+    label: 'Gadget',
+    icon: '🎲',
+    description: 'Interactive demo widget with randomised colours and phrases.',
+    resolve: () => Gadget.render({}),
+  },
+];

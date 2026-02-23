@@ -1,4 +1,5 @@
 import { Component, type ComponentProps } from './component.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 /** Reusable CTA button shape — shared across all CTA sections. */
 export interface CtaButton {
@@ -103,3 +104,32 @@ export class CtaSection extends Component<CtaSectionProps> {
 </section>`;
   }
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'hero',
+    label: 'Hero',
+    icon: '🦸',
+    description: 'Large hero CTA section from frontmatter Hero object.',
+    frontmatterKey: 'Hero',
+    interfaceName: 'CtaSectionProps',
+    resolve: (ctx) => {
+      const hero = ctx.frontmatter['Hero'] as CtaSectionProps | undefined;
+      if (!hero) return '';
+      return CtaSection.render({ ...hero, variant: 'hero' });
+    },
+  },
+  {
+    tag: 'call-to-action',
+    label: 'Call to Action',
+    icon: '📣',
+    description: 'Banner CTA section from frontmatter CTA object.',
+    frontmatterKey: 'CTA',
+    interfaceName: 'CtaSectionProps',
+    resolve: (ctx) => {
+      const cta = ctx.frontmatter['CTA'] as CtaSectionProps | undefined;
+      if (!cta) return '';
+      return CtaSection.render({ ...cta, variant: 'banner' });
+    },
+  },
+];

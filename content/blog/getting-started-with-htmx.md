@@ -1,25 +1,20 @@
 ---
-title: Getting Started with HTMX
+Title: Getting Started with HTMX
 Short-URI: getting-started-htmx
 Template: blog-post
 Type: post
 Category: Tutorials
+Parent: blog
+Order: 1
+Author: Jane Developer
+Date: '2026-02-01'
+Keywords: 'htmx,tutorial,beginner,dynamic html'
+Description: Learn how to add dynamic behavior to your static site using HTMX attributes
 Labels:
   - htmx
   - beginner
   - javascript
-Parent: blog
-Order: 1
-Author: Jane Developer
-Date: 2026-02-01
-Description: Learn how to add dynamic behavior to your static site using HTMX attributes
-Keywords:
-  - htmx
-  - tutorial
-  - beginner
-  - dynamic html
 ---
-
 # Getting Started with HTMX
 
 HTMX lets you access modern browser features directly from HTML, without writing JavaScript. It extends HTML as a hypertext by adding attributes that trigger HTTP requests and swap content on the page.

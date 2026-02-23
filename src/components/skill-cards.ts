@@ -1,4 +1,5 @@
 import { Component, type ComponentProps } from './component.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 export type SkillColor = 'green' | 'blue' | 'purple' | 'amber' | 'gray' | 'rose' | 'teal';
 
@@ -73,3 +74,19 @@ export class SkillCards extends Component<SkillCardsProps> {
 </div>`;
   }
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'skill-cards',
+    label: 'Skill Cards',
+    icon: '🃏',
+    description: 'Grid of skill info cards from frontmatter Skills array.',
+    frontmatterKey: 'Skills',
+    interfaceName: 'SkillInfo[]',
+    resolve: (ctx) => {
+      const skills = ctx.frontmatter['Skills'] as SkillInfo[] | undefined;
+      if (!skills || !Array.isArray(skills) || skills.length === 0) return '';
+      return SkillCards.render({ skills });
+    },
+  },
+];

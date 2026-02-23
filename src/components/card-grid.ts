@@ -1,4 +1,5 @@
 import { Component, type ComponentProps } from './component.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 export type CardColor = 'blue' | 'green' | 'purple' | 'orange' | 'cyan' | 'pink' | 'amber' | 'red' | 'teal' | 'gray';
 
@@ -93,3 +94,32 @@ ${cards}
 </section>`;
   }
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'feature-grid',
+    label: 'Feature Grid',
+    icon: '🔲',
+    description: 'Responsive card grid from frontmatter Features object.',
+    frontmatterKey: 'Features',
+    interfaceName: 'CardGridProps',
+    resolve: (ctx) => {
+      const fg = ctx.frontmatter['Features'] as CardGridProps | undefined;
+      if (!fg || !fg.items || fg.items.length === 0) return '';
+      return CardGrid.render(fg);
+    },
+  },
+  {
+    tag: 'showcase-grid',
+    label: 'Showcase Grid',
+    icon: '🖼️',
+    description: 'Responsive card grid from frontmatter Showcase object.',
+    frontmatterKey: 'Showcase',
+    interfaceName: 'CardGridProps',
+    resolve: (ctx) => {
+      const sg = ctx.frontmatter['Showcase'] as CardGridProps | undefined;
+      if (!sg || !sg.items || sg.items.length === 0) return '';
+      return CardGrid.render(sg);
+    },
+  },
+];

@@ -1,7 +1,7 @@
 ---
 Title: Markdown-Powered Workflows
 Short-URI: markdown-workflows
-Template: landing
+Template: blog-post
 Type: post
 Category: Tips & Tricks
 Parent: blog

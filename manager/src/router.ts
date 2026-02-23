@@ -14,7 +14,7 @@ import { handleCreatePage, handleUpdatePage, handleDeletePage, handleGetPagePars
 import { handleGetProducts, handleSaveProducts, handleGenerateProducts, handleSyncProducts, handleGetProductsParsed, handleSaveProductsParsed } from './api/products.js';
 import { handleBuild, handleGetDeployTargets, handleDeploy, handleDownloadDist, handleTest } from './api/build.js';
 import { handleSaveEnv } from './api/env.js';
-import { handleGetActiveTheme, handleSetActiveTheme, handleListTemplates, handleGetTemplateComponents } from './api/themes.js';
+import { handleGetActiveTheme, handleSetActiveTheme, handleListTemplates, handleGetTemplateComponents, handleSaveTemplate, handleCreateTemplate, handleDeleteTemplate, handleListThemeFiles, handleSaveThemeFile, handleCreateThemeFile, handleRenameThemeFile, handleDeleteThemeFile, handleCreateTheme, handleRenameTheme, handleDeleteTheme } from './api/themes.js';
 import { handleListMedia, handleServeMediaFile, handleUploadMedia, handleDeleteMedia } from './api/media.js';
 
 // UI views
@@ -175,6 +175,7 @@ export async function handleRequest(req: Request): Promise<Response> {
 
   // Themes
   if (subpath === '/themes' && method === 'GET') return html(renderThemes(siteId, isHtmx(req)));
+  if (subpath === '/themes' && method === 'POST') return handleCreateTheme(siteId, req);
   if (subpath === '/themes/active' && method === 'GET') return handleGetActiveTheme(siteId);
   if (subpath === '/themes/active' && method === 'PUT') return handleSetActiveTheme(siteId, req);
   if (subpath === '/themes/components' && method === 'GET') {
@@ -182,11 +183,37 @@ export async function handleRequest(req: Request): Promise<Response> {
     return handleGetTemplateComponents(siteId, tmpl);
   }
 
+  const themeRoot = subpath.match(/^\/themes\/([^/]+)$/);
+  if (themeRoot) {
+    if (method === 'PATCH')  return handleRenameTheme(siteId, themeRoot[1], req);
+    if (method === 'DELETE') return handleDeleteTheme(siteId, themeRoot[1]);
+  }
+
   const themeTemplates = subpath.match(/^\/themes\/([^/]+)\/templates$/);
   if (themeTemplates && method === 'GET') {
     return isHtmx(req)
       ? html(renderTemplateBrowser(siteId, themeTemplates[1]))
       : handleListTemplates(siteId, themeTemplates[1]);
+  }
+
+  const themeTemplateFile = subpath.match(/^\/themes\/([^/]+)\/templates\/([^/]+)$/);
+  if (themeTemplateFile) {
+    const [, tName, tFile] = themeTemplateFile;
+    if (method === 'PUT') return handleSaveTemplate(siteId, tName, tFile, req);
+    if (method === 'POST') return handleCreateTemplate(siteId, tName, tFile, req);
+    if (method === 'DELETE') return handleDeleteTemplate(siteId, tName, tFile);
+  }
+
+  const themeFiles = subpath.match(/^\/themes\/([^/]+)\/files$/);
+  if (themeFiles && method === 'GET') return handleListThemeFiles(siteId, themeFiles[1]);
+
+  const themeFilePath = subpath.match(/^\/themes\/([^/]+)\/files\/(.+)$/);
+  if (themeFilePath) {
+    const [, tName, tPath] = themeFilePath;
+    if (method === 'PUT')    return handleSaveThemeFile(siteId, tName, tPath, req);
+    if (method === 'POST')   return handleCreateThemeFile(siteId, tName, tPath, req);
+    if (method === 'PATCH')  return handleRenameThemeFile(siteId, tName, tPath, req);
+    if (method === 'DELETE') return handleDeleteThemeFile(siteId, tName, tPath);
   }
 
   return notFound();

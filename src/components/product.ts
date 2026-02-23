@@ -1,4 +1,6 @@
 import { Component, type ComponentProps } from './component.js';
+import { normaliseMediaAssets } from './static-media.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 export interface ProductProps extends ComponentProps {
   /** Product slug / identifier used for cart operations */
@@ -100,3 +102,28 @@ export class Product extends Component<ProductProps> {
 </section>`;
   }
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'product',
+    label: 'Product',
+    icon: '🛍️',
+    description: 'Product card or detail hero, auto-detected from the Template field.',
+    interfaceName: 'ProductProps',
+    resolve: (ctx) => {
+      const fm = ctx.frontmatter;
+      const id = (fm['Short-URI'] ?? fm['short-uri'] ?? '') as string;
+      const priceCents = (fm['PriceCents'] ?? fm['Price-Cents'] ?? 0) as number;
+      const price = priceCents > 0
+        ? `$${(priceCents / 100).toFixed(2)}`
+        : '';
+      const imageAssets = normaliseMediaAssets(fm['Image']);
+      const image = imageAssets[0]?.src ?? '';
+      const description = (fm['Description'] ?? '') as string;
+      const detail = (fm['Template'] ?? '') === 'product-detail';
+      const stripePaymentLink = (fm['StripePaymentLink'] ?? '') as string;
+      if (!id) return '';
+      return Product.render({ id, title: ctx.title, price, description, image: image || undefined, detail, stripePaymentLink: stripePaymentLink || undefined });
+    },
+  },
+];

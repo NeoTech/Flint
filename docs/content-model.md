@@ -171,12 +171,14 @@ The `LabelCloud` component renders a weighted tag cloud where size scales with f
 
 The `TreeMenu` component renders `section` nodes with bold/semibold styling.
 
-### `Short-URI` → Identity
+### `Short-URI` → Identity & URL
 
-The `Short-URI` is the stable identifier for a page. It's used:
+The `Short-URI` is the stable identifier for a page **and determines its URL**. It's used:
+- As the output directory name — `Short-URI: htmx-demo` → `dist/htmx-demo/index.html` at `/htmx-demo`
 - As the key in hierarchy lookups (`Parent` values reference `Short-URI` values)
 - For duplicate detection (`generateShortUri()` appends `-2`, `-3`, etc.)
-- For URL generation (though the actual URL comes from the file path)
+
+If `Short-URI` is omitted, the builder falls back to the filename stem (non-index files) or directory name (index files), but it is strongly recommended to set it explicitly.
 
 The `validatePageMetadata()` function enforces that Short-URIs contain only letters, numbers, hyphens, and underscores.
 

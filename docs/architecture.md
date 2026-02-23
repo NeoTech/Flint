@@ -216,14 +216,14 @@ The template engine selects an HTML template (based on `Template` frontmatter) a
 
 ### Phase 5: Write
 
-Output paths use **clean URLs**:
+Output paths are derived from the page's `Short-URI` (flat clean URLs):
 
-| Input | Output |
-|---|---|
-| `content/index.md` | `dist/index.html` |
-| `content/about.md` | `dist/about/index.html` |
-| `content/blog/index.md` | `dist/blog/index.html` |
-| `content/blog/post.md` | `dist/blog/post/index.html` |
+| Input | Short-URI | Output |
+|---|---|---|
+| `content/index.md` | *(any)* | `dist/index.html` |
+| `content/about.md` | `about` | `dist/about/index.html` |
+| `content/blog/index.md` | `blog` | `dist/blog/index.html` |
+| `content/blog/post.md` | `getting-started` | `dist/getting-started/index.html` |
 
 ## Design Decisions
 

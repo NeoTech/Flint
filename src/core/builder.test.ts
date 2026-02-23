@@ -114,9 +114,9 @@ title: Test Page
       expect(result.outputPath).toBe('index.html');
     });
 
-    it('should handle nested paths with clean URLs', () => {
+    it('should use filename stem when Short-URI is absent (flat URL)', () => {
       const result = builder.processFile('# Blog Post', 'blog/post.md');
-      expect(result.outputPath).toBe('blog/post/index.html');
+      expect(result.outputPath).toBe('post/index.html'); // stem of blog/post.md
     });
 
     it('should handle subdirectory index.md correctly', () => {
@@ -149,15 +149,22 @@ title: About Us
       expect(indexContent).toContain('<h1>Welcome</h1>');
     });
 
-    it('should preserve directory structure', async () => {
+    it('should use Short-URI as output path (flat URL)', async () => {
       const blogDir = join(contentDir, 'blog');
       mkdirSync(blogDir, { recursive: true });
-      
-      writeFileSync(join(blogDir, 'post.md'), '# Blog Post');
-      
+
+      // With Short-URI, the output is at <short-uri>/index.html regardless of file location
+      writeFileSync(join(blogDir, 'post.md'), [
+        '---',
+        'title: Blog Post',
+        'Short-URI: my-post',
+        '---',
+        '# Blog Post',
+      ].join('\n'));
+
       await builder.build();
-      
-      expect(existsSync(join(outputDir, 'blog', 'post', 'index.html'))).toBe(true);
+
+      expect(existsSync(join(outputDir, 'my-post', 'index.html'))).toBe(true);
     });
 
     it('should include navigation in output', async () => {
@@ -188,16 +195,16 @@ title: About Us
 
       writeFileSync(join(contentDir, 'index.md'), '---\ntitle: Home\nShort-URI: home\nParent: root\nOrder: 1\n---\n# Home');
       writeFileSync(join(blogDir, 'index.md'), '---\ntitle: Blog\nShort-URI: blog\nParent: root\nOrder: 2\n---\n# Blog');
-      writeFileSync(join(blogDir, 'post.md'), '---\ntitle: Post\nParent: blog\n---\n# A Post');
+      writeFileSync(join(blogDir, 'post.md'), '---\ntitle: Post\nShort-URI: a-post\nParent: blog\n---\n# A Post');
 
       await builder.build();
 
-      // Blog index should be at blog/index.html, NOT blog/index/index.html
+      // Blog index Short-URI=blog → dist/blog/index.html
       expect(existsSync(join(outputDir, 'blog', 'index.html'))).toBe(true);
       expect(existsSync(join(outputDir, 'blog', 'index', 'index.html'))).toBe(false);
 
-      // Blog post should be at blog/post/index.html
-      expect(existsSync(join(outputDir, 'blog', 'post', 'index.html'))).toBe(true);
+      // Blog post Short-URI=a-post → dist/a-post/index.html (flat URL)
+      expect(existsSync(join(outputDir, 'a-post', 'index.html'))).toBe(true);
 
       // Navigation should have /blog link (with leading slash)
       const homeContent = readFileSync(join(outputDir, 'index.html'), 'utf-8');
@@ -265,9 +272,9 @@ title: About Us
       expect(blogIndex).toContain('Second Post');
       // Date-desc: First Post (Feb 1) before Second Post (Jan 15)
       expect(blogIndex.indexOf('First Post')).toBeLessThan(blogIndex.indexOf('Second Post'));
-      // Should contain links to child pages
-      expect(blogIndex).toContain('/blog/post1');
-      expect(blogIndex).toContain('/blog/post2');
+      // Should contain links to child pages using their Short-URIs
+      expect(blogIndex).toContain('/first-post');
+      expect(blogIndex).toContain('/second-post');
       // Should contain descriptions
       expect(blogIndex).toContain('A first blog post');
       expect(blogIndex).toContain('A second blog post');
@@ -367,24 +374,31 @@ title: About Us
   });
 
   describe('getOutputPath', () => {
-    it('should convert md to folder with index.html', () => {
-      const result = (builder as unknown as { getOutputPath: (path: string) => string }).getOutputPath('page.md');
-      expect(result).toBe('page/index.html');
+    type GetOutputPath = (shortUri: string, path: string) => string;
+    const get = (b: SiteBuilder) => (b as unknown as { getOutputPath: GetOutputPath }).getOutputPath.bind(b);
+
+    it('should use Short-URI as output directory', () => {
+      expect(get(builder)('my-page', 'page.md')).toBe('my-page/index.html');
     });
 
-    it('should handle nested paths with clean URLs', () => {
-      const result = (builder as unknown as { getOutputPath: (path: string) => string }).getOutputPath('blog/post.md');
-      expect(result).toBe('blog/post/index.html');
+    it('should use Short-URI regardless of source file location (flat URL)', () => {
+      expect(get(builder)('my-post', 'blog/post.md')).toBe('my-post/index.html');
     });
 
-    it('should handle subdirectory index.md as directory index', () => {
-      const result = (builder as unknown as { getOutputPath: (path: string) => string }).getOutputPath('blog/index.md');
-      expect(result).toBe('blog/index.html');
+    it('should keep root index.md at site root', () => {
+      expect(get(builder)('home', 'index.md')).toBe('index.html');
     });
 
-    it('should handle deeply nested index.md', () => {
-      const result = (builder as unknown as { getOutputPath: (path: string) => string }).getOutputPath('blog/tutorials/index.md');
-      expect(result).toBe('blog/tutorials/index.html');
+    it('should use Short-URI for subdirectory index files', () => {
+      expect(get(builder)('blog', 'blog/index.md')).toBe('blog/index.html');
+    });
+
+    it('should fall back to directory name for index.md when shortUri is empty', () => {
+      expect(get(builder)('', 'blog/index.md')).toBe('blog/index.html');
+    });
+
+    it('should fall back to filename stem when shortUri is empty', () => {
+      expect(get(builder)('', 'blog/post.md')).toBe('post/index.html');
     });
   });
 

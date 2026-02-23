@@ -4,3 +4,6 @@ build/
 *.lock
 .env
 .wrangler/*
+themes/*
+!themes/default/
+!themes/dark/

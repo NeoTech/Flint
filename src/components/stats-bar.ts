@@ -1,4 +1,5 @@
 import { Component, type ComponentProps } from './component.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 export type StatColor = 'blue' | 'green' | 'purple' | 'orange' | 'cyan' | 'pink' | 'amber' | 'red' | 'teal' | 'gray';
 
@@ -59,3 +60,19 @@ ${items}
 </section>`;
   }
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'stats-bar',
+    label: 'Stats Bar',
+    icon: '📊',
+    description: 'Dark-background statistics bar from frontmatter Stats array.',
+    frontmatterKey: 'Stats',
+    interfaceName: 'StatsBarProps',
+    resolve: (ctx) => {
+      const sb = ctx.frontmatter['Stats'] as StatsBarProps | undefined;
+      if (!sb || !sb.stats || sb.stats.length === 0) return '';
+      return StatsBar.render(sb);
+    },
+  },
+];

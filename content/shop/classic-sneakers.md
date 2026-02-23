@@ -12,7 +12,7 @@ Labels: &ref_0
   - fashion
 Parent: shop
 Author: System
-Date: '2026-02-20'
+Date: '2026-02-23'
 Description: >-
   Timeless low-top canvas sneakers with a vulcanised rubber sole. Lightweight,
   breathable, and available in white. Unisex sizing.

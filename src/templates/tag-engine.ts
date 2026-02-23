@@ -21,33 +21,17 @@
  *   {{reading-time}}   — estimated reading time
  *   {{category-pill}}  — category badge HTML
  *   {{label-badges}}   — label badges HTML
- *   {{gadget}}         — interactive demo widget
- *   {{cart}}           — shopping cart widget (hydrated client-side)
- *   {{product}}        — product card or detail hero from frontmatter (auto-detects mode from Template)
- *   {{skill-cards}}    — grid of skill info cards from frontmatter Skills array
- *   {{hero}}           — hero CTA section (CtaSection variant='hero') from frontmatter Hero object
- *   {{feature-grid}}   — card grid from frontmatter Features object (CardGrid)
- *   {{stats-bar}}      — dark-background statistics bar from frontmatter Stats array
- *   {{showcase-grid}}  — card grid from frontmatter Showcase object (CardGrid)
- *   {{call-to-action}} — banner CTA section (CtaSection variant='banner') from frontmatter CTA object
- *   {{media-gallery}}  — responsive image grid from frontmatter Image array
- *   {{media-carousel}} — horizontal-scroll strip from frontmatter Image array
- *   {{media-hero}}     — first image as hero banner, remainder as strip
- *   {{media-strip}}    — compact thumbnail row
- *   {{media:N}}        — render single image at index N from frontmatter Image array
+ *
+ * Component tags (gadget, cart, product, skill-cards, hero, feature-grid,
+ * showcase-grid, call-to-action, stats-bar, media-gallery, media-carousel,
+ * media-hero, media-strip, media:N, …) are resolved via the TagRegistry —
+ * see src/templates/tag-registry.ts.
  */
 
 import { Navigation } from '../components/navigation.js';
 import { LabelFooter } from '../components/label-footer.js';
-import { Gadget } from '../components/gadget.js';
-import { Cart } from '../components/cart.js';
-import { Product } from '../components/product.js';
-import { SkillCards, type SkillInfo } from '../components/skill-cards.js';
-import { CtaSection, type CtaSectionProps } from '../components/cta-section.js';
-import { CardGrid, type CardGridProps } from '../components/card-grid.js';
-import { StatsBar, type StatsBarProps } from '../components/stats-bar.js';
-import { StaticMedia, normaliseMediaAssets } from '../components/static-media.js';
 import { renderHead, renderFootScripts } from './helpers.js';
+import { registry } from './tag-registry.js';
 import type { TemplateContext } from './template-registry.js';
 
 /**
@@ -77,14 +61,6 @@ export function formatDate(date: Date): string {
  * Unknown tags pass through unchanged as {{tagName}}.
  */
 export function resolveTag(tagName: string, ctx: TemplateContext): string {
-  // Indexed media access: {{media:N}} — renders the Nth image (0-based)
-  const mediaIndexMatch = tagName.match(/^media:(\d+)$/);
-  if (mediaIndexMatch) {
-    const index = parseInt(mediaIndexMatch[1], 10);
-    const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
-    return StaticMedia.render({ items: assets, index });
-  }
-
   switch (tagName) {
     case 'head':
       return renderHead({
@@ -179,91 +155,8 @@ export function resolveTag(tagName: string, ctx: TemplateContext): string {
           ).join('')
         : '';
 
-    case 'gadget':
-      return Gadget.render({});
-
-    case 'product': {
-      const fm = ctx.frontmatter;
-      const id = (fm['Short-URI'] ?? fm['short-uri'] ?? '') as string;
-      const priceCents = (fm['PriceCents'] ?? fm['Price-Cents'] ?? 0) as number;
-      const price = priceCents > 0
-        ? `$${(priceCents / 100).toFixed(2)}`
-        : '';
-      // Image may be a string or array — use first entry
-      const imageAssets = normaliseMediaAssets(fm['Image']);
-      const image = imageAssets[0]?.src ?? '';
-      const description = (fm['Description'] ?? '') as string;
-      const detail = (fm['Template'] ?? '') === 'product-detail';
-      const stripePaymentLink = (fm['StripePaymentLink'] ?? '') as string;
-      if (!id) return '';
-      return Product.render({ id, title: ctx.title, price, description, image: image || undefined, detail, stripePaymentLink: stripePaymentLink || undefined });
-    }
-
-    case 'cart':
-      return Cart.render({});
-
-    case 'skill-cards': {
-      const skills = ctx.frontmatter['Skills'] as SkillInfo[] | undefined;
-      if (!skills || !Array.isArray(skills) || skills.length === 0) return '';
-      return SkillCards.render({ skills });
-    }
-
-    case 'hero': {
-      const hero = ctx.frontmatter['Hero'] as CtaSectionProps | undefined;
-      if (!hero) return '';
-      return CtaSection.render({ ...hero, variant: 'hero' });
-    }
-
-    case 'feature-grid': {
-      const fg = ctx.frontmatter['Features'] as CardGridProps | undefined;
-      if (!fg || !fg.items || fg.items.length === 0) return '';
-      return CardGrid.render(fg);
-    }
-
-    case 'stats-bar': {
-      const sb = ctx.frontmatter['Stats'] as StatsBarProps | undefined;
-      if (!sb || !sb.stats || sb.stats.length === 0) return '';
-      return StatsBar.render(sb);
-    }
-
-    case 'showcase-grid': {
-      const sg = ctx.frontmatter['Showcase'] as CardGridProps | undefined;
-      if (!sg || !sg.items || sg.items.length === 0) return '';
-      return CardGrid.render(sg);
-    }
-
-    case 'call-to-action': {
-      const cta = ctx.frontmatter['CTA'] as CtaSectionProps | undefined;
-      if (!cta) return '';
-      return CtaSection.render({ ...cta, variant: 'banner' });
-    }
-
-    case 'media-gallery': {
-      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
-      if (assets.length === 0) return '';
-      return StaticMedia.render({ items: assets, layout: 'gallery' });
-    }
-
-    case 'media-carousel': {
-      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
-      if (assets.length === 0) return '';
-      return StaticMedia.render({ items: assets, layout: 'carousel' });
-    }
-
-    case 'media-hero': {
-      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
-      if (assets.length === 0) return '';
-      return StaticMedia.render({ items: assets, layout: 'hero' });
-    }
-
-    case 'media-strip': {
-      const assets = normaliseMediaAssets(ctx.frontmatter['Image']);
-      if (assets.length === 0) return '';
-      return StaticMedia.render({ items: assets, layout: 'strip' });
-    }
-
     default:
-      return `{{${tagName}}}`;
+      return registry.resolve(tagName, ctx) ?? `{{${tagName}}}`;
   }
 }
 

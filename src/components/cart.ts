@@ -1,4 +1,5 @@
 import { Component, type ComponentProps } from './component.js';
+import type { TagDef } from '../templates/tag-registry.js';
 
 export interface CartProps extends ComponentProps {
   /** Initial item count to display (server-side hint, hydrated client-side) */
@@ -34,3 +35,13 @@ export class Cart extends Component<CartProps> {
 </div>`;
   }
 }
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'cart',
+    label: 'Cart',
+    icon: '🛒',
+    description: 'Shopping cart widget (server-rendered, hydrated client-side).',
+    resolve: () => Cart.render({}),
+  },
+];

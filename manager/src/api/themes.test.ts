@@ -27,6 +27,9 @@ const {
   handleGetActiveTheme,
   handleSetActiveTheme,
   handleListTemplates,
+  handleSaveTemplate,
+  handleCreateTemplate,
+  handleDeleteTemplate,
 } = await import('./themes.js');
 
 // ---- helpers ----------------------------------------------------------------
@@ -224,5 +227,149 @@ describe('handleListTemplates', () => {
 
   it('returns 404 for unknown site', () => {
     expect(handleListTemplates('ghost', 'default').status).toBe(404);
+  });
+});
+
+// ---- helpers ----------------------------------------------------------------
+
+function makeTplDir(base: string, themeName = 'default'): string {
+  const d = join(base, 'themes', themeName, 'templates');
+  mkdirSync(d, { recursive: true });
+  return d;
+}
+
+function makeJsonRequest(method: string, body: unknown): Request {
+  return new Request('http://localhost/', {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+// ---- handleSaveTemplate -----------------------------------------------------
+
+describe('handleSaveTemplate', () => {
+  it('saves new content to existing file', async () => {
+    const dir = makeTplDir(tempDir);
+    writeFileSync(join(dir, 'default.html'), '<old/>');
+    const req = makeJsonRequest('PUT', { content: '<new/>' });
+    const resp = await handleSaveTemplate('test', 'default', 'default.html', req);
+    expect(resp.status).toBe(200);
+    expect(readFileSync(join(dir, 'default.html'), 'utf-8')).toBe('<new/>');
+  });
+
+  it('returns 404 when file does not exist', async () => {
+    makeTplDir(tempDir);
+    const resp = await handleSaveTemplate('test', 'default', 'ghost.html', makeJsonRequest('PUT', { content: 'x' }));
+    expect(resp.status).toBe(404);
+  });
+
+  it('returns 400 on invalid JSON', async () => {
+    const dir = makeTplDir(tempDir);
+    writeFileSync(join(dir, 'default.html'), '<old/>');
+    const req = new Request('http://localhost/', { method: 'PUT', body: '{bad' });
+    const resp = await handleSaveTemplate('test', 'default', 'default.html', req);
+    expect(resp.status).toBe(400);
+  });
+
+  it('rejects path traversal in file name', async () => {
+    makeTplDir(tempDir);
+    const resp = await handleSaveTemplate('test', 'default', '../evil.html', makeJsonRequest('PUT', { content: 'x' }));
+    expect(resp.status).toBe(400);
+  });
+
+  it('returns 404 for unknown site', async () => {
+    const resp = await handleSaveTemplate('ghost', 'default', 'x.html', makeJsonRequest('PUT', { content: '' }));
+    expect(resp.status).toBe(404);
+  });
+});
+
+// ---- handleCreateTemplate ---------------------------------------------------
+
+describe('handleCreateTemplate', () => {
+  it('creates a new template file with default content', async () => {
+    makeTplDir(tempDir);
+    const resp = await handleCreateTemplate('test', 'default', 'new-page.html', makeJsonRequest('POST', {}));
+    expect(resp.status).toBe(200);
+    const body = await resp.json() as { ok: boolean; file: string; content: string };
+    expect(body.file).toBe('new-page.html');
+    expect(existsSync(join(tempDir, 'themes', 'default', 'templates', 'new-page.html'))).toBe(true);
+  });
+
+  it('uses provided content when given', async () => {
+    makeTplDir(tempDir);
+    const content = '<html>custom</html>';
+    await handleCreateTemplate('test', 'default', 'custom.html', makeJsonRequest('POST', { content }));
+    expect(readFileSync(join(tempDir, 'themes', 'default', 'templates', 'custom.html'), 'utf-8')).toBe(content);
+  });
+
+  it('returns 409 if file already exists', async () => {
+    const dir = makeTplDir(tempDir);
+    writeFileSync(join(dir, 'existing.html'), '<old/>');
+    const resp = await handleCreateTemplate('test', 'default', 'existing.html', makeJsonRequest('POST', {}));
+    expect(resp.status).toBe(409);
+  });
+
+  it('returns 400 for non-.html extension', async () => {
+    makeTplDir(tempDir);
+    const resp = await handleCreateTemplate('test', 'default', 'file.txt', makeJsonRequest('POST', {}));
+    expect(resp.status).toBe(400);
+  });
+
+  it('rejects path traversal in file name', async () => {
+    makeTplDir(tempDir);
+    const resp = await handleCreateTemplate('test', 'default', '../evil.html', makeJsonRequest('POST', {}));
+    expect(resp.status).toBe(400);
+  });
+
+  it('creates templates dir if it does not exist', async () => {
+    makeThemeDir(tempDir, 'default');
+    // no templates dir
+    const resp = await handleCreateTemplate('test', 'default', 'first.html', makeJsonRequest('POST', {}));
+    expect(resp.status).toBe(200);
+    expect(existsSync(join(tempDir, 'themes', 'default', 'templates', 'first.html'))).toBe(true);
+  });
+
+  it('returns 404 for unknown site', async () => {
+    const resp = await handleCreateTemplate('ghost', 'default', 'x.html', makeJsonRequest('POST', {}));
+    expect(resp.status).toBe(404);
+  });
+});
+
+// ---- handleDeleteTemplate ---------------------------------------------------
+
+describe('handleDeleteTemplate', () => {
+  it('deletes a template file', async () => {
+    const dir = makeTplDir(tempDir);
+    writeFileSync(join(dir, 'a.html'), '<a/>');
+    writeFileSync(join(dir, 'b.html'), '<b/>');
+    const resp = handleDeleteTemplate('test', 'default', 'a.html');
+    expect(resp.status).toBe(200);
+    expect(existsSync(join(dir, 'a.html'))).toBe(false);
+    expect(existsSync(join(dir, 'b.html'))).toBe(true);
+  });
+
+  it('returns 400 when only one template remains', async () => {
+    const dir = makeTplDir(tempDir);
+    writeFileSync(join(dir, 'only.html'), '<x/>');
+    const resp = handleDeleteTemplate('test', 'default', 'only.html');
+    expect(resp.status).toBe(400);
+    expect(existsSync(join(dir, 'only.html'))).toBe(true);
+  });
+
+  it('returns 404 when file does not exist', async () => {
+    makeTplDir(tempDir);
+    const resp = handleDeleteTemplate('test', 'default', 'ghost.html');
+    expect(resp.status).toBe(404);
+  });
+
+  it('rejects path traversal in file name', async () => {
+    makeTplDir(tempDir);
+    const resp = handleDeleteTemplate('test', 'default', '../evil.html');
+    expect(resp.status).toBe(400);
+  });
+
+  it('returns 404 for unknown site', () => {
+    expect(handleDeleteTemplate('ghost', 'default', 'x.html').status).toBe(404);
   });
 });

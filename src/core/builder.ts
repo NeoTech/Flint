@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join, dirname, extname, relative } from 'path';
+import { join, dirname, relative } from 'path';
 import { MarkdownCompiler } from './markdown.js';
 import type { NavItem } from '../components/navigation.js';
 import { parseFrontmatter, type FrontmatterData } from './frontmatter.js';
@@ -11,6 +11,7 @@ import { rewriteAbsolutePaths } from './base-path.js';
 import { LabelIndex } from '../components/label-index.js';
 import { loadTemplatesFromDir, overlayTemplatesFromDir, type TemplateContext } from '../templates/index.js';
 import type { TemplateRegistry } from '../templates/template-registry.js';
+import { registry } from '../templates/tag-registry.js';
 
 export interface BuildConfig {
   contentDir: string;
@@ -95,35 +96,57 @@ export class SiteBuilder {
    */
   processFile(content: string, relativePath: string): ProcessedFile {
     const result = this.compiler.compileWithFrontmatter(content);
-    const outputPath = this.getOutputPath(relativePath);
 
-    return {
-      html: result.html,
-      data: result.data,
-      outputPath,
-    };
+    // Parse Short-URI to determine output path; fall back to filename stem
+    let shortUri = '';
+    try {
+      const metadata = parsePageMetadata(content);
+      shortUri = metadata.shortUri;
+    } catch {
+      const normPath = relativePath.replace(/\\/g, '/');
+      if (normPath.endsWith('/index.md')) {
+        shortUri = normPath.slice(0, -'/index.md'.length).split('/').pop() || '';
+      } else {
+        shortUri = normPath.replace(/\.md$/, '').split('/').pop() || '';
+      }
+    }
+
+    const outputPath = this.getOutputPath(shortUri, relativePath);
+    return { html: result.html, data: result.data, outputPath };
   }
 
   /**
-   * Convert markdown path to HTML output path
-   * Creates clean URLs: about.md -> about/index.html
+   * Convert a Short-URI + relative path to an HTML output path.
+   * The shortUri drives the output directory; relativePath is used only
+   * to detect the root index (content/index.md → dist/index.html).
+   * Falls back to the filename stem when shortUri is empty.
    */
-  private getOutputPath(relativePath: string): string {
-    const ext = extname(relativePath);
-    const base = relativePath.slice(0, -ext.length).replace(/\\/g, '/');
-    
-    // Any index.md stays as <dir>/index.html (not <dir>/index/index.html)
-    if (base === 'index' || base.endsWith('/index')) {
-      return `${base}.html`;
+  private getOutputPath(shortUri: string, relativePath: string): string {
+    const normPath = relativePath.replace(/\\/g, '/');
+
+    // Root index.md is always the site root
+    if (normPath === 'index.md') return 'index.html';
+
+    let slug = shortUri;
+    if (!slug) {
+      // Fall back: for **/index.md use the directory name, otherwise the file stem
+      if (normPath.endsWith('/index.md')) {
+        slug = normPath.slice(0, -'/index.md'.length).split('/').pop() || normPath;
+      } else {
+        slug = normPath.replace(/\.md$/, '').split('/').pop() || normPath.replace(/\.md$/, '');
+      }
     }
-    
-    return `${base}/index.html`;
+
+    return `${slug}/index.html`;
   }
 
   /**
    * Build the entire site
    */
   async build(): Promise<void> {
+    // Discover and register component tagDefs before processing templates
+    await registry.discover(join(import.meta.dir, '../components'));
+
     // Ensure output directory exists
     mkdirSync(this.config.outputDir, { recursive: true });
 
@@ -159,19 +182,28 @@ export class SiteBuilder {
 
       const processed = this.processFile(content, file.relativePath);
 
-      // Parse page metadata for template selection
+      // Parse page metadata for template selection and URL determination
       let templateName = 'default';
+      let pageShortUri = '';
       try {
         const metadata = parsePageMetadata(content);
         templateName = metadata.template;
+        pageShortUri = metadata.shortUri;
       } catch {
-        // Fall back to default template if metadata parsing fails
+        // Fall back: derive slug from filename
+        const normPath = file.relativePath.replace(/\\/g, '/');
+        if (normPath.endsWith('/index.md')) {
+          pageShortUri = normPath.slice(0, -'/index.md'.length).split('/').pop() || '';
+        } else {
+          pageShortUri = normPath.replace(/\.md$/, '').split('/').pop() || '';
+        }
       }
+      const currentUrl = this.getUrlPath(pageShortUri, file.relativePath);
 
       // Build navigation with active state
       const navWithActive = navigation?.map((item: NavItem) => ({
         ...item,
-        active: this.isActivePath(item.href, file.relativePath),
+        active: item.href === currentUrl,
       }));
 
       // Render full page
@@ -274,7 +306,7 @@ export class SiteBuilder {
 
         // Only include pages with Parent: root or no parent
         if (metadata.parent === 'root' || metadata.parent === null) {
-          const href = this.getUrlPath(file.relativePath);
+          const href = this.getUrlPath(metadata.shortUri, file.relativePath);
           navItems.push({
             label: metadata.title || file.name.replace(/\.md$/, ''),
             href,
@@ -308,7 +340,7 @@ export class SiteBuilder {
       try {
         const content = readFileSync(file.path, 'utf-8');
         const metadata = parsePageMetadata(content);
-        const url = this.getUrlPath(file.relativePath);
+        const url = this.getUrlPath(metadata.shortUri, file.relativePath);
 
         const parent = metadata.parent || 'root';
         if (!childrenMap.has(parent)) {
@@ -373,7 +405,7 @@ export class SiteBuilder {
       try {
         const content = readFileSync(file.path, 'utf-8');
         const metadata = parsePageMetadata(content);
-        const url = this.getUrlPath(file.relativePath);
+        const url = this.getUrlPath(metadata.shortUri, file.relativePath);
         results.push({ ...metadata, url });
       } catch {
         continue;
@@ -492,48 +524,28 @@ export class SiteBuilder {
   }
 
   /**
-   * Get URL path from file path
+   * Get the URL path for a page from its Short-URI.
+   * The shortUri drives the URL; relativePath is used only to detect the
+   * root index (content/index.md → '/').
+   * Falls back to the filename stem when shortUri is empty.
    */
-  private getUrlPath(relativePath: string): string {
+  private getUrlPath(shortUri: string, relativePath: string): string {
     const basePath = process.env.BASE_PATH || '';
-    // Remove .md extension and convert to URL path
-    let urlPath = relativePath.replace(/\.md$/, '').replace(/\\/g, '/');
-    
-    // Handle index files — strip the /index part, keep the directory
-    if (urlPath === 'index') {
-      return basePath + '/';
-    }
-    if (urlPath.endsWith('/index')) {
-      urlPath = urlPath.slice(0, -'/index'.length);
-    }
-    
-    // Ensure leading slash
-    if (!urlPath.startsWith('/')) {
-      urlPath = '/' + urlPath;
-    }
-    
-    return basePath + urlPath;
-  }
+    const normPath = relativePath.replace(/\\/g, '/');
 
-  /**
-   * Determine if a nav item is active for the current path
-   */
-  private isActivePath(href: string, filePath: string): boolean {
-    const basePath = process.env.BASE_PATH || '';
-    // Strip basePath from href for comparison
-    const cleanHref = basePath && href.startsWith(basePath)
-      ? (href.slice(basePath.length) || '/')
-      : href;
+    // Root index.md is always the site root
+    if (normPath === 'index.md') return basePath + '/';
 
-    // Convert file path to URL path
-    const urlPath = '/' + filePath.replace(/\.md$/, '.html').replace(/\\/g, '/');
-    
-    // Handle index pages
-    if (cleanHref === '/') {
-      return urlPath === '/index.html' || filePath === 'index.md';
+    let slug = shortUri;
+    if (!slug) {
+      if (normPath.endsWith('/index.md')) {
+        slug = normPath.slice(0, -'/index.md'.length).split('/').pop() || normPath;
+      } else {
+        slug = normPath.replace(/\.md$/, '').split('/').pop() || normPath.replace(/\.md$/, '');
+      }
     }
-    
-    return urlPath.startsWith(cleanHref + '/') || urlPath === cleanHref + '.html';
+
+    return `${basePath}/${slug}`;
   }
 }
 

@@ -65,17 +65,20 @@ Flint has two build pipelines that work together:
 
 ### Output Path Mapping
 
-The builder generates clean URLs:
+The builder uses the page's `Short-URI` as the output directory, producing flat clean URLs:
 
-| Content File | Output File | URL |
-|---|---|---|
-| `content/index.md` | `dist/index.html` | `/` |
-| `content/about.md` | `dist/about/index.html` | `/about` |
-| `content/htmx.md` | `dist/htmx/index.html` | `/htmx` |
-| `content/blog/index.md` | `dist/blog/index.html` | `/blog` |
-| `content/blog/post.md` | `dist/blog/post/index.html` | `/blog/post` |
+| Content File | Short-URI | Output File | URL |
+|---|---|---|---|
+| `content/index.md` | *(any)* | `dist/index.html` | `/` |
+| `content/about.md` | `about` | `dist/about/index.html` | `/about` |
+| `content/htmx.md` | `htmx-demo` | `dist/htmx-demo/index.html` | `/htmx-demo` |
+| `content/blog/index.md` | `blog` | `dist/blog/index.html` | `/blog` |
+| `content/blog/post.md` | `getting-started` | `dist/getting-started/index.html` | `/getting-started` |
 
-**Key rule:** Any file named `index.md` becomes `<dir>/index.html` (not `<dir>/index/index.html`). All other `.md` files become `<name>/index.html`.
+**Key rules:**
+- `content/index.md` is always the site root `/`, regardless of Short-URI.
+- All other pages use their `Short-URI` as the URL path — the file's location in `content/` is irrelevant to the URL.
+- If no `Short-URI` is set, the builder falls back to the filename stem (or directory name for `**/index.md` files).
 
 ### Build Configuration
 

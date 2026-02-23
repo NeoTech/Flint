@@ -41,59 +41,16 @@ export interface ComponentDef {
 }
 
 // ---------------------------------------------------------------------------
-// Static metadata (labels, icons, descriptions)
+// Private types
 // ---------------------------------------------------------------------------
 
-const TAG_META: Record<string, Pick<ComponentDef, 'label' | 'icon' | 'description'>> = {
-  'hero': {
-    label: 'Hero Section', icon: '🦸',
-    description: 'Full-width gradient hero with heading, optional tagline, subtitle, and up to two CTA buttons. Uses the Hero: frontmatter key.',
-  },
-  'feature-grid': {
-    label: 'Feature Grid', icon: '🔲',
-    description: 'Responsive grid of icon cards with titles and descriptions. Driven by Features: frontmatter — a heading, optional subtitle, and an items array.',
-  },
-  'stats-bar': {
-    label: 'Stats Bar', icon: '📊',
-    description: 'Dark-background row of headline statistics with colored values. Driven by Stats: frontmatter containing a stats array.',
-  },
-  'showcase-grid': {
-    label: 'Showcase Grid', icon: '🃏',
-    description: 'Secondary card grid, typically for showcasing work or products. Same structure as Feature Grid but uses the Showcase: frontmatter key.',
-  },
-  'call-to-action': {
-    label: 'Call to Action', icon: '📢',
-    description: 'Conversion banner (smaller than Hero). Heading, optional subtitle, and CTA buttons. Uses the CTA: frontmatter key.',
-  },
-  'skill-cards': {
-    label: 'Skill Cards', icon: '🎯',
-    description: 'Grid of skill info cards with icon, description, and colored badge tags. The Skills: frontmatter key takes a direct array of skill objects.',
-  },
-  'gadget': {
-    label: 'Demo Gadget', icon: '🎲',
-    description: 'Interactive randomizing demo widget. No frontmatter needed — just add {{gadget}} to your template.',
-  },
-  'product': {
-    label: 'Product', icon: '🛍️',
-    description: 'Product card or full detail hero, auto-detected from the Template field. Uses Short-URI, PriceCents, Image, Description, StripePaymentLink frontmatter.',
-  },
-  'cart': {
-    label: 'Cart', icon: '🛒',
-    description: 'Shopping cart sidebar widget, hydrated client-side from IndexedDB. No frontmatter needed.',
-  },
-  'navigation': {
-    label: 'Navigation Bar', icon: '🧭',
-    description: 'Auto-generated navigation bar from page hierarchy. No first-party configuration.',
-  },
-  'label-footer': {
-    label: 'Label Footer', icon: '🏷️',
-    description: 'Site-wide label cloud footer showing all page labels as links.',
-  },
-  'blog-header': {
-    label: 'Blog Header', icon: '📝',
-    description: 'Article header with title, author byline, reading time, category pill, and label badges.',
-  },
-};
+interface TagInfo {
+  key: string;
+  interfaceName: string;
+  label: string;
+  icon: string;
+  description: string;
+}
 
 // Interface name → structured editor type
 const INTERFACE_EDITORS: Record<string, EditorType> = {
@@ -110,14 +67,13 @@ const INTERFACE_EDITORS: Record<string, EditorType> = {
 
 /** Return all component definitions discovered from a site's source tree. */
 export function getComponentDefs(sitePath: string): ComponentDef[] {
-  const tagKeyMap = scanTagEngine(sitePath);
+  const tagInfoMap = scanComponentFiles(sitePath);
   const templates = discoverTemplates(sitePath);
 
   const result: ComponentDef[] = [];
 
-  for (const [tag, info] of tagKeyMap) {
-    const meta = TAG_META[tag] ?? { label: tag, icon: '🧩', description: '' };
-    const ifaceName = info.interfaceName.replace(/\s*\|.*/, '').trim(); // strip ' | undefined'
+  for (const [tag, info] of tagInfoMap) {
+    const ifaceName = info.interfaceName.replace(/\s*\|.*/, '').trim();
     const editorType: EditorType = info.key
       ? (INTERFACE_EDITORS[ifaceName] ?? 'yaml')
       : 'none';
@@ -131,9 +87,9 @@ export function getComponentDefs(sitePath: string): ComponentDef[] {
       tag,
       frontmatterKey: info.key,
       interfaceName: ifaceName,
-      label: meta.label,
-      icon: meta.icon,
-      description: meta.description,
+      label: info.label,
+      icon: info.icon,
+      description: info.description,
       editorType,
       props,
       usedInTemplates,
@@ -163,34 +119,52 @@ export function getComponentDef(sitePath: string, tag: string): ComponentDef | u
 }
 
 // ---------------------------------------------------------------------------
-// Private: tag-engine.ts scanning
+// Private: component source scanning (reads tagDefs from src/components/*.ts)
 // ---------------------------------------------------------------------------
 
-interface TagInfo { key: string; interfaceName: string; }
-
-function scanTagEngine(sitePath: string): Map<string, TagInfo> {
-  const file = join(sitePath, 'src', 'templates', 'tag-engine.ts');
-  if (!existsSync(file)) return new Map();
-  const src = readFileSync(file, 'utf-8');
+function scanComponentFiles(sitePath: string): Map<string, TagInfo> {
+  const compDir = join(sitePath, 'src', 'components');
+  if (!existsSync(compDir)) return new Map();
 
   const map = new Map<string, TagInfo>();
+  const files = readdirSync(compDir).filter(
+    f => (f.endsWith('.ts') || f.endsWith('.js')) && !f.includes('.test.')
+  );
 
-  // case 'tag-name': { ... ctx.frontmatter['Key'] as Interface ...
-  const withFm = /case '([\w-]+)':\s*\{[^}]*ctx\.frontmatter\['(\w+)'\]\s+as\s+([\w\[\]| ]+)/g;
-  let m: RegExpExecArray | null;
-  while ((m = withFm.exec(src)) !== null) {
-    map.set(m[1], { key: m[2], interfaceName: m[3].split('|')[0].trim() });
-  }
+  for (const file of files) {
+    const src = readFileSync(join(compDir, file), 'utf-8');
 
-  // case 'tag': (no frontmatter) — simple tags
-  const noFm = /case '([\w-]+)':\s*\n\s*return /g;
-  while ((m = noFm.exec(src)) !== null) {
-    if (!map.has(m[1])) map.set(m[1], { key: '', interfaceName: '' });
-  }
+    // Find the tagDefs array export
+    const arrayMatch = /export const tagDefs[\s\S]*?=\s*\[([\s\S]*?)\n\];/.exec(src);
+    if (!arrayMatch) continue;
+    const arrayContent = arrayMatch[1];
 
-  // Other no-frontmatter tags (gadget, cart, navigation, label-footer etc.)
-  for (const tag of Object.keys(TAG_META)) {
-    if (!map.has(tag)) map.set(tag, { key: '', interfaceName: '' });
+    // Split individual objects on `},\n  {` boundary (our consistent formatting)
+    const rawObjs = arrayContent.split(/},\s*\n?\s*{/);
+
+    for (const raw of rawObjs) {
+      const tagM = /tag:\s*'([\w-]+)'/.exec(raw);
+      const labelM = /label:\s*'([^']+)'/.exec(raw);
+      const iconM = /icon:\s*'([^']+)'/.exec(raw);
+      const descM = /description:\s*'([^']+)'/.exec(raw);
+      const fkM = /frontmatterKey:\s*'(\w+)'/.exec(raw);
+      const ifM = /interfaceName:\s*'([\w\[\]]+)'/.exec(raw);
+
+      const tag = tagM?.[1] ?? '';
+      const label = labelM?.[1] ?? tag;
+      if (!tag && !label) continue;
+
+      // For wildcard entries (no tag prop), derive map key from label
+      const mapKey = tag || label.toLowerCase().replace(/\s+/g, '-');
+
+      map.set(mapKey, {
+        key: fkM?.[1] ?? '',
+        interfaceName: ifM?.[1] ?? '',
+        label,
+        icon: iconM?.[1] ?? '\ud83e\udde9',
+        description: descM?.[1] ?? '',
+      });
+    }
   }
 
   return map;

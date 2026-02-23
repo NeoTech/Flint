@@ -15,31 +15,29 @@ import {
 
 let tempDir: string;
 
-const TAG_ENGINE_SRC = `
-import { type ComponentRenderContext } from '../components/component.js';
+// Component files with tagDefs exports (the new source-of-truth pattern)
+const GADGET_SRC = `
+export const tagDefs = [
+  {
+    tag: 'gadget',
+    label: 'Demo Gadget',
+    icon: '\u{1F3B2}',
+    description: 'Interactive randomizing demo widget.',
+    resolve: () => '<gadget />',
+  },
+];
+`;
 
-export function renderTag(tag: string, ctx: ComponentRenderContext): string {
-  switch (tag) {
-    case 'hero': {
-      const data = ctx.frontmatter['Hero'] as HeroProps;
-      return '<hero />';
-    }
-    case 'feature-grid': {
-      const data = ctx.frontmatter['Features'] as CardGridProps;
-      return '<features />';
-    }
-    case 'stats-bar': {
-      const data = ctx.frontmatter['Stats'] as StatsBarProps;
-      return '<stats />';
-    }
-    case 'gadget':
-      return '<gadget />';
-    case 'navigation':
-      return '<nav />';
-    default:
-      return '';
-  }
-}
+const NAVIGATION_SRC = `
+export const tagDefs = [
+  {
+    tag: 'navigation',
+    label: 'Navigation Bar',
+    icon: '\u{1F9ED}',
+    description: 'Auto-generated navigation bar.',
+    resolve: () => '<nav />',
+  },
+];
 `;
 
 const CTA_SECTION_SRC = `
@@ -53,6 +51,17 @@ export interface CtaSectionProps {
   /** Button URL */
   buttonUrl: string;
 }
+export const tagDefs = [
+  {
+    tag: 'hero',
+    label: 'Hero Section',
+    icon: '\u{1F9B8}',
+    description: 'Full-width gradient hero.',
+    frontmatterKey: 'Hero',
+    interfaceName: 'CtaSectionProps',
+    resolve: () => '<hero />',
+  },
+];
 `;
 
 const CARD_GRID_SRC = `
@@ -63,25 +72,44 @@ export interface CardGridProps {
   description?: string;
   items: CardItem[];
 }
+export const tagDefs = [
+  {
+    tag: 'feature-grid',
+    label: 'Feature Grid',
+    icon: '\u{1F532}',
+    description: 'Responsive card grid.',
+    frontmatterKey: 'Features',
+    interfaceName: 'CardGridProps',
+    resolve: () => '<features />',
+  },
+];
 `;
 
 const STATS_BAR_SRC = `
 export interface StatsBarProps {
   stats: StatItem[];
 }
+export const tagDefs = [
+  {
+    tag: 'stats-bar',
+    label: 'Stats Bar',
+    icon: '\u{1F4CA}',
+    description: 'Dark-background statistics bar.',
+    frontmatterKey: 'Stats',
+    interfaceName: 'StatsBarProps',
+    resolve: () => '<stats />',
+  },
+];
 `;
 
 beforeAll(() => {
   tempDir = mkdtempSync(join(tmpdir(), 'manager-scanner-test-'));
 
-  // src/templates/tag-engine.ts
-  const tagEngineDir = join(tempDir, 'src', 'templates');
-  mkdirSync(tagEngineDir, { recursive: true });
-  writeFileSync(join(tagEngineDir, 'tag-engine.ts'), TAG_ENGINE_SRC);
-
-  // src/components/*.ts
+  // src/components/*.ts — with tagDefs exports
   const compDir = join(tempDir, 'src', 'components');
   mkdirSync(compDir, { recursive: true });
+  writeFileSync(join(compDir, 'gadget.ts'), GADGET_SRC);
+  writeFileSync(join(compDir, 'navigation.ts'), NAVIGATION_SRC);
   writeFileSync(join(compDir, 'cta-section.ts'), CTA_SECTION_SRC);
   writeFileSync(join(compDir, 'card-grid.ts'), CARD_GRID_SRC);
   writeFileSync(join(compDir, 'stats-bar.ts'), STATS_BAR_SRC);
@@ -227,12 +255,8 @@ describe('getComponentDefs', () => {
     const emptyDir = mkdtempSync(join(tmpdir(), 'scanner-empty-'));
     try {
       const defs = getComponentDefs(emptyDir);
-      // Without tag-engine.ts, only TAG_META fill-ins remain (no key/iface)
-      // All should have empty frontmatterKey and interfaceName
-      for (const def of defs) {
-        expect(def.frontmatterKey).toBe('');
-        expect(def.interfaceName).toBe('');
-      }
+      // No component files — scanner returns empty array
+      expect(defs).toHaveLength(0);
     } finally {
       rmSync(emptyDir, { recursive: true, force: true });
     }
@@ -248,7 +272,7 @@ describe('getComponentDef', () => {
     expect(def!.tag).toBe('hero');
   });
 
-  it('returns component label from TAG_META', () => {
+  it('returns component label from tag definition', () => {
     const def = getComponentDef(tempDir, 'gadget');
     expect(def!.label).toBe('Demo Gadget');
   });
