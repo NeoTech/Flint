@@ -1,228 +1,119 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/HTMX-2.0-3366CC?logo=htmx&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/Bun_test-515_tests-f472b6?logo=bun&logoColor=white" />
-  <img src="https://img.shields.io/badge/Stripe-payments-635BFF?logo=stripe&logoColor=white" />
-  <img src="https://img.shields.io/badge/Cloudflare_Workers-edge-F38020?logo=cloudflare&logoColor=white" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow" />
-</p>
+# Flint
 
-# ⚡ Flint
+A TypeScript static site generator. Write Markdown content, build to plain HTML/CSS/JS, deploy anywhere.
 
-**Strike markdown. Get a blazing-fast website.**
-
-Flint is a zero-compromise static site generator that turns Markdown files into beautiful, interactive websites — powered by TypeScript, styled with Tailwind CSS, and supercharged with HTMX. No React. No Vue. No bloat. Just content in, website out.
+**Tech:** Bun · TypeScript (strict) · Marked · HTMX 2 · Tailwind CSS 3 · Rspack · Stripe
 
 ---
 
-## 🤔 Why Flint?
+## Prerequisites
 
-Most static site generators make you choose: **simple but ugly**, or **pretty but complex**. Flint refuses that tradeoff.
-
-| Pain Point | Flint's Answer |
-|---|---|
-| "I need a framework for interactivity" | HTMX gives you dynamic behavior **from HTML attributes** — no JS framework required |
-| "SSGs are hard to customize" | Component-driven architecture with a clean `Component<T>` base class |
-| "Markdown is too limited" | Extended frontmatter with categories, labels, hierarchy, ordering — your content is structured data |
-| "Testing is an afterthought" | **515 tests** baked in from day one. Every module has co-located test files |
-| "Build tools are a nightmare" | Rspack builds in **under 100ms**. Hot reload included |
-| "E-commerce needs a big backend" | Stripe Payment Links need zero server. Multi-item cart uses a 50-line Cloudflare Worker |
+- [Bun](https://bun.sh) ≥ 1.0
 
 ---
 
-## 🚀 Get Started in 60 Seconds
-
-### Prerequisites
-
-Install [Bun](https://bun.sh) (fast JavaScript runtime & package manager):
+## Quick Start
 
 ```bash
-# macOS / Linux
-curl -fsSL https://bun.sh/install | bash
-
-# Windows
-powershell -c "irm bun.sh/install.ps1 | iex"
-```
-
-### Setup
-
-```bash
-# Clone the repo
-git clone https://github.com/your-username/flint.git
-cd flint
-
-# Install dependencies
 bun install
-
-# Start the dev server with hot reload
-bun run dev
-
-# Build the production site
-bun run build
-```
-
-Your site is now in `dist/`. Deploy it anywhere — GitHub Pages, Netlify, Cloudflare, or a $5 VPS.
-
----
-
-## 🛒 Shop & Products Quick Start
-
-Products are managed from a single file — `products.yaml` at the project root. No manual Markdown files, no Stripe Dashboard clicks.
-
-**1. Add a product:**
-
-```yaml
-# products.yaml
-products:
-  - id: red-plate
-    title: Red Dinner Plate
-    description: A vibrant hand-painted ceramic dinner plate.
-    price_cents: 1800
-    image: "🍽️"
-    order: 2
-```
-
-**2. Sync to Stripe and build:**
-
-```bash
-# First time / after price changes — creates products in Stripe
-bun run build:sync
-
-# Day-to-day — just builds the site
-bun run build
-```
-
-**3. Start the dev server:**
-
-```bash
-bun run dev
-# Open http://localhost:3000/shop
-```
-
-That's it. The build generates product Markdown pages from the YAML, syncs prices to Stripe, and renders the shop. See [docs/ecommerce.md](docs/ecommerce.md) for full setup (Stripe sandbox keys, CI/CD, test cards).
-
-### Checkout modes
-
-**`payment-links`** (default — zero infrastructure)  
-Each product gets a pre-generated Stripe Payment Link created at build time. Clicking Add to Cart goes straight to Stripe's hosted page — no server needed. One product per session.
-
-**`serverless`** (multi-item cart)  
-Items accumulate in an encrypted IndexedDB cart. Checkout POSTs the full cart to a checkout server which creates a Stripe Checkout Session. Choose your runtime:
-
-| Runtime | How to run | Best for |
-|---------|-----------|----------|
-| **Bun server** | `bun run serve:checkout` | Local dev, self-hosted VPS |
-| **Cloudflare Workers** | `bun run deploy:checkout:cloudflare` | Production — edge-deployed, scales to zero |
-
-Set `CHECKOUT_MODE=serverless`, `CHECKOUT_RUNTIME=cloudflare` (or `bun`), and `CHECKOUT_ENDPOINT` to the server URL in `.env`. See [docs/ecommerce.md](docs/ecommerce.md) for the full GitHub Actions and Cloudflare setup.
-
----
-
-## 📁 Project Structure
-
-```
-├── content/              ← Your content lives here (Markdown + YAML frontmatter)
-│   ├── index.md          ← Homepage
-│   ├── about.md          ← Static pages
-│   ├── htmx.md           ← Interactive HTMX demos
-│   ├── agent.md          ← Agent & Skills info page
-│   ├── blog/             ← Blog section with posts
-│   │   ├── index.md      ← Blog listing page
-│   │   └── *.md          ← Individual posts
-│   └── shop/             ← E-commerce section
-│       ├── index.md      ← Shop listing page
-│       └── *.md          ← Product pages (generated from products.yaml)
-├── functions/            ← Checkout server
-│   ├── checkout-handler.ts      ← Platform-agnostic checkout logic
-│   ├── checkout-server.ts       ← Bun HTTP adapter
-│   └── checkout-cloudflare.ts   ← Cloudflare Worker adapter
-├── templates/            ← HTML page layouts with {{tag}} placeholders
-├── src/
-│   ├── components/       ← Reusable server-rendered UI components
-│   ├── client/           ← Browser-side JS (cart, product hydration, nav)
-│   ├── core/             ← Engine (markdown, frontmatter, templates, builder)
-│   ├── templates/        ← Tag engine and template registry
-│   └── styles/           ← Tailwind CSS entry point
-├── scripts/              ← Build scripts (Stripe sync, product generation, cleanup, CF deploy)
-├── static/               ← Static assets (copied to dist as-is)
-├── products.yaml         ← Single source of truth for all products
-├── wrangler.toml         ← Cloudflare Worker config
-├── .github/skills/       ← AI agent skill definitions
-└── dist/                 ← Generated site (git-ignored)
+bun run dev        # Dev server at http://localhost:3000 (HMR via Rspack)
+bun run build      # Compile content/ → dist/
 ```
 
 ---
 
-## ✍️ Content Authoring
+## Project Structure
 
-Create a Markdown file, add frontmatter, and you're done. Flint handles the rest.
+```
+content/              ← Markdown pages with YAML frontmatter
+  index.md            ← Homepage
+  blog/               ← Blog section
+    index.md          ← Listing page
+    *.md              ← Individual posts
+  shop/               ← Product pages (generated from products.yaml)
+    index.md
+    *.md
+functions/            ← Checkout server (serverless mode only)
+  checkout-handler.ts ← Platform-agnostic checkout logic
+  checkout-server.ts  ← Bun HTTP adapter (port 3001)
+  checkout-cloudflare.ts ← Cloudflare Worker adapter
+src/
+  components/         ← Reusable server-rendered UI (TypeScript → HTML strings)
+  client/             ← Browser JS (cart, nav, product hydration) — bundled by Rspack
+  core/               ← Build engine (markdown, frontmatter, builder)
+  styles/             ← Tailwind CSS entry point
+scripts/              ← Build scripts (Stripe sync, product generation, deploy)
+themes/
+  default/
+    templates/        ← HTML layouts with {{tag}} placeholders
+static/               ← Static assets copied to dist/ as-is
+products.yaml         ← Product catalogue
+dist/                 ← Generated site output (git-ignored)
+manager/              ← Flint Manager web UI (separate Bun server)
+```
+
+---
+
+## Content Authoring
+
+Add a `.md` file to `content/` with YAML frontmatter:
 
 ```markdown
 ---
-title: My Awesome Post
-Short-URI: awesome-post
+title: My Post
+Short-URI: my-post
 Type: post
 Category: Tutorials
 Labels:
   - typescript
-  - beginner
 Parent: blog
 Order: 1
 Author: Your Name
 Date: 2026-02-05
-Description: A short summary for SEO and social previews
-Keywords:
-  - tutorial
-  - getting-started
+Description: Short summary for SEO and social previews
 ---
 
-# Your Content Here
-
-Write **standard Markdown** with full HTML support.
+Write **standard Markdown** here.
 ```
 
-### What the frontmatter gives you
+### Key frontmatter fields
 
-| Field | What it does |
-|---|---|
-| `Parent` | Builds page hierarchy — automatic breadcrumbs & tree menus |
-| `Category` | Groups content — auto-generated category indexes |
-| `Labels` | Tags content — label clouds with post counts |
-| `Order` | Controls navigation order — no config files to maintain |
-| `Short-URI` | Stable permalinks that survive file renames |
+| Field | Purpose |
+|-------|---------|
+| `Short-URI` | Stable URL slug (survives file renames) |
+| `Parent` | Builds page hierarchy — sets breadcrumbs and tree menus |
+| `Type` | `page` (default), `post`, `product` |
+| `Category` | Groups content — auto-generates category index |
+| `Labels` | Tag list — generates label clouds with post counts |
+| `Order` | Navigation order within a section |
+| `Template` | Override the HTML template for this page |
 
----
+See [docs/content-model.md](docs/content-model.md) for the full field reference.
 
-## ⚡ HTMX — Interactivity Without the Baggage
+### HTMX in content
 
-Flint has first-class HTMX support. Add dynamic behavior using a special Markdown syntax:
+Link syntax with HTMX attributes:
 
 ```markdown
-[Load Content](/fragments/greeting.html){hx-get hx-target="#output" hx-swap="innerHTML"}
+[Load it](/fragments/greeting.html){hx-get hx-target="#output" hx-swap="innerHTML"}
 ```
 
-Or use raw HTML blocks for full control:
+Or raw HTML blocks:
 
 ````markdown
 :::html
-<button hx-get="/fragments/greeting.html"
-        hx-target="#result"
-        hx-swap="innerHTML"
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+<button hx-get="/fragments/greeting.html" hx-target="#result" hx-swap="innerHTML">
   Click Me
 </button>
 <div id="result"></div>
 :::
 ````
 
-HTMX is bundled offline — no CDN dependency, no extra requests.
-
 ---
 
-## 🧩 Component Architecture
+## Components
 
-Build UI with TypeScript classes that return HTML strings. Pure, testable, composable.
+Reusable server-rendered UI. Extend `Component<T>` and implement `render()`:
 
 ```typescript
 import { Component, type ComponentProps } from './component.js';
@@ -235,110 +126,206 @@ interface CardProps extends ComponentProps {
 class Card extends Component<CardProps> {
   render(): string {
     return `
-      <div class="${this.classNames('rounded-lg border p-6 shadow-sm')}">
-        <h3 class="text-lg font-semibold">${this.escapeHtml(this.props.title)}</h3>
-        <p class="mt-2 text-gray-600">${this.escapeHtml(this.props.description)}</p>
+      <div class="${this.classNames('rounded-lg border p-6')}">
+        <h3>${this.escapeHtml(this.props.title)}</h3>
+        <p>${this.escapeHtml(this.props.description)}</p>
       </div>
     `;
   }
 }
 ```
 
-No virtual DOM. No hydration. No runtime overhead. Just strings.
+Register the component tag in `src/index.ts`, then use `{{card title="..." description="..."}}` in any template.
+
+See [docs/components.md](docs/components.md) for the full API.
 
 ---
 
-## 🧪 Test-First, Always
+## Shop & Products
 
-Every module ships with co-located tests. 38 test files, 515 tests, all green.
+### 1. Define products in `products.yaml`
+
+```yaml
+- id: red-plate
+  name: Red Plate
+  description: A vibrant hand-painted ceramic dinner plate.
+  price_cents: 1800
+  image: "���️"
+  order: 1
+```
+
+### 2. Sync to Stripe and build
 
 ```bash
-# Run tests once
-bun run test:run
+# First time, or after changing prices — creates/updates Stripe products
+bun run build:sync
 
-# Watch mode during development
-bun run test
+# Day-to-day rebuild (no Stripe API calls)
+bun run build
+```
 
-# Type-check without emitting
-bun run typecheck
+`build:sync` writes Stripe price IDs back into `products.yaml` and regenerates product pages. Always run it before deploying after price changes.
 
-# Lint
-bun run lint
+### 3. Required environment variables
+
+Create a `.env` file at the project root:
+
+```env
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+CHECKOUT_MODE=payment-links
+```
+
+### Checkout modes
+
+**`payment-links`** (default) — zero infrastructure required
+Each product gets a Stripe Payment Link at build time. Cart clicks redirect to Stripe hosted checkout. One product per session. Works on any static host.
+
+**`serverless`** — multi-item cart
+Items accumulate in an encrypted IndexedDB cart. Checkout POSTs to a server that creates a Stripe Checkout Session.
+
+Additional `.env` for serverless mode:
+
+```env
+CHECKOUT_MODE=serverless
+CHECKOUT_RUNTIME=cloudflare   # or: bun
+CHECKOUT_ENDPOINT=https://your-worker.workers.dev
+CART_ENCRYPTION_KEY=          # generate: openssl rand -hex 32
+```
+
+#### Running the checkout server
+
+| Runtime | Command | Notes |
+|---------|---------|-------|
+| Bun (local/VPS) | `bun run serve:checkout` | Port 3001 |
+| Cloudflare Workers | `bun run deploy:checkout:cloudflare` | Edge-deployed |
+
+See [docs/ecommerce.md](docs/ecommerce.md) for the full Stripe setup, test cards, and CI/CD workflow.
+
+---
+
+## Manager
+
+Flint Manager is a separate Bun HTTP server (`manager/`) that provides a web UI for managing one or more Flint sites — edit pages, sync products, trigger builds, deploy.
+
+### Run locally
+
+```bash
+cd manager
+cp .env.docker.example .env   # edit MANAGER_API_KEY
+bun --hot server.ts            # http://localhost:8080
+```
+
+Required env vars:
+
+```env
+MANAGER_API_KEY=    # generate: openssl rand -hex 32
+MANAGER_PORT=8080
+```
+
+### Run with Docker (Traefik + optional ngrok tunnel)
+
+The manager ships with a Docker Compose stack: Traefik as the reverse proxy and optional ngrok for public tunnel access.
+
+```bash
+cd manager
+cp .env.docker.example .env
+# Edit .env — set MANAGER_API_KEY at minimum
+# Set NGROK_AUTHTOKEN if you want the public tunnel
+
+# Start without tunnel
+docker compose up -d
+
+# Start with ngrok tunnel
+docker compose --profile tunnel up -d
+```
+
+Files:
+
+| File | Purpose |
+|------|---------|
+| `manager/Dockerfile` | Multi-stage Bun build (oven/bun:1, Debian) |
+| `manager/docker-compose.yml` | Traefik + ngrok + manager services |
+| `manager/traefik.yml` | Traefik v3 static config (HTTP-only, ping healthcheck) |
+| `manager/ngrok.yml` | ngrok v3 agent config (tunnels to Traefik port 80) |
+| `manager/.env.docker.example` | All required and optional env vars with documentation |
+
+**Note:** Site paths in `manager.config.yaml` must be absolute container paths matching your volume mounts (e.g. `/sites/main`), not relative paths.
+
+### Manager commands (run from `manager/`)
+
+```bash
+bun --hot server.ts       # Dev with hot reload
+bun server.ts             # Production
+bun test --no-watch       # Run tests once
+bunx tsc --noEmit         # Type check
 ```
 
 ---
 
-## 📦 The Stack
+## Deploy
 
-| Layer | Tool | Why |
-|---|---|---|
-| **Runtime** | Bun | Fast installs, native TypeScript execution, no transpiler needed |
-| **Language** | TypeScript 5.7 (strict) | Type safety without compromise |
-| **Markdown** | Marked 15 | Fast, extensible, standards-compliant |
-| **Frontmatter** | gray-matter | Battle-tested YAML parsing |
-| **Interactivity** | HTMX 2.0 | Dynamic HTML without a JS framework |
-| **Styling** | Tailwind CSS 3.4 | Utility-first, zero unused CSS in prod |
-| **Bundler** | Rspack | Rust-powered builds — 5-10x faster than Webpack |
-| **Payments** | Stripe | Products, prices, checkout sessions, payment links |
-| **Edge functions** | Cloudflare Workers | Serverless checkout — globally distributed, zero cold start |
-| **Testing** | Bun test runner + happy-dom | Lightning-fast unit tests with DOM support |
-| **Linting** | ESLint + @typescript-eslint | Consistent code quality |
+Flint outputs plain files to `dist/`. Deploy that directory to any static host.
 
-**Production dependencies: 3** (site). The checkout Worker adds Stripe SDK — only runs server-side, never in the browser.
+For platform-specific setup, required tokens, and free tier limits see [content/hosting.md](content/hosting.md).
+
+| Platform | Static site | Serverless checkout |
+|----------|-------------|---------------------|
+| GitHub Pages | Yes | No — use `payment-links` mode |
+| Cloudflare Pages + Workers | Yes | Yes |
+| Vercel | Yes | Yes |
+| Netlify | Yes | Yes |
+
+```bash
+# Deploy static site to Cloudflare Pages
+bun run deploy:cloudflare:pages
+```
+
+After changing `products.yaml`, always run `bun run build:sync` before deploying.
 
 ---
 
-## 🛠️ Commands
+## Commands Reference
+
+### Site
 
 | Command | Description |
-|---|---|
-| `bun run dev` | Start dev server with hot reload (port 3000) |
-| `bun run build` | Generate production site to `dist/` |
-| `bun run build:sync` | Sync products to Stripe + build site |
+|---------|-------------|
+| `bun run dev` | Dev server at port 3000 with HMR |
+| `bun run build` | Compile `content/` → `dist/` |
+| `bun run build:sync` | Stripe sync + build (run after changing `products.yaml`) |
 | `bun run build:sync:force` | Force-recreate all Stripe Payment Links + build |
-| `bun run generate` | Generate product pages from `products.yaml` |
+| `bun run generate` | Regenerate product pages from `products.yaml` |
+| `bun run stripe:cleanup` | Archive all Flint-managed Stripe products and clear YAML IDs |
 | `bun run serve:checkout` | Start Bun checkout server (dev, port 3001) |
 | `bun run start:checkout` | Start Bun checkout server (production) |
 | `bun run deploy:checkout:cloudflare` | Deploy checkout function to Cloudflare Workers |
-| `bun run stripe:cleanup` | Archive all Flint-managed Stripe products + clear YAML IDs |
-| `bun run test` | Run tests in watch mode |
-| `bun run test:run` | Run tests once |
+| `bun run deploy:cloudflare:pages` | Deploy static site to Cloudflare Pages |
+
+### Quality
+
+| Command | Description |
+|---------|-------------|
+| `bun run test:run` | Run all tests once |
+| `bun run test` | Test watch mode |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint check |
 | `bun run lint:fix` | ESLint auto-fix |
 
 ---
 
-## 🌐 Deploy Anywhere
+## Testing
 
-Flint generates plain HTML, CSS, and JS. Deploy the `dist/` folder to:
+Tests are co-located with source files (`*.test.ts`). Run from the project root:
 
-- **GitHub Pages** — free, automatic with Actions
-- **Netlify / Vercel** — drag-and-drop or git push
-- **Cloudflare Pages / S3 / any CDN** — edge-cached globally
-- **Any web server** — it's just files
-- **ngrok** — built-in support for tunnel previews during development
+```bash
+bun run test:run
+```
 
-### Checkout server (serverless mode only)
-
-If you're using `CHECKOUT_MODE=serverless`, you also need a checkout server to create Stripe Checkout Sessions:
-
-| Where | Command | Notes |
-|-------|---------|-------|
-| **Cloudflare Workers** | `bun run deploy:checkout:cloudflare` | Recommended for production — edge-deployed, scales to zero |
-| **Local / VPS (Bun)** | `bun run start:checkout` | Self-hosted, set `CHECKOUT_ENDPOINT` to your server URL |
-
-See [docs/ecommerce.md](docs/ecommerce.md) for the full GitHub Actions workflow and required secrets.
+The suite covers: builder, components, markdown pipeline, HTMX directives, Stripe sync, product generation, cart API, and nav toggle.
 
 ---
 
-## 📄 License
+## License
 
-MIT — do whatever you want with it.
-
----
-
-<p align="center">
-  <strong>Stop configuring. Start publishing.</strong><br/>
-  <em>Flint — because your content deserves better than a 200MB node_modules folder.</em>
-</p>
+MIT
