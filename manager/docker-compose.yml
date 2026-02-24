@@ -1,0 +1,263 @@
+# Flint Manager — Docker Compose Stack
+#
+# THREE SERVICES:
+#   traefik  — reverse proxy, always running
+#   ngrok    — public tunnel (optional, activate with: --profile tunnel)
+#   manager  — Flint Manager Bun server, always running
+#
+# USAGE:
+#   Local (no public tunnel):
+#     docker compose up -d
+#     Open: http://localhost:80
+#
+#   With public ngrok tunnel:
+#     docker compose --profile tunnel up -d
+#     Get public URL: curl http://localhost:4040/api/endpoints | jq -r '.endpoints[0].url'
+#
+# SETUP:
+#   1. cp .env.docker.example .env
+#   2. Edit .env — set MANAGER_API_KEY and MANAGER_HOST
+#   3. Edit manager.config.yaml — set absolute container paths for each site
+#   4. Add site volume mounts to the `manager` service (see volumes section)
+#   5. docker compose build manager
+#   6. docker compose up -d
+#
+# SITE PATHS:
+#   In manager.config.yaml, site `path:` values must be ABSOLUTE container paths
+#   matching the volume mounts in this file. Example:
+#     manager.config.yaml: path: /sites/mysite
+#     docker-compose.yml volume: /host/path/to/mysite:/sites/mysite
+
+services:
+
+  # ── Traefik ──────────────────────────────────────────────────────────────────
+  # Reverse proxy that sits between ngrok and the manager.
+  # It reads Docker labels on other containers to know how to route requests.
+  #
+  # Network topology:
+  #   - On BOTH networks (proxy + internal) so it can receive from ngrok (proxy)
+  #     and forward to the manager (internal).
+  #   - Ports are bound to 127.0.0.1 only — never exposed to 0.0.0.0. This means
+  #     Traefik is only reachable from the host machine or from other containers on
+  #     the same Docker networks. ngrok connects to it via the Docker `proxy` network,
+  #     not via the exposed host port.
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: unless-stopped
+    volumes:
+      # Static Traefik configuration — entrypoints, dashboard, Docker provider settings.
+      # Read-only: Traefik never needs to write back to this file.
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      # Docker socket — lets Traefik discover containers and read their labels.
+      # Read-only: Traefik only needs to watch events, never manage containers.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      # HTTP entrypoint — ngrok forwards inbound tunnel traffic here.
+      # Loopback-only: not reachable from other machines on the LAN.
+      - "127.0.0.1:80:80"
+      # Traefik dashboard — useful during development to inspect routes and middleware.
+      # Loopback-only: never expose this publicly in production.
+      - "127.0.0.1:8080:8080"
+    networks:
+      # proxy: receives forwarded requests from ngrok
+      - proxy
+      # internal: forwards routed requests to the manager container
+      - internal
+    healthcheck:
+      # Traefik exposes a /ping endpoint when `ping: {}` is set in traefik.yml.
+      # This health check must pass before dependent services (ngrok, manager) start.
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      # Prevent Traefik from trying to route traffic to itself via label discovery.
+      traefik.enable: "false"
+
+  # ── ngrok ────────────────────────────────────────────────────────────────────
+  # Establishes an outbound tunnel to the ngrok cloud edge, which provides a
+  # public HTTPS URL that forwards to Traefik on the proxy network.
+  #
+  # Why a profile?
+  #   ngrok is OPTIONAL. The core stack (traefik + manager) runs perfectly fine
+  #   locally without any public tunnel. Adding `profiles: ["tunnel"]` means
+  #   `docker compose up -d` starts only traefik and manager. You must explicitly
+  #   opt in to the tunnel with: docker compose --profile tunnel up -d
+  #
+  # Network topology:
+  #   - On `proxy` network ONLY. It dials out to ngrok cloud, then forwards
+  #     inbound requests to Traefik over the shared Docker proxy network.
+  #   - Never on `internal` — it has no need to reach the manager directly and
+  #     should not be able to bypass Traefik's routing rules.
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    profiles:
+      # Opt-in profile — only starts when you pass --profile tunnel.
+      # This keeps the default `docker compose up -d` clean and tunnel-free.
+      - tunnel
+    restart: on-failure:3
+    # `start --all` reads all tunnel definitions from ngrok.yml and starts them.
+    command: ["start", "--all", "--config", "/etc/ngrok.yml"]
+    environment:
+      # Your ngrok auth token — required for the agent to authenticate with ngrok cloud.
+      # Set this in your .env file: NGROK_AUTHTOKEN=your_token_here
+      # Get a token at: https://dashboard.ngrok.com/get-started/your-authtoken
+      NGROK_AUTHTOKEN: "${NGROK_AUTHTOKEN}"
+    volumes:
+      # ngrok tunnel configuration — defines which local address to expose and
+      # optionally sets a reserved domain (for stable URLs on paid plans).
+      # Read-only: the agent only reads this config at startup.
+      - ./ngrok.yml:/etc/ngrok.yml:ro
+    ports:
+      # ngrok agent API / inspector UI — lets you see the public URL and inspect
+      # traffic: curl http://localhost:4040/api/endpoints
+      # Loopback-only: for local dev inspection, never expose publicly.
+      - "127.0.0.1:4040:4040"
+    networks:
+      # proxy only — ngrok talks to Traefik over this network.
+      # It must NOT be on `internal`; the manager is unreachable from ngrok directly.
+      - proxy
+    depends_on:
+      traefik:
+        # Wait until Traefik's /ping health check passes before ngrok attempts to
+        # establish a tunnel. This prevents ngrok from forwarding traffic to a
+        # proxy that isn't ready yet.
+        condition: service_healthy
+
+  # ── Flint Manager ────────────────────────────────────────────────────────────
+  # The Bun HTTP server that provides the web UI and API for managing Flint sites.
+  #
+  # Why no `ports:` entry?
+  #   The manager is on the `internal` network only. Traefik reaches it via the
+  #   shared Docker network using the container name as the hostname. There is
+  #   intentionally NO host-port binding — the manager is never directly reachable
+  #   from outside the container network. All traffic flows through Traefik.
+  #   Use `expose` to document the port without binding it to the host.
+  #
+  # Network topology:
+  #   - On `internal` network ONLY. Traefik (which is on both networks) routes
+  #     matched requests here. ngrok cannot reach the manager directly.
+  manager:
+    build:
+      # Build from the manager/ directory — expects a Dockerfile at manager/Dockerfile.
+      context: .
+      dockerfile: Dockerfile
+    container_name: flint-manager
+    restart: unless-stopped
+    # Documents that the manager listens on 8080 without binding to the host.
+    # Traefik uses this port (configured via labels below) to forward traffic.
+    expose:
+      - "8080"
+    env_file:
+      - path: ./.env
+        # The .env file MUST exist — it contains MANAGER_API_KEY and MANAGER_PORT.
+        # Copy .env.docker.example to .env and fill in your values before starting.
+        required: true
+    volumes:
+      # ── Manager runtime config (NOT baked into image) ──────────────────────
+      # manager.config.yaml is the site registry — it lists all registered Flint
+      # sites with their container-side paths. Mount it writable so the manager
+      # can add, update, and remove site registrations at runtime without rebuilding
+      # the image.
+      - type: bind
+        source: ./manager.config.yaml
+        target: /app/manager.config.yaml
+
+      # ── Site mounts ────────────────────────────────────────────────────────
+      # Mount each Flint site directory here so the manager can run builds,
+      # syncs, and deploys against them. The target path MUST match the `path:`
+      # field for that site in manager.config.yaml.
+      #
+      # Each mounted site must have its dependencies installed on the HOST
+      # before mounting (run `bun install` in the site directory). The manager
+      # will invoke `bun run build`, `bunx rspack`, etc. inside these directories.
+      #
+      # Example — uncomment and adjust for each site you want to manage:
+      #
+      # - type: bind
+      #   source: /absolute/host/path/to/your-flint-site
+      #   target: /sites/main
+      #
+      # If you have multiple sites:
+      #
+      # - type: bind
+      #   source: /absolute/host/path/to/site-one
+      #   target: /sites/site-one
+      #
+      # - type: bind
+      #   source: /absolute/host/path/to/site-two
+      #   target: /sites/site-two
+      #
+      # Then in manager.config.yaml, each site entry would have:
+      #   path: /sites/site-one
+      #   path: /sites/site-two
+    networks:
+      # internal only — Traefik routes to the manager; nothing else should reach it.
+      - internal
+    depends_on:
+      traefik:
+        # Wait for Traefik to be healthy before starting the manager.
+        # This ensures the routing layer is ready to accept traffic as soon as
+        # the manager comes online.
+        condition: service_healthy
+    healthcheck:
+      # The manager exposes /_health for liveness checks.
+      # wget is used instead of curl since it's available in the base Bun image.
+      test: ["CMD-SHELL", "wget --quiet --spider http://localhost:8080/_health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      # Give the Bun server extra time to initialise on first start (reads config,
+      # scans registered sites, etc.) before health checks begin.
+      start_period: 30s
+    labels:
+      # Tell Traefik to include this container in its routing table.
+      traefik.enable: "true"
+
+      # Route rule — match requests by Host header.
+      # ${MANAGER_HOST:-localhost} defaults to `localhost` when MANAGER_HOST is
+      # not set in .env. In production, set MANAGER_HOST=yourdomain.ngrok.app
+      # (or your custom domain) so Traefik routes ngrok traffic correctly.
+      traefik.http.routers.manager.rule: "Host(`${MANAGER_HOST:-localhost}`)"
+
+      # Entrypoint — the `web` entrypoint listens on :80, as defined in traefik.yml.
+      traefik.http.routers.manager.entrypoints: "web"
+
+      # Tell Traefik which port to forward matched requests to inside the container.
+      traefik.http.services.manager.loadbalancer.server.port: "8080"
+
+      # Explicitly specify the Docker network Traefik should use to reach this
+      # container. Must match the `name:` of the internal network below.
+      # Without this, Traefik may try the wrong network if the container has
+      # multiple network interfaces (which it doesn't here, but it's good practice).
+      traefik.docker.network: "flint_internal"
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+#
+# Two isolated networks enforce the security boundary:
+#
+#   proxy    — shared by traefik + ngrok. ngrok forwards tunnel traffic to Traefik.
+#              The manager is NEVER on this network and cannot be reached by ngrok.
+#
+#   internal — shared by traefik + manager. Traefik forwards routed requests to
+#              the manager. ngrok is NEVER on this network.
+#
+# Explicit `name:` values avoid Docker's default project-prefix behaviour
+# (e.g. "manager_proxy"). The names here must match any references in traefik.yml
+# (particularly providers.docker.network, if set).
+networks:
+  proxy:
+    driver: bridge
+    # Explicit name prevents Docker from prepending the project name.
+    # Use this name in traefik.yml if you reference it there.
+    name: flint_proxy
+
+  internal:
+    driver: bridge
+    # Explicit name prevents Docker from prepending the project name.
+    # This value must match `traefik.docker.network` label on the manager service
+    # and any `providers.docker.network` setting in traefik.yml.
+    name: flint_internal

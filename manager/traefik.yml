@@ -1,0 +1,99 @@
+# =============================================================================
+# Traefik v3 — Static Configuration
+# Mounted at: /etc/traefik/traefik.yml inside the Traefik container
+#
+# Traffic flow:
+#   Browser (HTTPS)
+#     → ngrok cloud edge  (terminates TLS, forwards plain HTTP)
+#     → ngrok container   (outbound tunnel, port 80 on Docker network)
+#     → Traefik :80       (HTTP routing by Host header)
+#     → manager :8080     (internal Docker network only)
+#
+# Because ngrok sits in front and terminates TLS, Traefik operates in
+# HTTP-only mode. There is intentionally NO tls: or certificatesResolvers:
+# section in this file — adding one would be wrong and break the tunnel.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# API / Dashboard
+# Exposes the Traefik dashboard and REST API on a separate internal port (8080
+# by default). insecure: true skips the need for a dedicated router/TLS cert
+# for the dashboard itself.
+#
+# This is acceptable here because docker-compose.yml binds the dashboard port
+# exclusively to 127.0.0.1 (e.g. "127.0.0.1:8081:8080"), so it is never
+# reachable from the public internet — only from the host machine for local
+# debugging.
+# -----------------------------------------------------------------------------
+api:
+  dashboard: true
+  insecure: true # Dashboard on :8080, bound to 127.0.0.1 in docker-compose — never exposed publicly
+
+# -----------------------------------------------------------------------------
+# Ping
+# Enables the GET /ping healthcheck endpoint on every entrypoint.
+# docker-compose uses this to determine when Traefik is ready before starting
+# dependent containers (healthcheck: test: ["CMD", "wget", "-qO-", "..."]).
+# -----------------------------------------------------------------------------
+ping: {}
+
+# -----------------------------------------------------------------------------
+# Entry Points
+# Defines the network listeners Traefik accepts connections on.
+#
+# Only a single HTTP entrypoint is needed. ngrok handles HTTPS termination
+# externally, so Traefik never sees raw TLS traffic. Do NOT add a :443
+# entrypoint or a tls block here — it would conflict with the ngrok tunnel.
+# -----------------------------------------------------------------------------
+entryPoints:
+  web:
+    address: ":80"
+    forwardedHeaders:
+      # Trust X-Forwarded-Proto, X-Forwarded-For, and X-Real-IP headers
+      # injected by ngrok (and any intermediate proxies on the Docker network).
+      #
+      # Without this, Traefik would strip forwarded headers from untrusted
+      # sources, and middleware that inspects the originating protocol or IP
+      # (e.g. redirectScheme, rate limiting, access logs) would see wrong values.
+      #
+      # "0.0.0.0/0" trusts ALL sources — acceptable in this setup because the
+      # only thing that can reach Traefik :80 is the ngrok container on the
+      # internal Docker network (not the public internet).
+      #
+      # TODO: In a production hardened setup, narrow this to ngrok's actual
+      # egress IP ranges instead of the wildcard CIDR.
+      trustedIPs:
+        - "0.0.0.0/0"
+
+# -----------------------------------------------------------------------------
+# Providers
+# Tells Traefik where to discover routers, services, and middleware
+# definitions. Dynamic config (labels on containers) is picked up
+# automatically — no separate dynamic config file is needed.
+# -----------------------------------------------------------------------------
+providers:
+  docker:
+    # Connect to the Docker daemon via the Unix socket mounted into the
+    # Traefik container (read-only in docker-compose for least privilege).
+    endpoint: "unix:///var/run/docker.sock"
+
+    # Security best practice: opt-in model.
+    # Traefik will IGNORE containers unless they carry the label
+    # "traefik.enable=true". This prevents accidental exposure of containers
+    # that should remain internal (e.g. DB, Redis, internal tooling).
+    exposedByDefault: false
+
+    # The named Docker network Traefik uses to reach backend containers.
+    # Must match the network name declared in docker-compose.yml so that
+    # Traefik can open a connection to the manager container's internal IP.
+    # Traefik will use the container's IP on this network when proxying
+    # requests — the container does NOT need a published host port.
+    network: "flint_internal"
+
+# -----------------------------------------------------------------------------
+# Logging
+# Controls the verbosity of Traefik's own operational logs (not access logs).
+# Change to DEBUG during initial setup or when diagnosing routing issues.
+# -----------------------------------------------------------------------------
+log:
+  level: "INFO" # Change to DEBUG during setup to see full routing decisions

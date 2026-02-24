@@ -1,0 +1,103 @@
+# ngrok v3 configuration file for Flint Manager Docker setup
+#
+# FORMAT NOTE: This uses the v3 format (`version: 3`). The old v2 `tunnels:` key
+# is deprecated and will be removed in a future ngrok release. Always use
+# `endpoints:` with `version: 3` for new configurations.
+#
+# OVERVIEW:
+#   ngrok runs as a Docker container alongside Traefik on the `proxy` network.
+#   It opens an outbound tunnel to ngrok.io, receives inbound HTTPS traffic from
+#   the internet, terminates TLS, and forwards plain HTTP to the Traefik container
+#   on port 80. Traefik then routes requests to the Flint Manager container.
+#
+#   Internet (HTTPS) → ngrok.io → ngrok container → Traefik:80 → Flint Manager
+
+version: 3
+
+# ---------------------------------------------------------------------------
+# Agent configuration
+# ---------------------------------------------------------------------------
+agent:
+  # AUTHTOKEN: intentionally omitted from this file.
+  #
+  # The ngrok agent automatically reads NGROK_AUTHTOKEN from the environment.
+  # The token is injected via the `environment:` block in docker-compose.yml:
+  #
+  #   environment:
+  #     - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+  #
+  # Keeping the token out of this file means it never gets committed to source
+  # control. Store it in your .env file (which is gitignored) instead.
+  #
+  # To get your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken
+
+  # Log to stdout so Docker captures output via `docker logs` / `docker compose logs`.
+  log: stdout
+  log_level: info
+
+  # IMPORTANT: bind the ngrok web/API interface on 0.0.0.0, NOT 127.0.0.1.
+  #
+  # By default ngrok binds its local API and web inspector to 127.0.0.1:4040,
+  # which is only reachable from within the container itself. When running in
+  # Docker the host machine cannot connect to 127.0.0.1 inside the container.
+  #
+  # Setting 0.0.0.0:4040 makes the API reachable via the port mapping
+  # declared in docker-compose.yml (`ports: - "4040:4040"`), so you can:
+  #
+  #   • Query the assigned public URL from the host:
+  #       curl http://localhost:4040/api/endpoints | jq -r '.endpoints[0].url'
+  #
+  #   • Open the ngrok web inspector in your browser:
+  #       http://localhost:4040
+  #
+  # Without this setting those commands would time out or be refused.
+  web_addr: "0.0.0.0:4040"
+
+# ---------------------------------------------------------------------------
+# Endpoints  (v3 replacement for the deprecated v2 `tunnels:` key)
+# ---------------------------------------------------------------------------
+#
+# v2 used:
+#   tunnels:
+#     manager:
+#       proto: http
+#       addr: traefik:80
+#
+# v3 uses `endpoints:` with explicit `upstream:` blocks. The semantics are
+# equivalent but the schema is more expressive and supports additional
+# features such as traffic policies, OAuth, and IP restrictions.
+#
+endpoints:
+  - name: manager
+
+    # PUBLIC URL / DOMAIN
+    #
+    # Option A — Random URL (default, no configuration needed):
+    #   Leave the `url:` key absent (as below). ngrok assigns a random
+    #   subdomain on every start, e.g. https://a1b2c3d4.ngrok-free.app
+    #   Retrieve it at runtime:
+    #     curl http://localhost:4040/api/endpoints | jq -r '.endpoints[0].url'
+    #   Then update MANAGER_HOST in your docker-compose .env to match.
+    #
+    # Option B — Static reserved domain (recommended for production):
+    #   1. Reserve a domain in the ngrok dashboard:
+    #        https://dashboard.ngrok.com/domains
+    #   2. Uncomment and edit the line below:
+    #        url: https://yourdomain.ngrok.app
+    #   3. Set MANAGER_HOST=yourdomain.ngrok.app in your .env file so that
+    #      Traefik's Host() routing rule matches incoming requests correctly.
+    #
+    # url: https://yourdomain.ngrok.app
+
+    upstream:
+      # `traefik` is the Docker Compose service name for the Traefik container.
+      # Docker's internal DNS resolves service names to container IPs within a
+      # shared network, so `http://traefik:80` routes directly to Traefik
+      # without any host-machine port mapping. Both ngrok and Traefik must be
+      # on the same Docker network (named `proxy` in this setup).
+      url: http://traefik:80
+
+      # Force HTTP/1.1 between ngrok and Traefik.
+      # Traefik's default entrypoint on port 80 is HTTP/1.1; using http1 here
+      # avoids any h2c negotiation mismatch.
+      protocol: http1
