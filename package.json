@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bun scripts/build.ts",
+    "build:css": "rspack build --mode production",
     "build:sync": "bun scripts/build.ts --stripe-sync",
     "build:sync:force": "bun scripts/build.ts --stripe-sync --force",
     "stripe:cleanup": "bun scripts/stripe-cleanup.ts",

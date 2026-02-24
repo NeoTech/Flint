@@ -57,7 +57,7 @@ Features:
       color: cyan
     - icon: "🛒"
       title: Built-in E-commerce
-      description: "Stripe-powered cart and checkout, client-side IndexedDB, and product pages — all from Markdown."
+      description: "Stripe-powered cart and checkout, client-side IndexedDB, and product pages — all from Markdown. One-click Build + Deploy to Cloudflare Pages."
       color: pink
 
 Stats:
@@ -65,7 +65,7 @@ Stats:
     - value: "< 200ms"
       label: Build time
       color: blue
-    - value: "410+"
+    - value: "807+"
       label: Tests passing
       color: green
     - value: "0"

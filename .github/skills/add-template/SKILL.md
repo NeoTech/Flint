@@ -39,7 +39,7 @@ Before creating a new template, check `themes/default/templates/` — reuse or c
 
 ### 2. Create the file
 
-Create `themes/default/templates/<name>.html`. Start from this skeleton:
+Create the template in the active theme's directory: `themes/<THEME>/templates/<name>.html` (check `THEME` in `.env`). To make a template available to all themes, use `themes/default/templates/<name>.html` — themes overlay on top of `default` and inherit any templates they don't override. Start from this skeleton:
 
 ```html
 {{head}}

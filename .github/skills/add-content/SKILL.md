@@ -56,7 +56,7 @@ Description: A short SEO summary
 - `Parent: root` → appears in top navigation
 - `Parent: <section-short-uri>` → child of that section
 - `Type: section` → container page, use `:::children` in body
-- `Type: product` → requires `PriceCents`, `Currency`, `StripePriceId`, `Image`
+- `Type: product` → requires `PriceCents`, `Currency`, `StripePriceId`, `StripePaymentLink`, `Image`
 
 ### 3. Write the Markdown body
 
@@ -92,7 +92,7 @@ See `references/directives.md` for full options and placeholders.
 - `Template` matches a file in `themes/default/templates/` (without `.html`)
 - `Type` is one of: `page`, `post`, `section`, `product`
 - Section indexes include a `:::children` directive
-- Products have all four product fields
+- Products have all five product fields
 
 ### 5. Build
 

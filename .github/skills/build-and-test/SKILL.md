@@ -26,6 +26,8 @@ Core commands for building the site, running tests, and checking code quality.
 - Running or writing tests
 - Checking TypeScript types or linting
 - Debugging build or test failures
+- After changing `products.yaml`: run `build:sync` then deploy
+- Before deploying: always build first (or use the manager's "Build + Deploy" button)
 
 ## Commands
 
@@ -37,6 +39,10 @@ Core commands for building the site, running tests, and checking code quality.
 | `bun run test` | Run tests in watch mode |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint |
+| `bun run build:sync` | Stripe sync + compile (required after changing `products.yaml`) |
+| `bun run build:sync:force` | Force-recreate all Stripe Payment Links + compile |
+| `bun run deploy:cloudflare:pages` | Deploy static site to Cloudflare Pages (Direct Upload API) |
+| `bun run deploy:checkout:cloudflare` | Deploy checkout Worker to Cloudflare Workers |
 
 ## Build Pipeline
 
@@ -100,6 +106,32 @@ describe('MyClass', () => {
 - Write tests first — failing test, then implement
 - Use `.js` extension in imports (TypeScript path mapping)
 - Descriptive test names that read like documentation
+
+## Deploy
+
+### Deploy static site (Cloudflare Pages)
+
+```bash
+bun run build:sync          # if products changed — syncs Stripe, rebuilds
+bun run deploy:cloudflare:pages   # uploads dist/ via CF Direct Upload API
+```
+
+### Deploy checkout Worker
+
+```bash
+bun run deploy:checkout:cloudflare
+```
+
+Requires in `.env`:
+- `CLOUDFLARE_API_TOKEN` (scoped token with Pages:Edit — NOT the Global API Key)
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CF_PAGES_PROJECT`
+
+### Manager Build Page
+
+The manager's Build page (`/sites/:id/build`) has:
+- **Build + Deploy** buttons per target — combines build and deploy in one streaming log
+- **Build only** button — compiles without deploying
 
 ## Pre-commit Checklist
 

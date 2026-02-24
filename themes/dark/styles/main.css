@@ -107,6 +107,15 @@ div.bg-white.rounded-xl {
 }
 div.bg-white.rounded-xl:hover { box-shadow: 0 4px 20px rgba(157, 111, 255, 0.15); }
 
+/* SkillCards — use rounded-lg not rounded-xl */
+div.bg-white.rounded-lg {
+  background-color: #1a0b2e;
+  border-color: #3a1f56;
+}
+div.bg-white.rounded-lg:hover { box-shadow: 0 4px 20px rgba(157, 111, 255, 0.15); }
+div.bg-white.rounded-lg h3.text-gray-900 { color: #f2c8ff; }
+div.bg-white.rounded-lg p.text-gray-600  { color: #b8a0e0; }
+
 /* Cards — link (anchor) variant */
 a.group.bg-white.rounded-xl {
   background-color: #1a0b2e;
@@ -145,6 +154,8 @@ a.group.bg-white.rounded-xl  p.text-gray-600 { color: #b8a0e0; }
 .bg-green-100  { background-color: #0a2018; }
 .bg-purple-100 { background-color: #280a40; }
 .bg-orange-100 { background-color: #2a1000; }
+.bg-indigo-100 { background-color: #0d0a40; }
+.bg-rose-100   { background-color: #2a0818; }
 .bg-cyan-100   { background-color: #042030; }
 .bg-pink-100   { background-color: #2a0a18; }
 .bg-amber-100  { background-color: #2a1800; }
@@ -163,6 +174,8 @@ a.group.bg-white.rounded-xl  p.text-gray-600 { color: #b8a0e0; }
 .text-amber-800  { color: #ffe0a0; }
 .text-rose-800   { color: #ffaacc; }
 .text-teal-800   { color: #a0ffe0; }
+.text-orange-800 { color: #ffcc88; }
+.text-indigo-800 { color: #b8b0ff; }
 .text-gray-700   { color: #c4aaff; }
 /* -700 badge variants used in LabelFooter */
 .text-blue-700   { color: #c4aaff; }
@@ -181,7 +194,7 @@ footer.border-t {
 }
 footer h3.text-gray-500 { color: #b8a0e0; }
 
-/* Label badges — override each color pair */
+/* Label badges — override each color pair (-700 variants used by LabelFooter) */
 .bg-blue-100.text-blue-700     { background-color: #1e0d40; color: #c4aaff; }
 .bg-green-100.text-green-700   { background-color: #0a2018; color: #a8ffc4; }
 .bg-purple-100.text-purple-700 { background-color: #280a40; color: #d4aaff; }
@@ -190,6 +203,17 @@ footer h3.text-gray-500 { color: #b8a0e0; }
 .bg-teal-100.text-teal-700     { background-color: #042020; color: #a0ffe0; }
 .bg-indigo-100.text-indigo-700 { background-color: #0d0a40; color: #b8b0ff; }
 .bg-orange-100.text-orange-700 { background-color: #2a1000; color: #ffcc88; }
+
+/* Skill card badges — -800 variants, slightly lighter bg so they read against #1a0b2e card */
+.bg-blue-100.text-blue-800     { background-color: #1e0d40; color: #c4aaff; }
+.bg-green-100.text-green-800   { background-color: #143320; color: #a8ffc4; }
+.bg-purple-100.text-purple-800 { background-color: #280a40; color: #d4aaff; }
+.bg-amber-100.text-amber-800   { background-color: #2a1a00; color: #ffe0a0; }
+.bg-rose-100.text-rose-800     { background-color: #2a0a1a; color: #ffaacc; }
+.bg-teal-100.text-teal-800     { background-color: #04201a; color: #a0ffe0; }
+.bg-indigo-100.text-indigo-800 { background-color: #0e0c40; color: #b8b0ff; }
+.bg-orange-100.text-orange-800 { background-color: #2a1400; color: #ffcc88; }
+.bg-gray-200.text-gray-700     { background-color: #1e1030; color: #c4aaff; }
 
 /* ── Generic prose / page content ────────────────────────────────── */
 /* Any stray text-gray-* outside the components */

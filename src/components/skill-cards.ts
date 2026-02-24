@@ -1,7 +1,7 @@
 import { Component, type ComponentProps } from './component.js';
 import type { TagDef } from '../templates/tag-registry.js';
 
-export type SkillColor = 'green' | 'blue' | 'purple' | 'amber' | 'gray' | 'rose' | 'teal';
+export type SkillColor = 'green' | 'blue' | 'purple' | 'amber' | 'gray' | 'rose' | 'teal' | 'orange' | 'indigo';
 
 export interface SkillInfo {
   /** Skill directory name */
@@ -29,6 +29,8 @@ const COLOR_MAP: Record<SkillColor, { bg: string; text: string }> = {
   gray:   { bg: 'bg-gray-200',   text: 'text-gray-700' },
   rose:   { bg: 'bg-rose-100',   text: 'text-rose-800' },
   teal:   { bg: 'bg-teal-100',   text: 'text-teal-800' },
+  orange: { bg: 'bg-orange-100', text: 'text-orange-800' },
+  indigo: { bg: 'bg-indigo-100', text: 'text-indigo-800' },
 };
 
 /**

@@ -9,17 +9,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
 const basePath = process.env.BASE_PATH || '';
 
-// Resolve the active theme's CSS, falling back to the default theme
-const _theme = (process.env.THEME || '').trim();
-function resolveThemeCss(): string {
-  if (_theme && _theme !== 'default') {
-    const themed = path.resolve(__dirname, `themes/${_theme}/styles/main.css`);
-    if (existsSync(themed)) return themed;
-  }
-  return path.resolve(__dirname, 'themes/default/styles/main.css');
-}
-const resolvedThemeCss = resolveThemeCss();
-
 function readDotEnv(): Record<string, string> {
   try {
     return Object.fromEntries(
@@ -41,6 +30,20 @@ function getEnvVar(key: string, fallback: string): string {
   const env = readDotEnv();
   return process.env[key] || env[key] || fallback;
 }
+
+// Resolve the active theme's CSS, falling back to the default theme
+// NOTE: THEME is resolved once at startup. Changing .env requires restarting
+// `bun run dev` — HMR cannot reload the rspack config or its aliases.
+const _theme = getEnvVar('THEME', '').trim();
+function resolveThemeCss(): string {
+  if (_theme && _theme !== 'default') {
+    const themed = path.resolve(__dirname, `themes/${_theme}/styles/main.css`);
+    if (existsSync(themed)) return themed;
+  }
+  return path.resolve(__dirname, 'themes/default/styles/main.css');
+}
+const resolvedThemeCss = resolveThemeCss();
+console.log(`[rspack] THEME=${_theme || 'default'}  css=${resolvedThemeCss}`);
 
 export default defineConfig({
   entry: {

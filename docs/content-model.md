@@ -44,7 +44,8 @@ Used with `Type: product` pages. See [ecommerce.md](ecommerce.md) for full detai
 | `PriceCents` | `number` | — | `1200` | Price in cents (e.g. `1200` = $12.00). The `{{product}}` tag formats this automatically. |
 | `Currency` | `string` | `usd` | `usd` | ISO currency code. |
 | `StripePriceId` | `string` | — | `price_1QxABC...` | Stripe Price ID from your Stripe Dashboard. |
-| `Image` | `string` | — | `☕` or URL | Image URL or emoji for product card thumbnails. |
+| `StripePaymentLink` | `string` | — | `https://buy.stripe.com/...` | Stripe Payment Link URL. Used by the cart for direct checkout and in `:::children` product listings via the `{stripe-payment-link}` placeholder. |
+| `Image` | `string \| MediaAsset[]` | — | `☕` or `[{ src: "/img/mug.jpg", alt: "Blue mug", caption: "Ocean-blue finish" }]` | Product image. Either an emoji/URL string (for the `{{product}}` card) or an array of `{ src, alt?, caption? }` objects (for the `{{media-gallery}}` / `{{media-hero}}` / `{{media-carousel}}` / `{{media-strip}}` / `{{media:N}}` tags). |
 
 ### Optional — Component Data Fields
 
@@ -58,6 +59,7 @@ Arbitrary YAML that drives **data-driven components**. Any key in frontmatter fl
 | `Showcase` | `CardGridProps` | See index.md | `{{showcase-grid}}` tag → CardGrid component |
 | `Stats` | `StatsBarProps` | See index.md | `{{stats-bar}}` tag → StatsBar component |
 | `Skills` | `SkillInfo[]` | See agent.md | `{{skill-cards}}` tag → SkillCards component |
+| `Image` | `string \| MediaAsset[]` | `[{ src: "/img/hero.jpg", alt: "Hero" }]` | `{{media-gallery}}`, `{{media-carousel}}`, `{{media-hero}}`, `{{media-strip}}`, `{{media:N}}` tags → StaticMedia component |
 
 **CtaSection props** (`Hero:` / `CTA:`): `heading`, `subtitle?`, `tagline?` (hero only), `primaryCta: { label, href }`, `secondaryCta?: { label, href }`.
 
@@ -66,6 +68,8 @@ Arbitrary YAML that drives **data-driven components**. Any key in frontmatter fl
 **StatsBar props** (`Stats:`): `stats[]` where each stat has `value`, `label`, `color`.
 
 The `Skills` array contains objects with: `name`, `icon`, `description`, `tags` (string[]), `color` (green\|blue\|purple\|amber\|gray\|rose\|teal).
+
+**MediaAsset** (`Image:` for media tags): a single asset or an array where each entry has `src` (URL or path, required), `alt` (alt text, optional — falls back to filename), and `caption` (displayed below the image, optional). A plain string/emoji is also accepted and treated as a single `src`-only asset.
 
 ## Complete Example
 

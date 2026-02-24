@@ -13,6 +13,10 @@ Flint has two build pipelines that work together:
 |---|---|---|
 | `bun run build` | Compile all Markdown to `dist/` + copy static assets | Before deploying |
 | `bun run dev` | Start Rspack dev server with HMR on port 3000 | During development |
+| `bun run build:sync` | Stripe sync + site compile | After changing `products.yaml` |
+| `bun run build:sync:force` | Force-recreate all Stripe Payment Links + compile | Full Stripe reset |
+| `bun run deploy:cloudflare:pages` | Deploy static site to Cloudflare Pages (Direct Upload API) | After a build |
+| `bun run deploy:checkout:cloudflare` | Deploy Cloudflare Worker (checkout server) via wrangler | After changing checkout function |
 | `bun run test` | Run tests in watch mode | While writing code |
 | `bun run test:run` | Run all tests once | Before committing |
 | `bun run typecheck` | TypeScript type checking (`tsc --noEmit`) | Before committing |
@@ -100,6 +104,56 @@ Default config in `scripts/build.ts`:
   defaultTitle: 'My Static Site',
 }
 ```
+
+## Deploy Pipeline
+
+### Cloudflare Pages — Direct Upload API
+
+**Script:** `scripts/deploy-pages.ts`  
+**Command:** `bun run deploy:cloudflare:pages`
+
+Deploys the compiled `dist/` directory to Cloudflare Pages using the CF Direct Upload API — no wrangler subprocess. This is more reliable in non-TTY contexts (manager SSE runner, CI pipelines) and avoids local hash-cache drift.
+
+#### Required env vars (in `.env`)
+
+| Variable | Description |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | CF API token with Pages write permission (recommended) |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID |
+| `CF_PAGES_PROJECT` | Pages project name (e.g. `my-flint-site`) |
+| `CF_PAGES_DIR` | Directory to deploy (default: `dist`) |
+
+Alternatively, `CLOUDFLARE_GLOBAL_API_KEY` + `CLOUDFLARE_EMAIL` can substitute for the API token.
+
+#### How it works
+
+```
+1. Read CF_PAGES_PROJECT + CF_PAGES_DIR from .env
+       ↓
+2. Scan dist/ — compute MD5 hash for every file
+       ↓
+3. Ensure the Pages project exists (create it if not)
+       ↓
+4. GET upload JWT — short-lived token from CF for asset uploads
+       ↓
+5. POST check-missing → CF returns which hashes it doesn't have
+       ↓
+6. Upload only the missing files in batches of 50
+       ↓
+7. Upsert all hashes — tell CF the full file set for this deployment
+       ↓
+8. POST create deployment with full manifest
+   → CF builds the deployment and assigns a preview URL
+```
+
+Incremental by design — only new or changed files are uploaded on each run.
+
+### Cloudflare Worker (checkout server)
+
+**Script:** `scripts/deploy-cloudflare.ts`  
+**Command:** `bun run deploy:checkout:cloudflare`
+
+Deploys `functions/checkout-cloudflare.ts` as a Cloudflare Worker via wrangler. Separate from the Pages deploy — this is for the serverless checkout handler, not the static site.
 
 ## Template Engine
 
@@ -208,6 +262,19 @@ The `static/` directory is copied verbatim to `dist/` during build. Use it for:
 - HTML fragments served by HTMX (`static/fragments/*.html`)
 - Images, fonts, downloads
 - Any file that should be served as-is
+
+## Manager Build API
+
+The Flint Manager exposes SSE endpoints that drive the build and deploy UI. All responses are Server-Sent Events so the browser can stream log output in real time.
+
+| Route | What it does |
+|---|---|
+| `POST /sites/:id/build` | Runs `bun run build` — site compile only |
+| `POST /sites/:id/build/test` | Runs `bun run test:run` |
+| `POST /sites/:id/deploy/:target` | Deploys to the named target (e.g. `cloudflare`) — no build step |
+| `POST /sites/:id/build-and-deploy/:target` | Builds then deploys in a single streaming SSE sequence |
+
+The UI presents a **"Build + Deploy"** button (triggers `build-and-deploy`) and a separate **"Build only"** button at the bottom of the Build page.
 
 ## Testing
 

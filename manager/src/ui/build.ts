@@ -17,11 +17,6 @@ export function renderBuild(siteId: string, htmx = false): string {
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold text-white">Build &amp; Deploy</h1>
     <div class="flex gap-2">
-      <button id="build-btn"
-        onclick="startBuild('${escHtml(siteId)}')"
-        class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium">
-        🔨 Build
-      </button>
       <button id="test-btn"
         onclick="startTest('${escHtml(siteId)}')"
         class="text-sm bg-gray-700 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium">
@@ -50,12 +45,12 @@ export function renderBuild(siteId: string, htmx = false): string {
     <div id="deploy-targets" class="grid grid-cols-2 gap-3">
       <div class="col-span-2 text-xs text-gray-500">Loading deploy targets…</div>
     </div>
-    <!-- Download fallback — always visible -->
-    <a href="/sites/${escHtml(siteId)}/build/download"
-       class="mt-3 flex items-center justify-between gap-2 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white text-sm rounded-xl px-4 py-3 transition-colors">
-      <span class="font-medium">⬇ Download dist.tar.gz</span>
-      <span class="text-xs text-gray-500">No platform needed</span>
-    </a>
+    <!-- Build-only fallback — always visible -->
+    <button id="build-btn" onclick="startBuild(SITE_ID, this)"
+       class="mt-3 flex items-center justify-between gap-2 w-full bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white text-sm rounded-xl px-4 py-3 transition-colors text-left">
+      <span class="font-medium">🔨 Build only</span>
+      <span class="text-xs text-gray-500">Compile without deploying</span>
+    </button>
     <p class="text-xs text-gray-600 mt-3">
       Add deploy credentials to this site's <code class="text-indigo-400">.env</code> via the
       <a href="/sites/${escHtml(siteId)}/env" hx-get="/sites/${escHtml(siteId)}/env"
@@ -78,10 +73,10 @@ export function renderBuild(siteId: string, htmx = false): string {
       container.innerHTML = targets.map(t => {
         if (t.available) {
           return \`<button
-            onclick="startDeploy('\${t.id}', '\${t.label}')"
+            onclick="startBuildAndDeploy('\${t.id}', '\${t.label}', this)"
             class="flex items-center justify-between gap-2 bg-gray-800 hover:bg-indigo-700 border border-gray-700 hover:border-indigo-500 text-white text-sm rounded-xl px-4 py-3 transition-colors text-left">
             <span class="font-medium">\${t.label}</span>
-            <span class="text-xs text-indigo-300">Deploy →</span>
+            <span class="text-xs text-indigo-300">Build + Deploy →</span>
           </button>\`;
         } else {
           const missing = t.missing.map(k => \`<code class="text-yellow-400">\${k}</code>\`).join(', ');
@@ -148,13 +143,11 @@ export function renderBuild(siteId: string, htmx = false): string {
   }
 
   // ---- Build ----------------------------------------------------------------
-  window.startBuild = function(siteId) {
+  window.startBuild = function(siteId, btnEl) {
     const log = document.getElementById('build-log');
-    const btn = document.getElementById('build-btn');
     const status = document.getElementById('build-status');
-    btn.textContent = '⏳ Building…';
-    streamTo('/sites/' + siteId + '/build', 'POST', log, status, btn)
-      .then(() => { btn.textContent = '🔨 Build'; });
+    const btn = btnEl || document.getElementById('build-btn');
+    streamTo('/sites/' + siteId + '/build', 'POST', log, status, btn);
   };
 
   // ---- Test -----------------------------------------------------------------
@@ -175,7 +168,13 @@ export function renderBuild(siteId: string, htmx = false): string {
     log.textContent = 'Deploying to ' + targetLabel + '…\\n';
     streamTo('/sites/' + SITE_ID + '/deploy/' + targetId, 'POST', log, status, btn);
   };
-
+  // ---- Build + Deploy -------------------------------------------------------
+  window.startBuildAndDeploy = function(targetId, targetLabel, btn) {
+    const log = document.getElementById('build-log');
+    const status = document.getElementById('build-status');
+    log.textContent = '';
+    streamTo('/sites/' + SITE_ID + '/build-and-deploy/' + targetId, 'POST', log, status, btn);
+  };
   document.addEventListener('DOMContentLoaded', loadTargets);
   // Also load immediately in case DOMContentLoaded already fired (HTMX swap)
   if (document.readyState !== 'loading') loadTargets();

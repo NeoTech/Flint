@@ -84,20 +84,32 @@ export class MyComponent extends Component<MyComponentProps> {
 - `this.classNames()` for conditional CSS classes
 - Tailwind utility classes only — no `<style>` tags
 
-### 3. Register the tag
+### 3. Export tagDefs from the component file
 
-Edit `src/templates/tag-engine.ts`:
-- Add import: `import { MyComponent } from '../components/<name>.js';`
-- Add case in `resolveTag` switch that reads **props from `ctx.frontmatter`**:
-  ```typescript
-  case 'my-tag': {
-    const data = ctx.frontmatter['MyData'] as MyProps | undefined;
-    if (!data) return '';
-    return MyComponent.render(data);
-  }
-  ```
-- Return `''` when frontmatter data is missing so `{{#if my-tag}}` works
+At the bottom of `src/components/<name>.ts`, add:
+
+```typescript
+import type { TagDef } from '../templates/tag-registry.js';
+
+export const tagDefs: TagDef[] = [
+  {
+    tag: 'my-tag',
+    label: 'My Tag',
+    icon: '🔧',
+    description: 'One-line description of this component.',
+    resolve: (ctx) => {
+      const data = ctx.frontmatter['MyData'] as MyProps | undefined;
+      if (!data) return '';
+      return MyComponent.render(data);
+    },
+  },
+];
+```
+
+- The tag registry **auto-discovers** `tagDefs` exports by scanning `src/components/` — **do NOT edit `tag-engine.ts`**
+- Return `''` when frontmatter data is missing so `{{#if my-tag}}` suppresses the block
 - **Never hardcode props** — content files drive data into components via frontmatter
+- `label`, `icon`, `description` power the manager's component browser
 
 ### 4. Extend TemplateContext if needed
 
@@ -115,7 +127,7 @@ MyData:
 ---
 ```
 
-The tag-engine case reads this and passes it to the component. Content authors control the data; the component controls the presentation.
+The `tagDefs` resolve function reads this from `ctx.frontmatter` and passes it to the component. Content authors control the data; the component controls the presentation.
 
 ### 5. Use in templates
 
@@ -137,8 +149,8 @@ bun run build
 - [ ] Extends `Component<T>` with typed props interface
 - [ ] `render()` is pure — no side effects
 - [ ] All user text through `this.escapeHtml()`
-- [ ] Tag registered in `tag-engine.ts` reading props from `ctx.frontmatter`
-- [ ] No hardcoded data in tag-engine — content files drive data
+- [ ] `tagDefs` exported from component file; registry auto-discovers it
+- [ ] No hardcoded data in `tagDefs.resolve` — frontmatter drives data
 - [ ] `TemplateContext` extended only if site-wide data needed
 - [ ] Content file has structured YAML matching component props
 - [ ] Tag placed in template with `{{#if}}` guard if optional

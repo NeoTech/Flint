@@ -93,6 +93,34 @@ The same checkout logic (`functions/checkout-cloudflare.ts`) deployed as a Cloud
 
 Set `CHECKOUT_RUNTIME=cloudflare` and `CHECKOUT_ENDPOINT` to the Worker URL in your `.env` and GitHub repository variables.
 
+## Deploying the Static Site
+
+The static site itself is deployed to **Cloudflare Pages** via a custom Direct Upload API implementation — no wrangler CLI needed:
+
+```bash
+bun run build:sync          # (if products changed) sync Stripe + rebuild
+bun run deploy:cloudflare:pages   # upload dist/ → Cloudflare Pages
+```
+
+`scripts/deploy-pages.ts` scans `dist/`, computes MD5 hashes, uploads only changed files in batches, and creates a deployment record — all via plain `fetch()` calls to the Cloudflare API. This works reliably in CI, subprocesses, and the Flint Manager.
+
+### Flint Manager — Build + Deploy
+
+The [Flint Manager](https://github.com/flint-project/manager) has a **Build \& Deploy** page that combines both steps in one click:
+
+- **Build + Deploy** buttons per platform (Cloudflare Pages, Vercel, Netlify, GitHub Pages) — compiles the site, then deploys, with a live streaming log
+- **Build only** button — compile without deploying
+- Deploy targets are automatically enabled based on which credentials are set in `.env`
+
+### Required Credentials
+
+| Var | Purpose |
+|-----|---------|
+| `CLOUDFLARE_API_TOKEN` | Scoped token with **Cloudflare Pages:Edit** — required for Pages deploy |
+| `CLOUDFLARE_ACCOUNT_ID` | Your CF account ID |
+| `CF_PAGES_PROJECT` | Pages project name |
+| `CF_PAGES_DIR` | Build output dir (default: `dist`) |
+
 ## Development Workflow
 
 ```

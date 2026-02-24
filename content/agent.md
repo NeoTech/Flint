@@ -49,6 +49,11 @@ Skills:
     description: Build the site, run tests, type-check, and lint. The core development loop for compiling Markdown to HTML.
     tags: [bun run build, bun test, typecheck]
     color: amber
+  - name: deploy
+    icon: 🚀
+    description: Deploy the static site to Cloudflare Pages, Vercel, Netlify, or GitHub Pages — and deploy the checkout Worker. Covers the full build+sync+deploy workflow.
+    tags: ["deploy:cloudflare:pages", "build:sync", Direct-Upload-API]
+    color: indigo
   - name: create-skill
     icon: 📚
     description: Meta-skill for creating new skills. Covers the progressive disclosure pattern, the 200-line SKILL.md rule, and bundled references.

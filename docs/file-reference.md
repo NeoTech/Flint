@@ -484,7 +484,21 @@ Pure rendering layer. Each component extends `Component<T>` and returns HTML str
 |---|---|---|
 | `build()` | async function | Run the full site build |
 | `config` | object | Default `BuildConfig` |
+---
 
+### `scripts/deploy-pages.ts`
+
+**Purpose:** Deploys the static site to Cloudflare Pages via the Direct Upload API (fetch-based, no wrangler). Scans `dist/`, computes MD5 hashes, gets upload JWT, checks which files are missing from CF's cache, uploads missing files in batches of 50, upserts hashes, then creates the deployment record. Requires `CLOUDFLARE_API_TOKEN` (scoped token), `CLOUDFLARE_ACCOUNT_ID`, `CF_PAGES_PROJECT`, and optionally `CF_PAGES_DIR`. Run: `bun run deploy:cloudflare:pages`
+
+**Dependencies:** `node:crypto` (`createHash`), `fs` (`readFileSync`, `readdirSync`, `statSync`, `existsSync`), `path` (`join`, `relative`)
+
+---
+
+### `scripts/deploy-cloudflare.ts`
+
+**Purpose:** Deploys the Cloudflare Worker (checkout server) via `bunx wrangler deploy`. Run: `bun run deploy:checkout:cloudflare`
+
+**Dependencies:** `wrangler` (subprocess via `bunx`)
 ---
 
 ### `rspack.config.ts`
@@ -587,6 +601,38 @@ Browser-side modules bundled by Rspack. These run in the browser, not at build t
 | `shop/index.md` | section | root | 5 | Shop |
 | `shop/blue-mug.md` | product | shop | 1 | Shop |
 | `agent.md` | page | root | 6 | — |
+
+---
+
+## Manager (`manager/`)
+
+The Flint Manager is a standalone Bun HTTP server providing a web UI for managing one or more Flint sites.
+
+---
+
+### `manager/src/api/build.ts`
+
+**Purpose:** SSE build and deploy handlers for the manager API.
+
+**Key exports:**
+| Export | Type | Description |
+|---|---|---|
+| `handleBuild(siteId)` | function | SSE stream: runs `bun run build` in the site directory |
+| `handleDeploy(siteId, target)` | function | SSE stream: runs the appropriate deploy command for the given target |
+| `handleBuildAndDeploy(siteId, target)` | function | SSE stream: chains build steps + deploy steps via `spawnChained` — single combined operation |
+
+---
+
+### `manager/src/router.ts`
+
+**Purpose:** Single request dispatcher for all manager HTTP routes.
+
+**Notable routes:**
+| Method | Path | Handler |
+|---|---|---|
+| `POST` | `/sites/:id/build` | `handleBuild` — SSE build log |
+| `POST` | `/sites/:id/deploy/:service` | `handleDeploy` — SSE deploy log |
+| `POST` | `/sites/:id/build-and-deploy/:target` | `handleBuildAndDeploy` — SSE combined build + deploy |
 
 ---
 

@@ -76,7 +76,7 @@ Follow the `add-component` skill procedure:
 ### 4b. Template
 
 Follow the `add-template` skill procedure:
-- Create `themes/default/templates/<name>.html`
+- Create `themes/<THEME>/templates/<name>.html` (check `THEME` in `.env`; use `themes/default/templates/` for a base template available to all themes)
 - Use `{{head}}`, `{{content}}`, `{{foot-scripts}}` as the required skeleton
 - Place component tags in section order from Phase 2
 - Wrap optional tags in `{{#if}}` guards

@@ -112,6 +112,61 @@ export function handleDeploy(siteId: string, target: string): Response {
   return sseResponse(spawnChained(steps, cwd));
 }
 
+// ---- Build + Deploy (combined) --------------------------------------------
+
+export function handleBuildAndDeploy(siteId: string, target: string): Response {
+  const site = getSite(siteId);
+  if (!site) return notFound(siteId);
+
+  const cwd = resolveSitePath(site);
+  const env = loadSiteEnv(cwd);
+
+  type Step = { label: string; cmd: string[]; env?: Record<string, string> };
+
+  const buildSteps: Step[] = [
+    { label: '● Compiling pages…',                 cmd: ['bun', 'run', 'build'] },
+    { label: '● Bundling client JS (production)…', cmd: ['bunx', '--bun', 'rspack', 'build', '--mode', 'production'] },
+  ];
+
+  let deploySteps: Step[];
+  switch (target) {
+    case 'cloudflare':
+      deploySteps = [{
+        label: '● Deploying to Cloudflare Pages…',
+        cmd: ['bun', 'run', 'deploy:cloudflare:pages'],
+      }];
+      break;
+
+    case 'vercel':
+      deploySteps = [{
+        label: '● Deploying to Vercel…',
+        cmd: ['bunx', 'vercel', '--token', env['VERCEL_TOKEN'] ?? '', '--yes', '--prod'],
+      }];
+      break;
+
+    case 'netlify':
+      deploySteps = [{
+        label: '● Deploying to Netlify…',
+        cmd: ['bunx', 'netlify', 'deploy', '--dir', 'dist', '--prod'],
+        env: { NETLIFY_AUTH_TOKEN: env['NETLIFY_AUTH_TOKEN'] ?? '', NETLIFY_SITE_ID: env['NETLIFY_SITE_ID'] ?? '' },
+      }];
+      break;
+
+    case 'ghpages':
+      deploySteps = [{
+        label: '● Deploying to GitHub Pages…',
+        cmd: ['bunx', 'gh-pages', '-d', 'dist'],
+        env: { GITHUB_TOKEN: env['GH_TOKEN'] ?? '' },
+      }];
+      break;
+
+    default:
+      return json({ error: `Unknown deploy target: ${target}` }, 400);
+  }
+
+  return sseResponse(spawnChained([...buildSteps, ...deploySteps], cwd));
+}
+
 // ---- Test ------------------------------------------------------------------
 
 export function handleTest(siteId: string): Response {

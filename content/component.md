@@ -110,18 +110,28 @@ Notice that **CtaSection** and **CardGrid** each serve two tags. They're generic
 
 ## How the Tag Engine Connects Everything
 
-The tag engine (`src/templates/tag-engine.ts`) is a `switch` statement that maps tag names to components. When the build system encounters `{{feature-grid}}` in a template, it calls `resolveTag('feature-grid', ctx)`, which:
+The tag engine (`src/templates/tag-engine.ts`) maps tag names to components via a `resolveTag('feature-grid', ctx)` call. Components **self-register** by exporting a `tagDefs` array from their own file — the `TagRegistry.discover()` scans `src/components/` automatically and picks them up without any central switch statement.
+
+When the build system encounters `{{feature-grid}}` in a template, it:
 
 1. Reads the `Features:` object from `ctx.frontmatter`
 2. Passes it as typed props to `CardGrid.render()`
 3. Returns the HTML string (or `''` if the data is missing)
 
 ```typescript
-case 'feature-grid': {
-  const fg = ctx.frontmatter['Features'] as CardGridProps | undefined;
-  if (!fg || !fg.items || fg.items.length === 0) return '';
-  return CardGrid.render(fg);
-}
+// src/components/card-grid.ts — self-registration via tagDefs:
+export const tagDefs: TagDef[] = [
+  {
+    label: 'feature-grid',
+    icon: '🧩',
+    description: 'Icon card grid from Features: frontmatter',
+    resolve: (ctx) => {
+      const fg = ctx.frontmatter['Features'] as CardGridProps | undefined;
+      if (!fg?.items?.length) return '';
+      return CardGrid.render(fg);
+    },
+  },
+];
 ```
 
 Returning `''` when data is missing makes `{{#if feature-grid}}` conditionals work — the template can guard optional sections so pages without that frontmatter data render cleanly.

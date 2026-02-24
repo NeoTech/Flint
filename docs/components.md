@@ -57,26 +57,16 @@ const html = Card.render({ title: 'Hello', body: 'World' });
 
 ## Built-in Components
 
-### Layout
+### Page Shell (Templates + Helpers, not a Component)
 
-**File:** `src/components/layout.ts`
+There is **no** `Layout` component class. The outer page shell — `<!DOCTYPE html>`, `<head>`, `<body>`, CSS/JS includes — is produced by two helper functions in `src/templates/helpers.ts`, exposed to templates as built-in tags:
 
-The outermost wrapper. Every page is rendered inside a `Layout`. It provides the full HTML document: `<!DOCTYPE html>`, `<head>` with meta tags, `<body>` with the app container, and script/style includes.
+| Tag | Helper | Output |
+|-----|--------|--------|
+| `{{head}}` | `renderHead(opts)` | Full `<!DOCTYPE html><html><head>…</head>` block including meta tags, `main.css`, and any extra CSS/JS files |
+| `{{foot-scripts}}` | `renderFootScripts(basePath)` | `<script src="…/assets/main.js"></script>` closing tag |
 
-```typescript
-interface LayoutProps extends ComponentProps {
-  title: string;           // <title> tag
-  description?: string;    // <meta name="description">
-  children: string;        // Page body HTML
-  lang?: string;           // html lang attribute (default: 'en')
-  cssFiles?: string[];     // Additional <link> tags
-  jsFiles?: string[];      // Additional <script> tags
-}
-```
-
-The Layout always includes:
-- `/assets/main.css` — Tailwind CSS (built by Rspack)
-- `/assets/main.js` — HTMX bundle (built by Rspack)
+Every template starts with `{{head}}` and ends with `{{foot-scripts}}` inside a `</body></html>`. No component wiring required — it is automatic when you use these tags in an HTML template.
 
 ### Navigation
 
@@ -381,6 +371,51 @@ interface LabelIndexProps extends ComponentProps {
 - Cards with title link, date/category meta, description
 - Shows "No pages found" message when `pages` is empty
 
+### StaticMedia
+
+**File:** `src/components/static-media.ts`
+
+Renders one or more static image assets from the page's `Image` frontmatter field. Supports four layout modes and single-index access. Powers the `{{media-*}}` and `{{media:N}}` template tags.
+
+```typescript
+interface MediaAsset {
+  src: string;       // Public path or URL, e.g. "/static/images/hero.jpg"
+  alt?: string;      // Alt text — falls back to the filename if omitted
+  caption?: string;  // Optional caption below the image
+}
+
+type MediaLayout = 'gallery' | 'carousel' | 'hero' | 'strip';
+
+interface StaticMediaProps extends ComponentProps {
+  items: MediaAsset[];     // Assets to display
+  layout?: MediaLayout;    // Arrangement (default: 'gallery')
+  columns?: 2 | 3 | 4 | 5 | 6; // Gallery column count (default: auto)
+  index?: number;          // Render a single asset by zero-based index
+  heroHeight?: string;     // Max-height for hero layout (default: '500px')
+}
+```
+
+**Layout modes:**
+
+| Layout | Description |
+|--------|-------------|
+| `gallery` | Responsive CSS grid of images with captions |
+| `carousel` | Horizontal-scroll film-strip |
+| `hero` | First image as a full-width banner, remainder as strip |
+| `strip` | Compact equal-width thumbnail row, no captions |
+
+**Template tags backed by StaticMedia:**
+
+| Tag | Layout |
+|-----|--------|
+| `{{media-gallery}}` | `gallery` |
+| `{{media-carousel}}` | `carousel` |
+| `{{media-hero}}` | `hero` |
+| `{{media-strip}}` | `strip` |
+| `{{media:N}}` | Single asset at index N |
+
+All media tags read the `Image` frontmatter key. A single string/emoji is treated as one asset; an array of `MediaAsset` objects provides full alt/caption control. Returns empty string when `Image` is absent.
+
 ## Data-Driven Components
 
 Some components receive their props from **page frontmatter** rather than hardcoded values. The tag engine reads YAML fields from `ctx.frontmatter` and maps them to typed component props.
@@ -394,6 +429,11 @@ Some components receive their props from **page frontmatter** rather than hardco
 | `{{stats-bar}}` | `Stats` (object with stats[] of value, label, color) | `StatsBar` |
 | `{{product}}` | `Short-URI`, `PriceCents`, `Description`, `Image` | `Product` |
 | `{{skill-cards}}` | `Skills` (array of objects) | `SkillCards` |
+| `{{media-gallery}}` | `Image` (asset or array of `{ src, alt?, caption? }`) | `StaticMedia` (gallery) |
+| `{{media-carousel}}` | `Image` | `StaticMedia` (carousel) |
+| `{{media-hero}}` | `Image` | `StaticMedia` (hero) |
+| `{{media-strip}}` | `Image` | `StaticMedia` (strip) |
+| `{{media:N}}` | `Image` | `StaticMedia` (single asset at index N) |
 
 Note: `CtaSection` serves two tags (`hero` and `call-to-action`) via its `variant` prop. `CardGrid` serves two tags (`feature-grid` and `showcase-grid`) — the same component with different frontmatter sources.
 

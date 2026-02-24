@@ -12,6 +12,8 @@
 - **Test-first**: Always write or update tests before implementing features.
 - **Build after changes**: Run `bun run build` after content or code changes.
 - **Stripe sync**: After changing `products.yaml`, run `bun run build:sync` to sync prices and rebuild. Use `build:sync:force` to force-recreate all Payment Links. Use `stripe:cleanup` to archive all Flint-managed products and clear IDs before a full reset.
+- **Cloudflare Pages deploy**: Always use `scripts/deploy-pages.ts` via `bun run deploy:cloudflare:pages` (Direct Upload API via fetch — no wrangler). Never use `wrangler pages deploy` in any subprocess context. Wrangler is unreliable in non-TTY/subprocess contexts and its local hash cache breaks new-project deploys.
+- **Product sync before deploy**: When shop content changes, always run `bun run build:sync` (writes real Stripe price IDs + recompiles) then `bun run deploy:cloudflare:pages`. Running just `bun run deploy:cloudflare:pages` without syncing first deploys stale content with placeholder price IDs.
 
 ---
 
@@ -90,10 +92,11 @@ A **TypeScript static site generator** that compiles Markdown files into HTML pa
 |---------|--------|
 | `bun run build` | Compile content/ → dist/ |
 | `bun run dev` | Dev server on port 3000 with HMR (Rspack) |
-| `bun run build:sync` | Stripe sync + compile |
+| `bun run build:sync` | Stripe sync + compile (run after changing `products.yaml`) |
 | `bun run build:sync:force` | Force-recreate all Stripe Payment Links + compile |
 | `bun run generate` | Regenerate product pages from `products.yaml` |
 | `bun run stripe:cleanup` | Archive all Flint-managed Stripe products + clear `products.yaml` IDs |
+| `bun run deploy:cloudflare:pages` | Deploy static site to Cloudflare Pages (Direct Upload API, no wrangler) |
 
 ### Checkout server (serverless mode only)
 
@@ -292,6 +295,7 @@ Use the appropriate skill for each task:
 | Add/update a shop product (products.yaml + Stripe) | `add-product` |
 | Build, test, lint, typecheck, debug | `build-and-test` |
 | Build a Flint template from a URL or screenshot | `design-to-template` |
+| Deploy the Flint site to Cloudflare Pages or other platforms | `deploy` |
 
 Skills live in `.github/skills/` with references for detailed field lists, examples, and API docs.
 

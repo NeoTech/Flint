@@ -12,7 +12,7 @@ import { isAuthenticated, redirectToLogin, unauthorizedJson, buildSessionCookie,
 import { handleListSites, handleAddSite, handleRemoveSite } from './api/sites.js';
 import { handleCreatePage, handleUpdatePage, handleDeletePage, handleGetPageParsed, handleUpdatePageParsed, handleReorderPages } from './api/pages.js';
 import { handleGetProducts, handleSaveProducts, handleGenerateProducts, handleSyncProducts, handleGetProductsParsed, handleSaveProductsParsed } from './api/products.js';
-import { handleBuild, handleGetDeployTargets, handleDeploy, handleDownloadDist, handleTest } from './api/build.js';
+import { handleBuild, handleGetDeployTargets, handleDeploy, handleBuildAndDeploy, handleDownloadDist, handleTest } from './api/build.js';
 import { handleSaveEnv } from './api/env.js';
 import { handleGetActiveTheme, handleSetActiveTheme, handleListTemplates, handleGetTemplateComponents, handleSaveTemplate, handleCreateTemplate, handleDeleteTemplate, handleListThemeFiles, handleSaveThemeFile, handleCreateThemeFile, handleRenameThemeFile, handleDeleteThemeFile, handleCreateTheme, handleRenameTheme, handleDeleteTheme } from './api/themes.js';
 import { handleGetDeployConfig, handleSaveDeployConfig } from './api/deploy.js';
@@ -158,6 +158,7 @@ export async function handleRequest(req: Request): Promise<Response> {
   if (subpath === '/build/targets' && method === 'GET') return handleGetDeployTargets(siteId);
   if (subpath === '/build/download' && method === 'GET') return handleDownloadDist(siteId);
   if (subpath === '/build/test' && method === 'POST') return handleTest(siteId);
+  if (subpath.startsWith('/build-and-deploy/') && method === 'POST') return handleBuildAndDeploy(siteId, subpath.slice('/build-and-deploy/'.length));
   if (subpath.startsWith('/deploy/') && method === 'POST') return handleDeploy(siteId, subpath.slice('/deploy/'.length));
 
   // Env

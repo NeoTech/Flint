@@ -378,6 +378,14 @@ CLOUDFLARE_GLOBAL_API_KEY=your_global_api_key_here
 CLOUDFLARE_ACCOUNT_ID=your_account_id_here
 # CLOUDFLARE_ZONE_ID=      (only needed for a custom domain)
 # CLOUDFLARE_WORKER_ROUTE= (only needed for a custom domain)
+
+# ── Cloudflare Pages Deploy ─────────────────────────────────────
+# IMPORTANT: Use a scoped API Token (Pages:Edit), NOT the Global API Key.
+# The Global API Key silently uploads assets but never creates the deployment record.
+CLOUDFLARE_API_TOKEN=your_scoped_api_token_here
+CF_PAGES_PROJECT=your-pages-project-name
+CF_PAGES_DIR=dist
+# CLOUDFLARE_ACCOUNT_ID is shared with Workers above
 ```
 
 #### 3. Deploy the Worker
@@ -421,6 +429,74 @@ CI does **not** redeploy automatically — this is intentional to avoid pushing 
 
 ---
 
+### Cloudflare Pages Deploy
+
+The static site is deployed to Cloudflare Pages using the **Direct Upload API** — no `wrangler` CLI is required. The script `scripts/deploy-pages.ts` handles everything internally via `fetch()`.
+
+**How it works (automated by `bun run deploy:cloudflare:pages`):**
+
+1. Scan `dist/` recursively, compute an MD5 hash for every file
+2. `GET /accounts/{id}/pages/projects/{name}/upload-token` → obtain a short-lived JWT
+3. `POST https://api.cloudflare.com/client/v4/pages/assets/check-missing` (Bearer JWT) → get list of hashes Cloudflare doesn't have yet
+4. Upload only missing files in batches of 50 via `POST .../pages/assets/upload` (Bearer JWT)
+5. `POST .../pages/assets/upsert-hashes` → register all file hashes
+6. `POST /accounts/{id}/pages/projects/{name}/deployments` (FormData with manifest JSON `{"/path": "md5hash"}`) → create the deployment record
+
+**Required env vars:**
+
+| Variable | Value | Notes |
+|----------|-------|-------|
+| `CLOUDFLARE_API_TOKEN` | scoped API token | **Must have Cloudflare Pages:Edit permission** — see below |
+| `CLOUDFLARE_ACCOUNT_ID` | your account ID | Same as Workers |
+| `CF_PAGES_PROJECT` | pages project name | The name as shown in the CF dashboard |
+| `CF_PAGES_DIR` | `dist` (default) | Build output directory |
+
+**Creating a scoped API token:**
+
+1. Go to **My Profile → API Tokens → Create Token**
+2. Use the **"Edit Cloudflare Pages"** template, or manually grant **Account → Cloudflare Pages → Edit**
+3. Scope it to your account
+4. Copy the token into `CLOUDFLARE_API_TOKEN` in `.env`
+
+> ⚠️ **Critical:** The **Global API Key** (`CLOUDFLARE_GLOBAL_API_KEY`) **cannot** create Cloudflare Pages deployment records in non-interactive / non-TTY mode. It silently succeeds at uploading assets (steps 1–5) but step 6 (the deployment record) is never created, so the site is never actually published. Always use a **scoped API Token** with Pages:Edit for `bun run deploy:cloudflare:pages`.
+
+**Deploy the site:**
+
+```bash
+bun run deploy:cloudflare:pages
+```
+
+---
+
+### Full Deploy Workflow
+
+Follow this order when shipping shop changes to production:
+
+```bash
+# 1. Edit products.yaml (add/change products or prices)
+
+# 2. Sync with Stripe — creates/updates Products, Prices, Payment Links
+#    and writes real stripe_price_id + stripe_payment_link back to products.yaml.
+#    Also rebuilds the site.
+bun run build:sync
+
+# 3. Deploy the updated static site to Cloudflare Pages
+bun run deploy:cloudflare:pages
+
+# 4. (Only if Worker secrets changed — e.g. new STRIPE_SECRET_KEY)
+bun run deploy:checkout:cloudflare
+```
+
+**Why the order matters:**
+
+- `products.yaml` stores `stripe_price_id` and `stripe_payment_link` fields that are empty until `build:sync` runs.
+- `dist/static/products/index.json` is generated from these fields. If they are empty or contain placeholder values (e.g. `price_placeholder_blue-mug`), the checkout Worker receives fake Stripe price IDs and the checkout fails silently with a Stripe "No such price" error.
+- Always run `build:sync` before deploying shop changes.
+
+> **Manager shortcut:** The Manager Build page (`/sites/:id/build`) has **"Build + Deploy"** buttons that combine `bun run build` + the platform deploy command into a single click. Use the **"Build only"** button at the bottom when you need to build without deploying. Route: `POST /sites/:id/build-and-deploy/:target`.
+
+---
+
 ### Full GitHub Settings Checklist
 
 Use this checklist when setting up a new repository or rotating credentials.
@@ -439,6 +515,13 @@ Use this checklist when setting up a new repository or rotating credentials.
 - [ ] `CHECKOUT_ENDPOINT` → `https://flint-checkout.<subdomain>.workers.dev`
 - [ ] `SITE_URL` → `https://yourusername.github.io`
 - [ ] `BASE_PATH` → `/your-repo-name`
+- [ ] `CF_PAGES_PROJECT` → your Cloudflare Pages project name
+- [ ] `CF_PAGES_DIR` → `dist`
+
+**Repository Secrets** (also add these if deploying to Cloudflare Pages via CI):
+
+- [ ] `CLOUDFLARE_API_TOKEN` — scoped token with Pages:Edit (NOT the Global API Key)
+- [ ] `CLOUDFLARE_ACCOUNT_ID`
 
 **GitHub Pages** (`Settings → Pages`):
 
@@ -572,6 +655,40 @@ Creates a real product in Stripe test mode, verifies price creation/archival, an
 | `4000 0025 0000 3155` | 🔐 Requires authentication |
 
 Use any future expiry date and any 3-digit CVC.
+
+---
+
+## Troubleshooting
+
+### Checkout gives 404 / "No such price" error
+
+**Symptom:** Clicking the Checkout button shows a 404 response or a Stripe error like `"No such price: 'price_placeholder_blue-mug'"`.
+
+**Cause:** `products.yaml` has empty or placeholder `stripe_price_id` / `stripe_payment_link` values. These get baked into `dist/static/products/index.json` at build time. If they were never populated (i.e. `bun run build:sync` was not run), the Worker receives fake IDs that Stripe rejects.
+
+**Note:** A Stripe "No such price" error arrives as a `400` from the Worker, but because the checkout client catches and surfaces it, it can look like a generic failure. A 404 from the Worker itself means the request path is wrong — the Worker only handles `GET /health` and `POST /checkout`; any other path returns `{"error":"Not found"}` (404) by design.
+
+**Fix:**
+
+```bash
+bun run build:sync          # Syncs with Stripe, writes real IDs, rebuilds
+bun run deploy:cloudflare:pages  # Redeploy the updated site
+```
+
+### Worker appears live but checkout silently fails
+
+Check that the Worker's `STRIPE_SECRET_KEY` secret is a real key (not a test placeholder) and that it matches the mode (test vs live) the front-end was built with. Redeploy secrets with:
+
+```bash
+bun run deploy:checkout:cloudflare
+```
+
+### Cloudflare Pages deploy succeeds but site is not updated
+
+Most likely cause: `CLOUDFLARE_API_TOKEN` has insufficient permissions or the wrong token type was used.
+
+- The **Global API Key** silently uploads file assets but never creates the deployment record — the old version keeps serving.
+- Create a **scoped API Token** with **Cloudflare Pages:Edit** permission and set it as `CLOUDFLARE_API_TOKEN`.
 
 ---
 

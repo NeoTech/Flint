@@ -128,6 +128,8 @@ Content files select their template via `Template: <name>` in frontmatter. The t
 | File | Purpose |
 |---|---|
 | `scripts/build.ts` | Entry point: creates `SiteBuilder`, runs build, copies static assets |
+| `scripts/deploy-pages.ts` | Deploys the static site to Cloudflare Pages via the **Direct Upload API** (fetch-based, no wrangler). Scans `dist/`, computes MD5 hashes, uploads missing files in batches, creates deployment record. Reads `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CF_PAGES_PROJECT` from `.env`. Run: `bun run deploy:cloudflare:pages` |
+| `scripts/deploy-cloudflare.ts` | Deploys the Cloudflare Worker (checkout function) via `bunx wrangler deploy`. Run: `bun run deploy:checkout:cloudflare` |
 | `rspack.config.ts` | Bundles `src/index.ts` → JS + CSS for the browser (HTMX, Tailwind) |
 | `package.json` | Scripts: `dev`, `build`, `test`, `lint`, `typecheck` |
 
@@ -266,3 +268,34 @@ Every module has a `.test.ts` file next to it. This makes it obvious which tests
 ### Why data-driven components?
 
 Many tags (`{{hero}}`, `{{call-to-action}}`, `{{feature-grid}}`, `{{showcase-grid}}`, `{{stats-bar}}`, `{{product}}`, `{{skill-cards}}`) read their props directly from `ctx.frontmatter` in the tag engine rather than receiving hardcoded values. This means **content files drive component data** — the YAML frontmatter is the single source of truth. Adding a new product, skill card, or landing page section means editing a Markdown file, not touching TypeScript. The tag engine maps frontmatter keys to typed component props. Some components serve multiple tags via a variant prop (e.g. `CtaSection` renders both `{{hero}}` and `{{call-to-action}}`; `CardGrid` renders both `{{feature-grid}}` and `{{showcase-grid}}`).
+
+## Deployment
+
+### Static Site → Cloudflare Pages
+
+`scripts/deploy-pages.ts` uses the **Cloudflare Pages Direct Upload API** (pure `fetch`, no wrangler dependency):
+
+1. Scans `dist/` recursively and computes an MD5 hash for every file
+2. Requests an upload JWT from the CF API (`POST /pages/projects/:project/uploadToken`)
+3. Sends the full hash manifest to CF to learn which files are missing from its cache (`POST /pages/assets/check-missing`)
+4. Uploads only the missing files in batches of 50 (`POST /pages/assets/upload`)
+5. Upserts the complete hash map (`POST /pages/assets/upsert-hashes`)
+6. Creates the deployment record via a FormData POST (`POST /pages/projects/:project/deployments`)
+
+This approach is reliable in non-TTY subprocess contexts (CI, manager SSE streams) where `wrangler pages deploy` can fail due to its local hash cache or TTY detection.
+
+### Cloudflare Worker → Checkout Server
+
+`scripts/deploy-cloudflare.ts` deploys the checkout `Worker` (serverless function) via `bunx wrangler deploy`. This is a separate flow from the static site deploy.
+
+### Manager: Combined Build + Deploy
+
+The Flint Manager (`manager/`) exposes a unified build+deploy route:
+
+| Route | Handler | Purpose |
+|---|---|---|
+| `POST /sites/:id/build` | `handleBuild` | Build only (SSE log) |
+| `POST /sites/:id/deploy/:target` | `handleDeploy` | Deploy only (SSE log) |
+| `POST /sites/:id/build-and-deploy/:target` | `handleBuildAndDeploy` | Chain build + deploy in a single SSE stream |
+
+The manager UI presents target-specific **"Build + Deploy"** buttons and a separate **"Build only"** button. `handleBuildAndDeploy` uses `spawnChained` to sequence the build steps and the deploy steps, streaming all output to the client.

@@ -75,6 +75,7 @@ Specified on the opening `:::children` line:
 | `sort` | `date-desc`, `date-asc`, `order`, `title` | `date-desc` | Sort order for child pages |
 | `limit` | any positive integer | (no limit) | Maximum number of children to show |
 | `class` | any CSS classes (quoted) | `"space-y-4"` | Wrapper `<div>` CSS classes |
+| `type` | `page`, `post`, `section`, `product` | (no filter) | Filter children by page `Type`. When `type=product`, the default wrapper becomes a responsive product grid and a product card template is used when no custom template is provided. |
 
 ### Template Placeholders
 
@@ -91,6 +92,17 @@ Specified on the opening `:::children` line:
 | `{author}` | Author name | `Jane Developer` |
 | `{type}` | Page type | `post` |
 | `{short-uri}` | Short-URI identifier | `getting-started-htmx` |
+
+**Product-specific placeholders** (only populated when the child page has `Type: product`):
+
+| Placeholder | Resolves to | Example |
+|---|---|---|
+| `{price}` | Formatted price string | `$12.00` |
+| `{price-cents}` | Raw price in cents | `1200` |
+| `{currency}` | Currency code | `usd` |
+| `{stripe-price-id}` | Stripe Price ID | `price_1T2Kea5Rw...` |
+| `{stripe-payment-link}` | Stripe Payment Link URL | `https://buy.stripe.com/...` |
+| `{image}` | Image URL or emoji | `☕` |
 
 ### Default Template
 

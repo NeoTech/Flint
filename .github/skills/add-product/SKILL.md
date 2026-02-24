@@ -49,13 +49,27 @@ Products are managed through `products.yaml`. The build pipeline generates scaff
 bun run build:sync
 ```
 
-This will:
+This command syncs to Stripe AND rebuilds the site. After it completes, `stripe_price_id` and `stripe_payment_link` are written back to `products.yaml` and `dist/static/products/index.json` is updated.
+
+Specifically, this will:
 - Create the Stripe Price and Payment Link for the new product
 - Write `stripe_price_id` and `stripe_payment_link` back into `products.yaml`
 - Generate `content/shop/<id>.md` with a scaffold body placeholder
 - Build the full site
 
-### 3. Customise the scaffold body
+### 3. Deploy the updated site
+
+After sync, the site must be rebuilt and redeployed:
+
+```bash
+bun run deploy:cloudflare:pages
+```
+
+Or use the manager's **Build + Deploy** button on the Build page.
+
+> **Warning:** Deploying without syncing first results in placeholder Stripe price IDs (`price_placeholder_<id>`) being sent to the worker, which causes a "No such price" error at checkout.
+
+### 4. Customise the scaffold body
 
 Open `content/shop/<id>.md`. You will see a scaffold placeholder:
 
@@ -84,7 +98,7 @@ Edit the body with real product copy. **Remove the `<!-- flint:scaffold` comment
 ...
 ```
 
-### 4. Rebuild
+### 5. Rebuild
 
 ```bash
 bun run build

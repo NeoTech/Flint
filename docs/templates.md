@@ -4,10 +4,10 @@ Templates are plain HTML files with `{{tag}}` placeholders that define the page 
 
 ## Location
 
-Templates live in the `templates/` directory at the project root:
+Templates live in `themes/default/templates/` by default:
 
 ```
-templates/
+themes/default/templates/
 ├── default.html        # Standard page (nav, content, footer)
 ├── blank.html          # Minimal shell (no nav, no footer)
 ├── blog-post.html      # Article layout (byline, reading time)
@@ -18,6 +18,8 @@ templates/
 ├── product-detail.html # Product detail with cart widget
 └── component-demo.html # Interactive component demo layout
 ```
+
+The builder loads templates from `themes/default/templates/`. If a non-default theme is active, templates from `themes/<theme>/templates/` are overlaid on top of the defaults. You can also set `templatesDir` in the builder config to point somewhere else entirely.
 
 ## Selecting a Template
 
@@ -34,7 +36,7 @@ If omitted, `default` is used. If the named template doesn't exist, it falls bac
 
 ## Creating a New Template
 
-1. Create `templates/<name>.html`
+1. Create `themes/default/templates/<name>.html`
 2. Use `{{tag}}` placeholders and `{{#if tag}}...{{/if}}` conditionals
 3. Set `Template: <name>` in content frontmatter
 4. Build — that's it
@@ -85,6 +87,11 @@ These tags read their props from the page's **YAML frontmatter**. They return em
 | `{{stats-bar}}` | `Stats` (stats[] of value, label, color) | Dark statistics row (StatsBar) |
 | `{{product}}` | `Short-URI`, `PriceCents`, `Description`, `Image` | Product card with Add-to-Cart button |
 | `{{skill-cards}}` | `Skills` (array of `{ name, icon, description, tags, color }`) | Responsive grid of skill info cards |
+| `{{media-gallery}}` | `Image` (asset or array of `{ src, alt?, caption? }`) | Responsive CSS grid of images (StaticMedia, gallery layout) |
+| `{{media-carousel}}` | `Image` | Horizontal-scroll film-strip of images (StaticMedia, carousel layout) |
+| `{{media-hero}}` | `Image` | First image as a full-width hero banner (StaticMedia, hero layout) |
+| `{{media-strip}}` | `Image` | Equal-width compact thumbnail row (StaticMedia, strip layout) |
+| `{{media:N}}` | `Image` | Single image at zero-based index N (e.g. `{{media:0}}`, `{{media:1}}`) |
 
 ### Scalar Tags
 
