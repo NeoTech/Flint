@@ -13,8 +13,8 @@ products:
       - mug
       - ceramic
       - coffee
-    stripe_price_id: ""
-    stripe_payment_link: ""
+    stripe_price_id: "price_1T2Kea5RwVcf7QBBMtoBx5e2"
+    stripe_payment_link: "https://buy.stripe.com/test_fZu4gsbs84Nl5rEgcn6AM0X"
     tax_code: txcd_99999999
   - id: red-plate
     title: Red Dinner Plate
@@ -30,8 +30,8 @@ products:
       - plate
       - ceramic
       - kitchen
-    stripe_price_id: ""
-    stripe_payment_link: ""
+    stripe_price_id: "price_1T2Keb5RwVcf7QBB9y7P3gOE"
+    stripe_payment_link: "https://buy.stripe.com/test_3cI28kdAg4Nlg6i9NZ6AM0Y"
     tax_code: txcd_99999999
   - id: classic-sneakers
     title: Classic Canvas Sneakers
@@ -47,8 +47,8 @@ products:
       - sneakers
       - footwear
       - fashion
-    stripe_price_id: ""
-    stripe_payment_link: ""
+    stripe_price_id: "price_1T2Ked5RwVcf7QBBM4mysPfT"
+    stripe_payment_link: "https://buy.stripe.com/test_5kQfZa2VCa7FaLY0dp6AM0Z"
     tax_code: txcd_99999999
   - id: luxury-yacht
     title: Luxury Motor Yacht
@@ -64,6 +64,6 @@ products:
       - yacht
       - luxury
       - marine
-    stripe_price_id: ""
-    stripe_payment_link: ""
+    stripe_price_id: "price_1T2Kee5RwVcf7QBBipmhyvt8"
+    stripe_payment_link: "https://buy.stripe.com/test_28E8wI0Nu6Vt07kf8j6AM10"
     tax_code: txcd_20030000

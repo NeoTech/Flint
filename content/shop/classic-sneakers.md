@@ -12,14 +12,14 @@ Labels: &ref_0
   - fashion
 Parent: shop
 Author: System
-Date: '2026-02-23'
+Date: '2026-02-24'
 Description: >-
   Timeless low-top canvas sneakers with a vulcanised rubber sole. Lightweight,
   breathable, and available in white. Unisex sizing.
 PriceCents: 5500
 Currency: usd
-StripePriceId: price_placeholder_classic-sneakers
-StripePaymentLink: ''
+StripePriceId: price_1T2Ked5RwVcf7QBBM4mysPfT
+StripePaymentLink: 'https://buy.stripe.com/test_5kQfZa2VCa7FaLY0dp6AM0Z'
 Image: "\U0001F45F"
 Keywords: *ref_0
 ---

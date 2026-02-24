@@ -12,6 +12,7 @@
     "serve:checkout": "bun run functions/checkout-server.ts",
     "start:checkout": "NODE_ENV=production bun run functions/checkout-server.ts",
     "deploy:checkout:cloudflare": "bun run scripts/deploy-cloudflare.ts",
+    "deploy:cloudflare:pages": "bun scripts/deploy-pages.ts",
     "dev": "rspack serve --mode development",
     "test": "bun test --watch ./src/ ./scripts/",
     "test:run": "bun test --no-watch ./src/ ./scripts/",

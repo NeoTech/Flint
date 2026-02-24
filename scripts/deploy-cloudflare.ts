@@ -21,7 +21,6 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const ROOT = process.cwd();
-const WORKER_NAME = 'flint-checkout';
 const CF_API = 'https://api.cloudflare.com/client/v4';
 
 /* ------------------------------------------------------------------ */
@@ -115,9 +114,21 @@ async function wrangler(args: string[], stdin?: string): Promise<string> {
 /*  Step 1: Deploy Worker                                              */
 /* ------------------------------------------------------------------ */
 
+function getWorkerName(): string {
+  return getEnv('CF_WORKER_NAME') || 'flint-checkout';
+}
+
 async function deployWorker(): Promise<void> {
-  console.log('  Deploying Worker via wrangler...');
-  await wrangler(['deploy', '--config', 'wrangler.toml', '--name', WORKER_NAME]);
+  const name        = getWorkerName();
+  const main        = getEnv('CF_WORKER_MAIN')        || 'functions/checkout-cloudflare.ts';
+  const compatDate  = getEnv('CF_WORKER_COMPAT_DATE') || '2024-11-01';
+  console.log(`  Deploying Worker "${name}" via wrangler...`);
+  await wrangler([
+    'deploy', main,
+    '--name', name,
+    '--compatibility-date', compatDate,
+    '--compatibility-flags', 'nodejs_compat',
+  ]);
   console.log('  ✔ Deployed');
 }
 
@@ -126,15 +137,16 @@ async function deployWorker(): Promise<void> {
 /* ------------------------------------------------------------------ */
 
 async function getWorkerUrl(): Promise<string> {
+  const name = getWorkerName();
   const accountId = getEnv('CLOUDFLARE_ACCOUNT_ID');
-  if (!accountId) return `https://${WORKER_NAME}.workers.dev`;
+  if (!accountId) return `https://${name}.workers.dev`;
   try {
     const result = (await cfFetch(`/accounts/${accountId}/workers/subdomain`)) as { subdomain: string };
-    if (result?.subdomain) return `https://${WORKER_NAME}.${result.subdomain}.workers.dev`;
+    if (result?.subdomain) return `https://${name}.${result.subdomain}.workers.dev`;
   } catch {
     // ignore — fall through to generic URL
   }
-  return `https://${WORKER_NAME}.workers.dev`;
+  return `https://${name}.workers.dev`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -142,7 +154,7 @@ async function getWorkerUrl(): Promise<string> {
 /* ------------------------------------------------------------------ */
 
 async function putSecret(name: string, value: string): Promise<void> {
-  await wrangler(['secret', 'put', name, '--name', WORKER_NAME], value);
+  await wrangler(['secret', 'put', name, '--name', getWorkerName()], value);
   console.log(`  âœ“ Secret: ${name}`);
 }
 
@@ -213,8 +225,9 @@ async function ensureRoute(): Promise<void> {
   }>;
   const existing = routes?.find((r) => r.pattern === routePattern);
 
-  if (existing?.script === WORKER_NAME) {
-    console.log('  âœ“ Route already correct');
+  const workerName = getWorkerName();
+  if (existing?.script === workerName) {
+    console.log('  ✔ Route already correct');
     return;
   }
 
@@ -222,13 +235,13 @@ async function ensureRoute(): Promise<void> {
     await cfFetch(`/zones/${zoneId}/workers/routes/${existing.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pattern: routePattern, script: WORKER_NAME }),
+      body: JSON.stringify({ pattern: routePattern, script: workerName }),
     });
   } else {
     await cfFetch(`/zones/${zoneId}/workers/routes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pattern: routePattern, script: WORKER_NAME }),
+      body: JSON.stringify({ pattern: routePattern, script: workerName }),
     });
   }
   console.log(`  âœ“ Route set: ${routePattern}`);
@@ -246,7 +259,7 @@ async function enableSubdomain(): Promise<void> {
   }
   console.log('  Enabling workers.dev subdomain...');
   try {
-    await cfFetch(`/accounts/${accountId}/workers/scripts/${WORKER_NAME}/subdomain`, {
+    await cfFetch(`/accounts/${accountId}/workers/scripts/${getWorkerName()}/subdomain`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ enabled: true }),

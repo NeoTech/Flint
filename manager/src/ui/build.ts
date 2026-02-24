@@ -85,10 +85,18 @@ export function renderBuild(siteId: string, htmx = false): string {
           </button>\`;
         } else {
           const missing = t.missing.map(k => \`<code class="text-yellow-400">\${k}</code>\`).join(', ');
+          const cfgHref = '/sites/' + SITE_ID + (t.configUrl ?? '/deploy/' + t.id);
           return \`<div title="Missing: \${t.missing.join(', ')}"
-            class="flex items-center justify-between gap-2 bg-gray-900 border border-gray-800 text-gray-600 text-sm rounded-xl px-4 py-3 cursor-not-allowed">
-            <span class="font-medium">\${t.label}</span>
-            <span class="text-xs">missing \${missing}</span>
+            class="flex flex-col gap-1 bg-gray-900 border border-gray-800 text-gray-600 text-sm rounded-xl px-4 py-3">
+            <div class="flex items-center justify-between">
+              <span class="font-medium">\${t.label}</span>
+              <a href="\${cfgHref}"
+                 hx-get="\${cfgHref}"
+                 hx-target="#content"
+                 hx-push-url="true"
+                 class="text-xs text-indigo-400 hover:underline cursor-pointer">&#x2699; Configure &#x2192;</a>
+            </div>
+            <span class="text-xs text-gray-600">missing \${missing}</span>
           </div>\`;
         }
       }).join('') || '<div class="col-span-2 text-xs text-gray-500">No targets defined.</div>';

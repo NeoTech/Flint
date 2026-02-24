@@ -12,14 +12,14 @@ Labels: &ref_0
   - marine
 Parent: shop
 Author: System
-Date: '2026-02-23'
+Date: '2026-02-24'
 Description: >-
   A 42-metre flybridge motor yacht with twin diesel engines, five staterooms,
   and a sun deck with jacuzzi. Hull in pearl white.
 PriceCents: 19998999
 Currency: usd
-StripePriceId: price_placeholder_luxury-yacht
-StripePaymentLink: ''
+StripePriceId: price_1T2Kee5RwVcf7QBBipmhyvt8
+StripePaymentLink: 'https://buy.stripe.com/test_28E8wI0Nu6Vt07kf8j6AM10'
 Image: "\U0001F6E5️"
 Keywords: *ref_0
 ---

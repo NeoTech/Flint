@@ -184,8 +184,12 @@ manager/
 | POST | `/sites/:id/products/generate` | SSE: `bun run generate` |
 | POST | `/sites/:id/products/sync` | SSE: `bun run build:sync` |
 | POST | `/sites/:id/products/sync/force` | SSE: `bun run build:sync:force` |
-| GET | `/sites/:id/build` | Build UI |
+| GET | `/sites/:id/build` | Build UI (compile + Cloudflare **Pages** + Vercel/Netlify/GH Pages deploys) |
 | POST | `/sites/:id/build` | SSE: `bun run build` |
+| POST | `/sites/:id/build/targets` | List Pages-deploy targets + availability |
+| POST | `/sites/:id/deploy/:service` | SSE: deploy to **Cloudflare Workers** (or other workers-style services) |
+| GET | `/sites/:id/deploy` | **Workers** config overview (sidebar label: "Workers") |
+| GET | `/sites/:id/deploy/:service` | Per-service Workers config form |
 | GET/PUT | `/sites/:id/env` | Env editor |
 | GET | `/sites/:id/themes` | Theme browser |
 | GET/PUT | `/sites/:id/themes/active` | Get / set active theme |
@@ -218,6 +222,10 @@ HTMX navigates by swapping `#content` — sidebar and navbar persist across navi
 - **All API handlers are pure** — they receive `(siteId, req?)` and return `Response`. No side effects outside writing the site's files.
 - **Tests live in `src/**/*.test.ts`** — use `bun:test` + `mock.module()`. Every `mock.module('../registry.js')` must expose all 6 exports (`loadRegistry`, `saveRegistry`, `getSite`, `upsertSite`, `removeSite`, `resolveSitePath`).
 - **Do not mock `ui/*.js` in router.test.ts** — UI modules are safe to run with the real registry mock; mocking them contaminates `ui/*.test.ts` via Bun's shared module cache.
+- **Build page ≠ Workers page** — These are two completely separate deploy flows. NEVER mix them:
+  - **Build page** (`/sites/:id/build`) → deploys the **static site** to Cloudflare Pages, Vercel, Netlify, GitHub Pages via `wrangler pages deploy` etc.
+  - **Workers page** (`/sites/:id/deploy/*`, sidebar label "Workers") → deploys **Cloudflare Workers** (e.g. the checkout function) via `bun run deploy:checkout:cloudflare`.
+  - The Cloudflare card on the Build page has **no config page** — credentials are set in Env. Its "Configure →" link goes to `/env`, not `/deploy/cloudflare`.
 
 ### Manager commands
 

@@ -36,10 +36,13 @@ export interface DeployTarget {
   available: boolean;
   /** Env var names that are missing */
   missing: string[];
+  /** Override the "Configure →" link destination (defaults to /deploy/:id) */
+  configUrl?: string;
 }
 
-const TARGETS: Array<{ id: string; label: string; requires: string[] }> = [
-  { id: 'cloudflare', label: 'Cloudflare Pages', requires: ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'CF_PAGES_PROJECT'] },
+const TARGETS: Array<{ id: string; label: string; requires: string[]; configUrl?: string }> = [
+  // Cloudflare Pages \u2014 project name and credentials all in .env
+  { id: 'cloudflare', label: 'Cloudflare Pages', requires: ['CLOUDFLARE_GLOBAL_API_KEY', 'CLOUDFLARE_ACCOUNT_ID', 'CF_PAGES_PROJECT'], configUrl: '/deploy/cloudflare-pages' },
   { id: 'vercel',     label: 'Vercel',            requires: ['VERCEL_TOKEN'] },
   { id: 'netlify',    label: 'Netlify',            requires: ['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'] },
   { id: 'ghpages',    label: 'GitHub Pages',       requires: ['GH_TOKEN', 'GH_REPO'] },
@@ -52,7 +55,7 @@ export function handleGetDeployTargets(siteId: string): Response {
   const env = loadSiteEnv(resolveSitePath(site));
   const targets: DeployTarget[] = TARGETS.map(t => {
     const missing = t.requires.filter(k => !env[k]);
-    return { id: t.id, label: t.label, available: missing.length === 0, missing };
+    return { id: t.id, label: t.label, available: missing.length === 0, missing, configUrl: t.configUrl };
   });
 
   return json(targets);
@@ -72,10 +75,10 @@ export function handleDeploy(siteId: string, target: string): Response {
 
   switch (target) {
     case 'cloudflare':
+      // bun run deploy:cloudflare:pages handles project existence check + creation before deploying
       steps = [{
         label: '● Deploying to Cloudflare Pages…',
-        cmd: ['bunx', 'wrangler', 'pages', 'deploy', 'dist', '--project-name', env['CF_PAGES_PROJECT'] ?? ''],
-        env: { CLOUDFLARE_API_TOKEN: env['CLOUDFLARE_API_TOKEN'] ?? '', CLOUDFLARE_ACCOUNT_ID: env['CLOUDFLARE_ACCOUNT_ID'] ?? '' },
+        cmd: ['bun', 'run', 'deploy:cloudflare:pages'],
       }];
       break;
 
@@ -171,6 +174,7 @@ function loadSiteEnv(sitePath: string): Record<string, string> {
   }
   return result;
 }
+
 
 function notFound(what: string): Response {
   return json({ error: `Not found: ${what}` }, 404);

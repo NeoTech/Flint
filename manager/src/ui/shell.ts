@@ -24,7 +24,7 @@ export interface ShellOptions {
   /** Active site id for sidebar highlight */
   siteId?: string;
   /** Active nav section for sidebar link highlight */
-  activeSection?: 'pages' | 'products' | 'components' | 'build' | 'env' | 'themes' | 'media';
+  activeSection?: 'pages' | 'products' | 'components' | 'build' | 'env' | 'themes' | 'media' | 'deploy';
   /** Main body content */
   body: string;
   /** Extra <head> tags (e.g. inline scripts for CodeMirror) */
@@ -511,6 +511,7 @@ const navSections = [
   { id: 'build',      label: 'Build',      icon: '🔨' },
   { id: 'env',        label: 'Env',        icon: '🔑' },
   { id: 'themes',     label: 'Themes',     icon: '🎨' },
+  { id: 'deploy',     label: 'Workers',    icon: '🚀' },
 ] as const;
 
 export function escHtml(str: string): string {

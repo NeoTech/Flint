@@ -12,15 +12,15 @@ Labels: &ref_0
   - coffee
 Parent: shop
 Author: System
-Date: '2026-02-23'
+Date: '2026-02-24'
 Description: >-
   A beautiful hand-crafted ceramic mug, perfect for your morning coffee. Each
   mug is individually glazed in our signature ocean-blue finish. Holds 12 oz of
   your favourite beverage.
 PriceCents: 1200
 Currency: usd
-StripePriceId: price_placeholder_blue-mug
-StripePaymentLink: ''
+StripePriceId: price_1T2Kea5RwVcf7QBBMtoBx5e2
+StripePaymentLink: 'https://buy.stripe.com/test_fZu4gsbs84Nl5rEgcn6AM0X'
 Image: ☕
 Keywords: *ref_0
 ---

@@ -15,6 +15,7 @@ import { handleGetProducts, handleSaveProducts, handleGenerateProducts, handleSy
 import { handleBuild, handleGetDeployTargets, handleDeploy, handleDownloadDist, handleTest } from './api/build.js';
 import { handleSaveEnv } from './api/env.js';
 import { handleGetActiveTheme, handleSetActiveTheme, handleListTemplates, handleGetTemplateComponents, handleSaveTemplate, handleCreateTemplate, handleDeleteTemplate, handleListThemeFiles, handleSaveThemeFile, handleCreateThemeFile, handleRenameThemeFile, handleDeleteThemeFile, handleCreateTheme, handleRenameTheme, handleDeleteTheme } from './api/themes.js';
+import { handleGetDeployConfig, handleSaveDeployConfig } from './api/deploy.js';
 import { handleListMedia, handleServeMediaFile, handleUploadMedia, handleDeleteMedia } from './api/media.js';
 
 // UI views
@@ -24,6 +25,7 @@ import { renderProducts } from './ui/products.js';
 import { renderBuild } from './ui/build.js';
 import { renderEnv } from './ui/env.js';
 import { renderThemes, renderTemplateBrowser } from './ui/themes.js';
+import { renderDeploy, renderDeployForm } from './ui/deploy.js';
 import { renderMedia } from './ui/media.js';
 import { renderComponents, renderComponentDetail } from './ui/components.js';
 
@@ -171,6 +173,16 @@ export async function handleRequest(req: Request): Promise<Response> {
   const mediaDeleteMatch = subpath.match(/^\/media\/([^/].*)$/);
   if (mediaDeleteMatch && !mediaDeleteMatch[1].startsWith('list') && !mediaDeleteMatch[1].startsWith('upload') && !mediaDeleteMatch[1].startsWith('file') && method === 'DELETE') {
     return handleDeleteMedia(siteId, decodeURIComponent(mediaDeleteMatch[1]));
+  }
+
+  // Deploy config
+  if (subpath === '/deploy' && method === 'GET') return html(renderDeploy(siteId, isHtmx(req)));
+  const deployService = subpath.match(/^\/deploy\/([^/]+)$/);
+  if (deployService && method === 'GET') return html(renderDeployForm(siteId, deployService[1], isHtmx(req)));
+  const deployConfig = subpath.match(/^\/deploy\/([^/]+)\/config$/);
+  if (deployConfig) {
+    if (method === 'GET') return handleGetDeployConfig(siteId, deployConfig[1]);
+    if (method === 'PUT') return await handleSaveDeployConfig(siteId, deployConfig[1], req);
   }
 
   // Themes
