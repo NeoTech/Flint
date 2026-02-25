@@ -1,6 +1,6 @@
 # Themes
 
-Flint uses a **build-time overlay** theme system. Themes are resolved once at build time — no runtime overhead.
+Flint Static uses a **build-time overlay** theme system. Themes are resolved once at build time — no runtime overhead.
 
 ## Directory structure
 

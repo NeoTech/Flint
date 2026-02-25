@@ -1,6 +1,6 @@
 ---
 name: build-and-test
-description: Build the Flint static site and run tests. Use when compiling Markdown to HTML, running Bun tests, type-checking, linting, or debugging build/test issues.
+description: Build the Flint Static site and run tests. Use when compiling Markdown to HTML, running Bun tests, type-checking, linting, or debugging build/test issues.
 ---
 
 # Build and Test

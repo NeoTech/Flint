@@ -12,7 +12,7 @@ Labels:
 Parent: root
 Author: System
 Date: 2026-02-10
-Description: Meet Flint, the AI build agent, and the skills that power this project
+Description: Meet Flint Static, the AI build agent, and the skills that power this project
 Keywords:
   - agent
   - skills

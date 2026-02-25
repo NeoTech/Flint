@@ -1,5 +1,5 @@
 ---
-title: Flint v1.0
+title: Flint Static v1.0
 Short-URI: home
 Template: landing
 Type: page
@@ -23,7 +23,7 @@ Keywords:
 Hero:
   tagline: Static Site Generator
   heading: "Build fast sites. Ship with confidence."
-  subtitle: "Flint compiles Markdown into lightning-fast HTML — powered by TypeScript components, styled with Tailwind, and interactive with HTMX. No frameworks. No bloat."
+  subtitle: "Flint Static compiles Markdown into lightning-fast HTML — powered by TypeScript components, styled with Tailwind, and interactive with HTMX. No frameworks. No bloat."
   primaryCta:
     label: "Get Started →"
     href: /about
@@ -77,7 +77,7 @@ Stats:
 
 Showcase:
   heading: See it in action
-  subtitle: "Every page on this site is built with Flint. Explore what's possible."
+  subtitle: "Every page on this site is built with Flint Static. Explore what's possible."
   items:
     - icon: "🔄"
       title: HTMX Demos

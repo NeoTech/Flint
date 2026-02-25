@@ -606,7 +606,7 @@ Browser-side modules bundled by Rspack. These run in the browser, not at build t
 
 ## Manager (`manager/`)
 
-The Flint Manager is a standalone Bun HTTP server providing a web UI for managing one or more Flint sites.
+The Flint Static Manager is a standalone Bun HTTP server providing a web UI for managing one or more Flint Static sites.
 
 ---
 
@@ -640,11 +640,11 @@ The Flint Manager is a standalone Bun HTTP server providing a web UI for managin
 
 | Skill | Description |
 |---|---|
-| `add-content` | Create/edit Flint content pages (Markdown + YAML frontmatter) |
-| `add-template` | Create/edit Flint page templates (HTML with {{tag}} placeholders) |
-| `add-component` | Create/edit Flint UI components (TypeScript classes extending Component) |
-| `add-documentation` | Create/edit Flint developer documentation (docs/*.md) |
-| `build-and-test` | Build the Flint static site and run tests |
+| `add-content` | Create/edit Flint Static content pages (Markdown + YAML frontmatter) |
+| `add-template` | Create/edit Flint Static page templates (HTML with {{tag}} placeholders) |
+| `add-component` | Create/edit Flint Static UI components (TypeScript classes extending Component) |
+| `add-documentation` | Create/edit Flint Static developer documentation (docs/*.md) |
+| `build-and-test` | Build the Flint Static site and run tests |
 | `create-skill` | Guide for creating effective skills following best practices |
 
 ## Dependency Graph

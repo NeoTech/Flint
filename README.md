@@ -1,4 +1,4 @@
-# Flint
+# Flint Static
 
 A TypeScript static site generator. Write Markdown content, build to plain HTML/CSS/JS, deploy anywhere.
 
@@ -49,7 +49,7 @@ themes/
 static/               ← Static assets copied to dist/ as-is
 products.yaml         ← Product catalogue
 dist/                 ← Generated site output (git-ignored)
-manager/              ← Flint Manager web UI (separate Bun server)
+manager/              ← Flint Static Manager web UI (separate Bun server)
 ```
 
 ---
@@ -150,7 +150,7 @@ See [docs/components.md](docs/components.md) for the full API.
   name: Red Plate
   description: A vibrant hand-painted ceramic dinner plate.
   price_cents: 1800
-  image: "���️"
+  image: "���️"
   order: 1
 ```
 
@@ -206,7 +206,7 @@ See [docs/ecommerce.md](docs/ecommerce.md) for the full Stripe setup, test cards
 
 ## Manager
 
-Flint Manager is a separate Bun HTTP server (`manager/`) that provides a web UI for managing one or more Flint sites — edit pages, sync products, trigger builds, deploy.
+Flint Static Manager is a separate Bun HTTP server (`manager/`) that provides a web UI for managing one or more Flint Static sites — edit pages, sync products, trigger builds, deploy.
 
 ### Run locally
 
@@ -265,7 +265,7 @@ bunx tsc --noEmit         # Type check
 
 ## Deploy
 
-Flint outputs plain files to `dist/`. Deploy that directory to any static host.
+Flint Static outputs plain files to `dist/`. Deploy that directory to any static host.
 
 For platform-specific setup, required tokens, and free tier limits see [content/hosting.md](content/hosting.md).
 
@@ -296,7 +296,7 @@ After changing `products.yaml`, always run `bun run build:sync` before deploying
 | `bun run build:sync` | Stripe sync + build (run after changing `products.yaml`) |
 | `bun run build:sync:force` | Force-recreate all Stripe Payment Links + build |
 | `bun run generate` | Regenerate product pages from `products.yaml` |
-| `bun run stripe:cleanup` | Archive all Flint-managed Stripe products and clear YAML IDs |
+| `bun run stripe:cleanup` | Archive all Flint Static-managed Stripe products and clear YAML IDs |
 | `bun run serve:checkout` | Start Bun checkout server (dev, port 3001) |
 | `bun run start:checkout` | Start Bun checkout server (production) |
 | `bun run deploy:checkout:cloudflare` | Deploy checkout function to Cloudflare Workers |

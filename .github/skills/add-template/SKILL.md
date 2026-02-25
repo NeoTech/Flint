@@ -1,6 +1,6 @@
 ---
 name: add-template
-description: Create or edit Flint page templates (HTML with {{tag}} placeholders). Use when adding new page layouts or modifying the structural skeleton of pages.
+description: Create or edit Flint Static page templates (HTML with {{tag}} placeholders). Use when adding new page layouts or modifying the structural skeleton of pages.
 ---
 
 # Add / Edit a Template

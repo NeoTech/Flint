@@ -1,4 +1,4 @@
-# Section Patterns → Flint Primitives
+# Section Patterns → Flint Static Primitives
 
 Use this table during Phase 2 to classify each detected design section.
 
@@ -6,7 +6,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Navigation
 
-| Detected pattern | Flint answer | Notes |
+| Detected pattern | Flint Static answer | Notes |
 |-----------------|-------------|-------|
 | Top nav bar with site name + links | `{{navigation}}` in template | Auto-generated from hierarchy — no hardcoding |
 | Hamburger / mobile nav | Included in `{{navigation}}` | Already handled by NavigationComponent |
@@ -17,7 +17,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Hero / Above the Fold
 
-| Detected pattern | Flint answer | Frontmatter key |
+| Detected pattern | Flint Static answer | Frontmatter key |
 |-----------------|-------------|----------------|
 | Full-width hero with headline, subtext, CTA button | `{{hero}}` | `Hero:` block |
 | Hero with two CTA buttons (primary + secondary) | `{{hero}}` | `Hero.CTA` + `Hero.SecondaryCTA` |
@@ -29,7 +29,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Feature Sections
 
-| Detected pattern | Flint answer | Frontmatter key |
+| Detected pattern | Flint Static answer | Frontmatter key |
 |-----------------|-------------|----------------|
 | Grid of icon + title + description cards | `{{feature-grid}}` | `Features:` array |
 | Linked card grid (portfolio, products, posts) | `{{showcase-grid}}` | `Showcase:` array with `href` |
@@ -41,7 +41,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Statistics / Social Proof
 
-| Detected pattern | Flint answer | Frontmatter key |
+| Detected pattern | Flint Static answer | Frontmatter key |
 |-----------------|-------------|----------------|
 | Row of big numbers with labels | `{{stats-bar}}` | `Stats:` array |
 | Inline badge/pill metrics in hero | Add to hero subtitle text in frontmatter | |
@@ -50,7 +50,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Content Areas
 
-| Detected pattern | Flint answer | Notes |
+| Detected pattern | Flint Static answer | Notes |
 |-----------------|-------------|-------|
 | Long-form article / blog post | `{{content}}` in `blog-post` template | Markdown body |
 | FAQ accordion | `:::html` block with HTMX `hx-on:click` | Or a new FaqSection component |
@@ -62,7 +62,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Listings / Indexes
 
-| Detected pattern | Flint answer | Notes |
+| Detected pattern | Flint Static answer | Notes |
 |-----------------|-------------|-------|
 | Blog post listing | `:::children` directive | Auto-renders child pages as cards |
 | Product grid | `:::children` in shop section | Renders product cards |
@@ -73,7 +73,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## E-Commerce
 
-| Detected pattern | Flint answer | Notes |
+| Detected pattern | Flint Static answer | Notes |
 |-----------------|-------------|-------|
 | Product card (image, title, price, button) | `{{product}}` | `product-detail` or `product-demo` template |
 | Cart widget / drawer | `{{cart}}` | Already implemented |
@@ -84,7 +84,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Footer
 
-| Detected pattern | Flint answer | Notes |
+| Detected pattern | Flint Static answer | Notes |
 |-----------------|-------------|-------|
 | Tag/label cloud footer | `{{label-footer}}` | Auto-generated from all site labels |
 | Simple copyright bar | Add directly to template HTML | One `<footer>` element with Tailwind |
@@ -95,7 +95,7 @@ Use this table during Phase 2 to classify each detected design section.
 
 ## Calls to Action (Mid-page)
 
-| Detected pattern | Flint answer | Frontmatter key |
+| Detected pattern | Flint Static answer | Frontmatter key |
 |-----------------|-------------|----------------|
 | Full-width dark/brand CTA banner | `{{call-to-action}}` | `CTA:` block |
 | Inline CTA inside article | `:::html` block | |
@@ -106,7 +106,7 @@ Use this table during Phase 2 to classify each detected design section.
 ## Classification Decision Guide
 
 ```
-Is it already a Flint component?
+Is it already a Flint Static component?
   Yes → use its {{tag}} + add the correct frontmatter key
   No  → Is it page-specific?
           Yes → :::html block in content (don't make a component)

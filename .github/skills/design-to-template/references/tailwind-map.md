@@ -119,7 +119,7 @@ Goal is structural and typographic accuracy — colour is approximated, not pixe
 
 ## Responsiveness Defaults
 
-Always add responsive prefixes. Flint templates must be mobile-first:
+Always add responsive prefixes. Flint Static templates must be mobile-first:
 
 ```html
 <!-- Grid example -->
@@ -140,4 +140,4 @@ After implementing, always note:
 
 1. **Fonts** — Tailwind defaults to system sans-serif. If the design uses a custom Google Font, add the `<link>` to the `{{head}}` component's output or note it for manual addition.
 2. **Custom colours** — If the brand colour has no Tailwind equivalent, suggest adding it to `tailwind.config.js` under `theme.extend.colors`.
-3. **Animations** — Flint uses no animation libraries by default. Complex animations need a `src/client/` module.
+3. **Animations** — Flint Static uses no animation libraries by default. Complex animations need a `src/client/` module.

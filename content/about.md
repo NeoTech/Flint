@@ -102,11 +102,11 @@ bun run build:sync          # (if products changed) sync Stripe + rebuild
 bun run deploy:cloudflare:pages   # upload dist/ → Cloudflare Pages
 ```
 
-`scripts/deploy-pages.ts` scans `dist/`, computes MD5 hashes, uploads only changed files in batches, and creates a deployment record — all via plain `fetch()` calls to the Cloudflare API. This works reliably in CI, subprocesses, and the Flint Manager.
+`scripts/deploy-pages.ts` scans `dist/`, computes MD5 hashes, uploads only changed files in batches, and creates a deployment record — all via plain `fetch()` calls to the Cloudflare API. This works reliably in CI, subprocesses, and the Flint Static Manager.
 
-### Flint Manager — Build + Deploy
+### Flint Static Manager — Build + Deploy
 
-The [Flint Manager](https://github.com/flint-project/manager) has a **Build \& Deploy** page that combines both steps in one click:
+The [Flint Static Manager](https://github.com/flint-project/manager) has a **Build \& Deploy** page that combines both steps in one click:
 
 - **Build + Deploy** buttons per platform (Cloudflare Pages, Vercel, Netlify, GitHub Pages) — compiles the site, then deploys, with a live streaming log
 - **Build only** button — compile without deploying

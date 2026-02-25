@@ -1,6 +1,6 @@
 # Build System
 
-Flint has two build pipelines that work together:
+Flint Static has two build pipelines that work together:
 
 1. **Site build** (`bun run build`) — Bun script that compiles Markdown → HTML
 2. **Asset build** (`bun run dev`) — Rspack that bundles TypeScript + CSS for the browser
@@ -265,7 +265,7 @@ The `static/` directory is copied verbatim to `dist/` during build. Use it for:
 
 ## Manager Build API
 
-The Flint Manager exposes SSE endpoints that drive the build and deploy UI. All responses are Server-Sent Events so the browser can stream log output in real time.
+The Flint Static Manager exposes SSE endpoints that drive the build and deploy UI. All responses are Server-Sent Events so the browser can stream log output in real time.
 
 | Route | What it does |
 |---|---|

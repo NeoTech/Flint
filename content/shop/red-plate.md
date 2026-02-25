@@ -12,7 +12,7 @@ Labels: &ref_0
   - kitchen
 Parent: shop
 Author: System
-Date: '2026-02-24'
+Date: '2026-02-25'
 Description: >-
   A vibrant hand-painted ceramic dinner plate in bold crimson. Microwave and
   dishwasher safe. 10.5 inch diameter — perfect for everyday meals.

@@ -1,6 +1,6 @@
 ---
 name: add-content
-description: Create or edit Flint content pages (Markdown + YAML frontmatter). Use when adding pages, blog posts, section indexes, or products to the site.
+description: Create or edit Flint Static content pages (Markdown + YAML frontmatter). Use when adding pages, blog posts, section indexes, or products to the site.
 ---
 
 # Add / Edit Content

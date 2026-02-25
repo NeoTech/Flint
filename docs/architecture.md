@@ -1,6 +1,6 @@
 # Architecture
 
-Flint is a static site generator built around a simple pipeline: **Markdown in → HTML out**. This document explains the high-level architecture, data flow, and the design decisions behind each layer.
+Flint Static is a static site generator built around a simple pipeline: **Markdown in → HTML out**. This document explains the high-level architecture, data flow, and the design decisions behind each layer.
 
 ## System Overview
 
@@ -253,7 +253,7 @@ Marked plugins operate at the token level. HTMX attribute syntax (`{hx-get ...}`
 
 ### Why HTMX instead of a JS framework?
 
-Flint generates static HTML. HTMX adds interactivity by loading HTML fragments on demand — no client-side routing, no hydration, no build step for the interactive parts. The HTMX library (14 KB) is bundled offline via Rspack.
+Flint Static generates static HTML. HTMX adds interactivity by loading HTML fragments on demand — no client-side routing, no hydration, no build step for the interactive parts. The HTMX library (14 KB) is bundled offline via Rspack.
 
 ### Why Rspack?
 
@@ -290,7 +290,7 @@ This approach is reliable in non-TTY subprocess contexts (CI, manager SSE stream
 
 ### Manager: Combined Build + Deploy
 
-The Flint Manager (`manager/`) exposes a unified build+deploy route:
+The Flint Static Manager (`manager/`) exposes a unified build+deploy route:
 
 | Route | Handler | Purpose |
 |---|---|---|

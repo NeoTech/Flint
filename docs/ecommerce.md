@@ -1,6 +1,6 @@
-# E-commerce Integration (Flint)
+# E-commerce Integration (Flint Static)
 
-This document describes the lightweight e-commerce system built into Flint. No backend server is required by default — choose between two checkout modes depending on your hosting setup.
+This document describes the lightweight e-commerce system built into Flint Static. No backend server is required by default — choose between two checkout modes depending on your hosting setup.
 
 ---
 

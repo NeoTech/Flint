@@ -1,6 +1,6 @@
 ---
 name: add-documentation
-description: Create or edit Flint developer documentation (docs/*.md). Use when adding architecture docs, API references, system deep-dives, or updating existing documentation to reflect code changes.
+description: Create or edit Flint Static developer documentation (docs/*.md). Use when adding architecture docs, API references, system deep-dives, or updating existing documentation to reflect code changes.
 ---
 
 # Add / Edit Documentation

@@ -1,6 +1,6 @@
 # Markdown Pipeline
 
-Flint's Markdown compiler is more than a wrapper around `marked`. It runs a multi-stage preprocessing pipeline that supports child page listings, HTMX attribute syntax, and raw HTML blocks — then compiles standard Markdown — then restores the raw blocks.
+Flint Static's Markdown compiler is more than a wrapper around `marked`. It runs a multi-stage preprocessing pipeline that supports child page listings, HTMX attribute syntax, and raw HTML blocks — then compiles standard Markdown — then restores the raw blocks.
 
 ## Pipeline Overview
 

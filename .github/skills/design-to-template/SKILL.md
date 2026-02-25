@@ -1,17 +1,17 @@
 ---
 name: design-to-template
-description: Build a Flint template by analysing a URL or image. Use when a user says "build this", "clone this site", "make a template from this URL", or provides a screenshot and asks to replicate the design.
+description: Build a Flint Static template by analysing a URL or image. Use when a user says "build this", "clone this site", "make a template from this URL", or provides a screenshot and asks to replicate the design.
 ---
 
-# Design → Flint Template
+# Design → Flint Static Template
 
-Fetch a URL (or analyse an image), break down the design into Flint primitives, then implement a working template with any required new components.
+Fetch a URL (or analyse an image), break down the design into Flint Static primitives, then implement a working template with any required new components.
 
 ## Trigger Phrases
 
 - "Build a template from [URL]"
 - "Clone this design: [URL]"
-- "Make Flint look like [URL]"
+- "Make Flint Static look like [URL]"
 - "Turn this screenshot into a template"
 
 ---
@@ -39,7 +39,7 @@ For each section decide:
 
 | Decision | Action |
 |----------|--------|
-| Matches an existing Flint component | Reuse — add frontmatter key to content |
+| Matches an existing Flint Static component | Reuse — add frontmatter key to content |
 | Close but needs a variant | Extend existing component with a prop |
 | Unique — appears on this page only | `:::html` block in content |
 | Unique — will appear on multiple pages | New `Component<T>` (follow `add-component` skill) |
@@ -114,7 +114,7 @@ Before completing, confirm:
 
 ## References
 
-- `references/section-patterns.md` — Design section → Flint primitive lookup table
+- `references/section-patterns.md` — Design section → Flint Static primitive lookup table
 - `references/tailwind-map.md` — Visual properties → Tailwind class heuristics
 - `..add-template/SKILL.md` — Full template procedure and tag list
 - `..add-component/SKILL.md` — Full component procedure

@@ -9,13 +9,13 @@ Category: Documentation
 Labels: [hosting, deployment, cloudflare, vercel, netlify, github-pages]
 Author: System
 Date: 2026-02-24
-Description: Compare static site hosting platforms for Flint sites — GitHub Pages, Cloudflare Pages, Vercel, and Netlify — including configuration tokens, serverless capability, and checkout mode compatibility.
+Description: Compare static site hosting platforms for Flint Static sites — GitHub Pages, Cloudflare Pages, Vercel, and Netlify — including configuration tokens, serverless capability, and checkout mode compatibility.
 Keywords: [static hosting, deployment, github pages, cloudflare pages, vercel, netlify, serverless, payment links]
 ---
 
-Flint compiles your content, templates, and components into a self-contained set of plain HTML, CSS, and JavaScript files written to the `dist/` directory. Because the output contains no server-side logic, it can be served from any host capable of delivering static assets — a CDN edge network, a simple object store, or a traditional web server. This keeps hosting costs low, deployment simple, and page-load performance high.
+Flint Static compiles your content, templates, and components into a self-contained set of plain HTML, CSS, and JavaScript files written to the `dist/` directory. Because the output contains no server-side logic, it can be served from any host capable of delivering static assets — a CDN edge network, a simple object store, or a traditional web server. This keeps hosting costs low, deployment simple, and page-load performance high.
 
-The critical decision when choosing a hosting platform is which checkout mode your site uses. In **payment-links** mode, Flint embeds Stripe Payment Links directly into product pages; no server-side code runs at purchase time, and the entire site remains fully static. Any platform that can serve the `dist/` folder is compatible. In **serverless** mode, a Bun HTTP function (or its Cloudflare Worker equivalent) must run alongside the static site to handle cart sessions, create Stripe PaymentIntents, and process webhooks. This mode requires a platform that provides a serverless runtime — not all static hosts qualify. Choosing the wrong platform for serverless mode means checkout will be unavailable at runtime.
+The critical decision when choosing a hosting platform is which checkout mode your site uses. In **payment-links** mode, Flint Static embeds Stripe Payment Links directly into product pages; no server-side code runs at purchase time, and the entire site remains fully static. Any platform that can serve the `dist/` folder is compatible. In **serverless** mode, a Bun HTTP function (or its Cloudflare Worker equivalent) must run alongside the static site to handle cart sessions, create Stripe PaymentIntents, and process webhooks. This mode requires a platform that provides a serverless runtime — not all static hosts qualify. Choosing the wrong platform for serverless mode means checkout will be unavailable at runtime.
 
 This page covers four platforms and their suitability for both modes. **GitHub Pages** is the simplest option and supports payment-links mode only. **Cloudflare Pages** pairs static asset delivery with **Cloudflare Workers**, making it the recommended platform for serverless mode; deployment uses the Direct Upload API configured via **`CLOUDFLARE_ACCOUNT_ID`**, **`CLOUDFLARE_API_TOKEN`**, and **`CF_PAGES_PROJECT`**. **Vercel** and **Netlify** both offer integrated serverless function runtimes and are viable alternatives for teams already invested in those ecosystems, each with their own environment variable conventions and deployment API conventions.
 
@@ -38,7 +38,7 @@ If you use **payment-links** checkout mode, any of the four platforms works. Git
 
 If you use **serverless** checkout mode, choose one of the three platforms that support a function runtime: **Cloudflare Pages + Workers** (edge-deployed, lowest global latency), **Vercel** (straightforward setup with Node/Bun runtime support), or **Netlify** (atomic static + function deploys backed by AWS Lambda). GitHub Pages does not support a server runtime and cannot host the checkout function.
 
-The env vars listed above are set in the site `.env` file. Flint Manager reads them automatically when you trigger a deploy from the Build page, so no manual copy-paste into a dashboard is required.
+The env vars listed above are set in the site `.env` file. Flint Static Manager reads them automatically when you trigger a deploy from the Build page, so no manual copy-paste into a dashboard is required.
 
 ---
 
@@ -53,7 +53,7 @@ Static files only, hosted directly from a Git repository. No server-side runtime
 
 ### How it works
 
-Flint's `dist/` folder is pushed to the `gh-pages` branch (or whichever branch is configured in the repository's Pages settings). GitHub serves the site at `https://<username>.github.io/<repo>`, or at a custom domain if one is configured. Deploys are triggered via Flint Manager as an SSE stream, which runs the `ghpages` deploy script behind the scenes.
+Flint Static's `dist/` folder is pushed to the `gh-pages` branch (or whichever branch is configured in the repository's Pages settings). GitHub serves the site at `https://<username>.github.io/<repo>`, or at a custom domain if one is configured. Deploys are triggered via Flint Static Manager as an SSE stream, which runs the `ghpages` deploy script behind the scenes.
 
 ### Configuration
 
@@ -77,13 +77,13 @@ For a fine-grained token: GitHub → Settings → Developer settings → Fine-gr
 - No server-side execution — static files only.
 - 1 GB published site size limit per repository.
 - 100 GB/month soft bandwidth limit.
-- Builds are limited to 10 per hour when using GitHub Actions; Flint's direct-push method does not count against this limit.
+- Builds are limited to 10 per hour when using GitHub Actions; Flint Static's direct-push method does not count against this limit.
 
 ---
 
 ## Cloudflare Pages + Workers
 
-Cloudflare Pages serves static assets from a global CDN (330+ PoPs). Cloudflare Workers is a V8-isolate serverless runtime that runs at the edge. Together they form a full-stack deployment for Flint sites.
+Cloudflare Pages serves static assets from a global CDN (330+ PoPs). Cloudflare Workers is a V8-isolate serverless runtime that runs at the edge. Together they form a full-stack deployment for Flint Static sites.
 
 ### Checkout mode compatibility
 
@@ -143,7 +143,7 @@ Configured in the Cloudflare Pages dashboard or via the API. DNS must be managed
 
 ## Vercel
 
-Vercel is a hybrid platform offering global static CDN delivery and serverless/edge functions. Flint deploys pre-built static output from `dist/` directly via the Vercel REST API — no Vercel CLI dependency needed in automated contexts.
+Vercel is a hybrid platform offering global static CDN delivery and serverless/edge functions. Flint Static deploys pre-built static output from `dist/` directly via the Vercel REST API — no Vercel CLI dependency needed in automated contexts.
 
 ### Checkout mode compatibility
 
@@ -152,9 +152,9 @@ Vercel is a hybrid platform offering global static CDN delivery and serverless/e
 
 ### How it works
 
-Flint Manager triggers a deploy via the Vercel REST API (`POST https://api.vercel.com/v13/deployments`) with `target: "production"`. Files from `dist/` are uploaded directly — no wrangler or Vercel CLI needed.
+Flint Static Manager triggers a deploy via the Vercel REST API (`POST https://api.vercel.com/v13/deployments`) with `target: "production"`. Files from `dist/` are uploaded directly — no wrangler or Vercel CLI needed.
 
-For non-Git deploys (Flint's approach): files are hashed with SHA256, uploaded to Vercel's file store, and referenced in the deployment payload. `projectSettings.framework` is set to `null` (Vercel's "Other" preset — no framework detection, no build step executed on Vercel's side).
+For non-Git deploys (Flint Static's approach): files are hashed with SHA256, uploaded to Vercel's file store, and referenced in the deployment payload. `projectSettings.framework` is set to `null` (Vercel's "Other" preset — no framework detection, no build step executed on Vercel's side).
 
 ### Configuration
 
@@ -193,7 +193,7 @@ Place `vercel.json` in the project root:
 Key fields:
 
 - `"framework": null` — tells Vercel this is a pre-built static site; disables framework detection and build execution on Vercel's side.
-- `"outputDirectory": "dist"` — matches Flint's build output directory.
+- `"outputDirectory": "dist"` — matches Flint Static's build output directory.
 - `"cleanUrls": true` — removes `.html` extensions from URLs (e.g. `/about` instead of `/about.html`).
 - `"trailingSlash": false` — strips trailing slashes, issuing 308 redirects.
 
@@ -212,7 +212,7 @@ Key fields:
 | Runtime log retention | 1 hour |
 | Git repos | Personal only (no org repos) |
 
-**Notable:** Organization Git repos require a Pro plan. For Flint's direct API upload approach, Git organization restrictions do not apply.
+**Notable:** Organization Git repos require a Pro plan. For Flint Static's direct API upload approach, Git organization restrictions do not apply.
 
 ### Functions (serverless checkout)
 
@@ -231,10 +231,10 @@ Netlify is a static hosting + serverless functions platform. Static sites are de
 
 ### How it works
 
-Flint Manager triggers deploys via the Netlify REST API. Two upload approaches are supported:
+Flint Static Manager triggers deploys via the Netlify REST API. Two upload approaches are supported:
 
 1. **ZIP upload (simple):** POST the `dist/` folder as a zip to `https://api.netlify.com/api/v1/sites/{site_id}/deploys`. Limited to 25,000 files per deploy.
-2. **File-digest (efficient):** POST a JSON manifest of `{ filename: sha1 }` pairs; Netlify responds with which files it needs uploaded. Only changed files are transferred. This is Flint's default approach for incremental deploys.
+2. **File-digest (efficient):** POST a JSON manifest of `{ filename: sha1 }` pairs; Netlify responds with which files it needs uploaded. Only changed files are transferred. This is Flint Static's default approach for incremental deploys.
 
 ### Configuration
 
@@ -271,7 +271,7 @@ Place `netlify.toml` at the project root:
 
 Key fields:
 
-- `publish = "dist"` — matches Flint's build output directory.
+- `publish = "dist"` — matches Flint Static's build output directory.
 - `functions` — path to your serverless functions directory. Omit entirely for static-only deploys.
 - `[[headers]]` and `[[redirects]]` arrays support CDN-level rules without a server.
 
@@ -308,7 +308,7 @@ Content-Type: application/zip
 Body: <raw zip bytes>
 ```
 
-File-digest method (incremental, used by Flint):
+File-digest method (incremental, used by Flint Static):
 
 ```
 # Step 1 — send file manifest

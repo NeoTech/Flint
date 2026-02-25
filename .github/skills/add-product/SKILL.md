@@ -1,7 +1,7 @@
 ````skill
 ---
 name: add-product
-description: Add or update a product in the Flint ecommerce shop. Use when the user wants to add a new product, change a price, update product details, or manage the product catalogue.
+description: Add or update a product in the Flint Static ecommerce shop. Use when the user wants to add a new product, change a price, update product details, or manage the product catalogue.
 ---
 
 # Add / Update a Product

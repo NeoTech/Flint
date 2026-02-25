@@ -26,7 +26,7 @@ Components are **TypeScript classes** that render HTML strings. They live in `sr
 
 ## The Three Layers
 
-A page in Flint is built from three layers, each with a clear responsibility:
+A page in Flint Static is built from three layers, each with a clear responsibility:
 
 | Layer | Where | What it does |
 |-------|-------|-------------|
@@ -71,7 +71,7 @@ Components are classes that extend `Component<T>` where `T` is a typed props int
 
 ## Built-in Components
 
-Flint ships with these reusable components, each registered as a `{{tag}}` in the tag engine:
+Flint Static ships with these reusable components, each registered as a `{{tag}}` in the tag engine:
 
 ### Site-wide (always available)
 

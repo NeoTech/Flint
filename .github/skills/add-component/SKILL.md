@@ -1,6 +1,6 @@
 ---
 name: add-component
-description: Create or edit Flint UI components (TypeScript classes extending Component<T>). Use when building reusable server-rendered UI that appears across multiple pages via {{tag}} placeholders in templates.
+description: Create or edit Flint Static UI components (TypeScript classes extending Component<T>). Use when building reusable server-rendered UI that appears across multiple pages via {{tag}} placeholders in templates.
 ---
 
 # Add / Edit a Component

@@ -1,6 +1,6 @@
 # Components
 
-Flint uses a component-driven architecture where UI is built from TypeScript classes that return HTML strings. No virtual DOM, no hydration, no runtime — just pure string concatenation at build time.
+Flint Static uses a component-driven architecture where UI is built from TypeScript classes that return HTML strings. No virtual DOM, no hydration, no runtime — just pure string concatenation at build time.
 
 ## Base Class: `Component<T>`
 

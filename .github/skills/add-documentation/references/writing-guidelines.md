@@ -1,6 +1,6 @@
 # Writing Guidelines
 
-Formatting conventions for Flint developer documentation in `docs/`.
+Formatting conventions for Flint Static developer documentation in `docs/`.
 
 ## Document Structure
 

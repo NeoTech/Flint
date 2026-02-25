@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Deploy the Flint static site and/or checkout worker to Cloudflare Pages, Vercel, Netlify, or GitHub Pages. Use when asked to "deploy the site", "push to production", "deploy to Cloudflare", "deploy the worker", or "deploy checkout server".
+description: Deploy the Flint Static site and/or checkout worker to Cloudflare Pages, Vercel, Netlify, or GitHub Pages. Use when asked to "deploy the site", "push to production", "deploy to Cloudflare", "deploy the worker", or "deploy checkout server".
 ---
 
 # Deploy

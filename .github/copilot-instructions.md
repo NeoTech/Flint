@@ -1,4 +1,4 @@
-# Copilot Instructions — Flint Static Site Generator
+# Copilot Instructions — Flint Static
 
 > Lean routing document. Detailed procedures live in **skills** and **docs**.
 
@@ -11,13 +11,13 @@
 - **Stale Rspack process**: If Rspack appears to be running without `bun run dev` being active, a previous dev instance is still alive. Tell the user to run `taskkill /IM bun.exe /F` (Windows) or `pkill bun` (macOS/Linux) to clear it.
 - **Test-first**: Always write or update tests before implementing features.
 - **Build after changes**: Run `bun run build` after content or code changes.
-- **Stripe sync**: After changing `products.yaml`, run `bun run build:sync` to sync prices and rebuild. Use `build:sync:force` to force-recreate all Payment Links. Use `stripe:cleanup` to archive all Flint-managed products and clear IDs before a full reset.
+- **Stripe sync**: After changing `products.yaml`, run `bun run build:sync` to sync prices and rebuild. Use `build:sync:force` to force-recreate all Payment Links. Use `stripe:cleanup` to archive all Flint Static-managed products and clear IDs before a full reset.
 - **Cloudflare Pages deploy**: Always use `scripts/deploy-pages.ts` via `bun run deploy:cloudflare:pages` (Direct Upload API via fetch — no wrangler). Never use `wrangler pages deploy` in any subprocess context. Wrangler is unreliable in non-TTY/subprocess contexts and its local hash cache breaks new-project deploys.
 - **Product sync before deploy**: When shop content changes, always run `bun run build:sync` (writes real Stripe price IDs + recompiles) then `bun run deploy:cloudflare:pages`. Running just `bun run deploy:cloudflare:pages` without syncing first deploys stale content with placeholder price IDs.
 
 ---
 
-## What Is Flint?
+## What Is Flint Static?
 
 A **TypeScript static site generator** that compiles Markdown files into HTML pages using:
 
@@ -95,7 +95,7 @@ A **TypeScript static site generator** that compiles Markdown files into HTML pa
 | `bun run build:sync` | Stripe sync + compile (run after changing `products.yaml`) |
 | `bun run build:sync:force` | Force-recreate all Stripe Payment Links + compile |
 | `bun run generate` | Regenerate product pages from `products.yaml` |
-| `bun run stripe:cleanup` | Archive all Flint-managed Stripe products + clear `products.yaml` IDs |
+| `bun run stripe:cleanup` | Archive all Flint Static-managed Stripe products + clear `products.yaml` IDs |
 | `bun run deploy:cloudflare:pages` | Deploy static site to Cloudflare Pages (Direct Upload API, no wrangler) |
 
 ### Checkout server (serverless mode only)
@@ -118,9 +118,9 @@ A **TypeScript static site generator** that compiles Markdown files into HTML pa
 
 ---
 
-## Flint Manager (`manager/`)
+## Flint Static Manager (`manager/`)
 
-A **separate Bun HTTP server** that provides a web UI for managing one or more Flint sites.
+A **separate Bun HTTP server** that provides a web UI for managing one or more Flint Static sites.
 It is a standalone app — run and tested independently from the site itself.
 
 ### Starting the manager
@@ -142,7 +142,7 @@ manager/
 ├── src/
 │   ├── router.ts          ← Single request dispatcher (no external router)
 │   ├── auth.ts            ← Bearer token + session cookie auth
-│   ├── registry.ts        ← JSON registry of registered Flint sites
+│   ├── registry.ts        ← JSON registry of registered Flint Static sites
 │   ├── runner.ts          ← spawnAsStream() — SSE wrapper for bun subprocess
 │   ├── api/               ← JSON API handlers (pure functions → Response)
 │   │   ├── sites.ts       ← CRUD for registered sites
@@ -204,7 +204,7 @@ manager/
 
 ```
 ┌────────────────────────────────────────────────────┐
-│ Top navbar: ⚡ Flint Manager   [Secrets] [Profile] │  h-12, bg-gray-900
+│ Top navbar: ⚡ Flint Static Manager   [Secrets] [Profile] │  h-12, bg-gray-900
 ├──────────┬─────────────────────────────────────────┤
 │ Sidebar  │  <main id="content">                    │  flex-1, min-h-0
 │ w-56     │  HTMX target — pages swap here          │
@@ -294,8 +294,8 @@ Use the appropriate skill for each task:
 | Add/edit developer documentation | `add-documentation` |
 | Add/update a shop product (products.yaml + Stripe) | `add-product` |
 | Build, test, lint, typecheck, debug | `build-and-test` |
-| Build a Flint template from a URL or screenshot | `design-to-template` |
-| Deploy the Flint site to Cloudflare Pages or other platforms | `deploy` |
+| Build a Flint Static template from a URL or screenshot | `design-to-template` |
+| Deploy the Flint Static site to Cloudflare Pages or other platforms | `deploy` |
 
 Skills live in `.github/skills/` with references for detailed field lists, examples, and API docs.
 
